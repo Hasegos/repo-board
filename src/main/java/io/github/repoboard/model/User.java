@@ -10,6 +10,7 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * 회원 정보를 가진 엔터티(entity) 클래스
@@ -32,6 +33,7 @@ public class User {
 
     @Column(name = "username", nullable = false, unique = true)
     private String username;
+
     @Column(name = "password", nullable = false)
     private String password;
 
@@ -49,4 +51,15 @@ public class User {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    /* === EDK 연관 관계 === */
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,
+             fetch = FetchType.LAZY, orphanRemoval = true)
+    private Profile profile;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<SavedRepo> savedRepos;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Reaction> reactions;
 }
