@@ -2,6 +2,7 @@ package io.github.repoboard.model;
 
 import io.github.repoboard.model.enums.UserProvider;
 import io.github.repoboard.model.enums.UserRoleType;
+import io.github.repoboard.model.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -47,6 +48,10 @@ public class User {
 
     @Column(name = "provider_id", unique = true)
     private String providerId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private UserStatus status = UserStatus.ACTIVE;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
