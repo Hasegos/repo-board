@@ -5,5 +5,6 @@ package io.github.repoboard.model.enums;
  */
 public enum UserProvider {
     GOOGLE,
-    GITHUB
+    GITHUB,
+    LOCAL
 }
