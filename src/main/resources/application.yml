@@ -1,3 +1,6 @@
 spring:
   application:
     name: RepoBoard
+  aop:
+    proxy-target-class: true  # (기본 CGLIB 권장)
+    expose-proxy: true        # ← currentProxy() 사용을 위해 필수
