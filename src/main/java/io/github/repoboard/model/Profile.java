@@ -48,6 +48,12 @@ public class Profile {
     @Column(name = "repo_count")
     private Integer repoCount;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "s3Key")
+    private String s3Key;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamptz")
     private Instant createdAt;
