@@ -1,7 +1,5 @@
 package io.github.repoboard.service;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -21,7 +19,6 @@ import java.util.UUID;
  * <p>이미지 파일을 AWS S3에 업로드/조회/삭제하는 애플리케이션 서비스.</p>
  */
 @Service
-@RequiredArgsConstructor
 public class S3Service {
 
     private final S3Client s3Client;
