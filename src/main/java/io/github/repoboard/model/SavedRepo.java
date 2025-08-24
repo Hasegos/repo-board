@@ -75,10 +75,10 @@ public class SavedRepo {
     private String owner;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamptz")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false, columnDefinition = "timestamptz")
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 }
