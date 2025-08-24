@@ -54,6 +54,12 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
+    @Transactional(readOnly = true)
+    public User findByUserId(Long userId){
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 유저는 존재하지 않습니다."));
+    }
+
     /**
      * 회원 가입을 수행한다.
      *
