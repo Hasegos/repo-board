@@ -42,6 +42,3 @@ aws:
 github:
   api:
     base-url: https://api.github.com
-  sync:
-    interval : 1800000
-    enabled: true
