@@ -15,6 +15,13 @@ spring:
               - profile
               - email
             redirect-uri: http://localhost:8080/login/oauth2/code/google
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            scope:
+              - read:user
+              - user:email
+            redirect-uri: http://localhost:8080/login/oauth2/code/github
   h2:
     console:
       enabled: true

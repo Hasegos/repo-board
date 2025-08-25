@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>헤더 페이지</title>
+    <link rel="stylesheet" th:href="@{/css/shared/header.css}" />
+</head>
+<body>
+<header th:fragment="header" class="header">
+    <div class="header__inner">
+        <a class="header__logo" th:href="@{/}" aria-label="RepoBoard 홈">
+            <img class="header__logo-icon" th:src="@{/images/logo.svg}" alt="메인으로 돌아가기" />
+            <strong class="header__brand">RepoBoard</strong>
+        </a>
+
+        <div class="header__search">
+            <input class="header__search-input"
+                   type="search"
+                   placeholder="레포지토리, 사용자, 태그 검색…"
+                   aria-label="검색" />
+        </div>
+
+        <div class="header__nav">
+            <a class="header__btn header__btn--ghost" th:href="@{/}">탐색</a>
+
+            <!-- 로그인 상태 -->
+            <div class="header__login" th:if="${user != null}">
+                <a class="header__btn header__btn--ghost"
+                   th:href="${Profile != null}
+                        ? @{/users/profiles/{userId}(userId=${Profile.userId})}
+                        : @{/users/profiles/new}">
+                    내 프로필
+                </a>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="header__btn header__btn--primary">로그아웃</button>
+                </form>
+            </div>
+
+            <!-- 비로그인 상태 -->
+            <div class="header__unLogin" th:if="${user == null}">
+                <a class="header__btn header__btn--primary" th:href="@{/users/login}">로그인</a>
+                <a class="header__btn header__btn--ghost" th:href="@{/users/signup}">회원가입</a>
+            </div>
+        </div>
+    </div>
+</header>
+</body>
+</html>
