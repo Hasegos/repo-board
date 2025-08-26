@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -34,6 +35,7 @@ import java.util.*;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Qualifier("githubWebClient")
     private final WebClient githubWebClient;
@@ -134,7 +136,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         User user = new User();
         user.setUsername(generateUniqueUsername(email));
-        user.setPassword(randomPassword);
+        user.setPassword(passwordEncoder.encode(randomPassword));
         user.setRole(UserRoleType.USER);
         user.setProviderId(socialId);
         user.setProvider(provider);
