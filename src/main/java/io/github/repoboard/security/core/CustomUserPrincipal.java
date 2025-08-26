@@ -51,10 +51,10 @@ public class CustomUserPrincipal implements OAuth2User, UserDetails {
     }
 
     @Override
-    public String getPassword() { return user.getUsername(); }
+    public String getPassword() { return user.getPassword(); }
 
     @Override
-    public String getUsername() { return user.getPassword(); }
+    public String getUsername() { return user.getUsername(); }
 
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
