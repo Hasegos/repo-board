@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Optional;
 
 /**
@@ -89,6 +90,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         user.setProvider(UserProvider.LOCAL);
         user.setRole(UserRoleType.USER);
+        user.setCreatedAt(Instant.now());
 
         /* 소셜 로그인 */
         if(userDTO.getProviderId() != null && !userDTO.getProviderId().isEmpty()){
