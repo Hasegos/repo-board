@@ -10,7 +10,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -33,17 +32,8 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomUserDetailService customUserDetailService;
-
-    /**
-     * PasswordEncoder 빈을 등록합니다.
-     * BCrypt 해시를 사용하여 비밀번호를 안전하게 저장/검증합니다.
-     *
-     * @return BCrypt 기반 PasswordEncoder
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
+    private final CustomAuthFailureHandler customAuthFailureHandler;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * DAO 기반 인증 Provider 빈을 등록합니다.
@@ -55,7 +45,7 @@ public class SecurityConfig {
     public DaoAuthenticationProvider authenticationProvider(){
         DaoAuthenticationProvider p = new DaoAuthenticationProvider();
         p.setUserDetailsService(customUserDetailService);
-        p.setPasswordEncoder(passwordEncoder());
+        p.setPasswordEncoder(passwordEncoder);
         return p;
     }
 
@@ -84,19 +74,7 @@ public class SecurityConfig {
                         .loginPage("/users/login")
                         .loginProcessingUrl("/login")
                         .defaultSuccessUrl("/" , true)
-                        .failureHandler((request, response, exception) -> {
-                            String msg;
-
-                            if(exception instanceof org.springframework.security.authentication.LockedException){
-                                msg = "정지된 계정입니다.";
-                            }else if(exception instanceof org.springframework.security.authentication.DisabledException){
-                                msg = "탈퇴(비활성화된) 계정입니다.";
-                            } else{
-                                msg = "로그인에 실패했습니다. 잠시 후에 다시 시도해주세요.";
-                            }
-                            request.getSession().setAttribute("loginError",msg);
-                            response.sendRedirect("/users/login");
-                        })
+                        .failureHandler(customAuthFailureHandler)
                         .usernameParameter("username")
                         .passwordParameter("password")
                         .permitAll()
@@ -111,20 +89,7 @@ public class SecurityConfig {
                                 userInfo.userService(customOAuth2UserService);
                         })
                         .defaultSuccessUrl("/", true)
-                        .failureHandler((request, response, exception) -> {
-                            String msg = "소셜 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.";
-
-                            if (exception instanceof org.springframework.security.oauth2.core.OAuth2AuthenticationException oae) {
-                                var err = oae.getError();
-                                String code = (err != null) ? err.getErrorCode() : null;
-                                String desc = (err != null && err.getDescription() != null) ? err.getDescription() : null;
-
-                                if ("ACCOUNT_SUSPENDED".equals(code))      msg = (desc != null) ? desc : "정지된 계정입니다.";
-                                else if ("ACCOUNT_DELETED".equals(code))   msg = (desc != null) ? desc : "탈퇴(비활성)된 계정입니다.";
-                            }
-                            request.getSession().setAttribute("loginError", msg);
-                            response.sendRedirect("/users/login");
-                        })
+                        .failureHandler(customAuthFailureHandler)
                 );
         return http.build();
     }
