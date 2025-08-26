@@ -6,7 +6,6 @@ import io.github.repoboard.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,26 +32,24 @@ public class AuthController {
         return "auth/signup";
     }
 
-    @PostMapping("/singup")
-    public String postRegister(@ModelAttribute("userDTO") @Valid UserDTO userDTO,
-                               Model model, BindingResult bindingResult){
+    @PostMapping("/signup")
+    public String postRegister(@ModelAttribute("userDTO") @Valid UserDTO dto,
+                               BindingResult br){
 
-        if(bindingResult.hasErrors()){
+        if(userService.findByUsername(dto.getUsername()).isPresent()){
+            br.rejectValue("username", "duplicate", "이미 존재하는 회원입니다.");
             return "auth/signup";
         }
-
-        if(userService.findByUsername(userDTO.getUsername()).isPresent()){
-            bindingResult.rejectValue("username", "duplicate", "이미 존재하는 회원입니다.");
+        if (!br.hasFieldErrors("password") && !br.hasFieldErrors("passwordConfirm")) {
+            if (!java.util.Objects.equals(dto.getPassword(), dto.getPasswordConfirm())) {
+                br.rejectValue("passwordConfirm", "password.mismatch", "비밀번호가 일치하지 않습니다.");
+            }
+        }
+        if(br.hasErrors()){
             return "auth/signup";
         }
-
-        try{
-            userService.register(userDTO);
-            return "auth/login";
-        }catch (DataIntegrityViolationException e){
-            bindingResult.rejectValue("username", "duplicate", "이미 존재하는 회원입니다.");
-            return "auth/signup";
-        }
+        userService.register(dto);
+        return "auth/login";
     }
 
     @GetMapping("/login")
