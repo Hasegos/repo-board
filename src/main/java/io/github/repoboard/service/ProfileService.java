@@ -8,7 +8,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,7 +36,7 @@ public class ProfileService {
                 .orElseThrow(() -> new EntityNotFoundException("프로필이 존재하지 않습니다."));
     }
 
-    @Transactional(propagation = Propagation.NEVER)
+    @Transactional
     public Profile registerProfile(Long userId, ProfileDTO dto, MultipartFile file) throws IOException{
 
         User user = userService.findByUserId(userId);
@@ -68,7 +67,7 @@ public class ProfileService {
         }
     }
 
-    @Transactional(propagation =  Propagation.NEVER)
+    @Transactional
     public void updateProfileImage(Long userId, MultipartFile file) throws IOException {
 
         if(file == null || file.isEmpty()) { return; }
@@ -107,7 +106,7 @@ public class ProfileService {
         }
     }
 
-    @Transactional(propagation = Propagation.NEVER)
+    @Transactional
     public void deleteProfileByUserId(Long userId){
 
         Profile profile = findProfileByUserId(userId);
