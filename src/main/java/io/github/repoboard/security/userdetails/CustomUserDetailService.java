@@ -3,7 +3,6 @@ package io.github.repoboard.security.userdetails;
 import io.github.repoboard.model.User;
 import io.github.repoboard.repository.UserRepository;
 import io.github.repoboard.security.core.CustomUserPrincipal;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -31,7 +30,8 @@ public class CustomUserDetailService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 회원입니다."));
+
         return new CustomUserPrincipal(user);
     }
 }

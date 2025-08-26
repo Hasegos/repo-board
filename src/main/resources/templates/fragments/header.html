@@ -23,13 +23,10 @@
 
         <div class="header__nav">
             <a class="header__btn header__btn--ghost" th:href="@{/}">탐색</a>
-
             <!-- 로그인 상태 -->
             <div class="header__login" th:if="${user != null}">
-                <a class="header__btn header__btn--ghost"
-                   th:href="${Profile != null}
-                        ? @{/users/profiles/{userId}(userId=${Profile.userId})}
-                        : @{/users/profiles/new}">
+                <!-- 이미지 넣는건 좋을듯 -->
+                <a class="header__btn header__btn--ghost">
                     내 프로필
                 </a>
                 <form th:action="@{/logout}" method="post">
