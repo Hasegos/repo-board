@@ -10,7 +10,9 @@ import io.github.repoboard.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,7 +28,7 @@ import java.util.Optional;
  * <p>주요 기능</p>
  * <ul>
  *   <li>{@link #register(UserDTO)}: 회원가입(로컬/소셜)</li>
- *   <li>{@link #updateUser(Long, ChangePasswordDTO)}: 비밀번호 변경(로컬 계정)</li>
+ *   <li>{@link #changeUserPassword(Long, ChangePasswordDTO)} (Long, ChangePasswordDTO)}: 비밀번호 변경(로컬 계정)</li>
  *   <li>{@link #deleteUserAndProfile(Long)}: 회원 및 프로필 삭제(연계된 S3 이미지 삭제 포함)</li>
  * </ul>
  *
@@ -91,6 +93,7 @@ public class UserService {
         user.setProvider(UserProvider.LOCAL);
         user.setRole(UserRoleType.USER);
         user.setCreatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
 
         /* 소셜 로그인 */
         if(userDTO.getProviderId() != null && !userDTO.getProviderId().isEmpty()){
@@ -114,7 +117,7 @@ public class UserService {
      * @param change 비밀번호 변경 정보(현재/새/확인)
      */
     @Transactional
-    public void updateUser(Long userId, ChangePasswordDTO change){
+    public void changeUserPassword(Long userId, ChangePasswordDTO change){
 
         if(!change.getNewPassword().equals(change.getConfirmPassword())){
             throw new IllegalArgumentException("새 비밀번호 확인이 일치하지않습니다.");
@@ -124,13 +127,19 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 사용자는 존재하지 않습니다."));
 
         if(user.getProvider() == UserProvider.LOCAL){
+
             if(!passwordEncoder.matches(change.getCurrentPassword(), user.getPassword())){
                 throw new BadCredentialsException("현재 비밀번호가 일치하지않습니다.");
             }
+
+            if(passwordEncoder.matches(change.getNewPassword(), user.getPassword())){
+                throw new IllegalArgumentException("이전 비밀번호와 동일합니다.");
+            }
+        } else {
+            throw new AccessDeniedException("소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다.");
         }
-        if(passwordEncoder.matches(change.getNewPassword(), user.getPassword())){
-            throw new IllegalArgumentException("이전 비밀번호와 동일합니다.");
-        }
+
+        user.setUpdatedAt(Instant.now());
         user.setPassword(passwordEncoder.encode(change.getNewPassword()));
     }
 
