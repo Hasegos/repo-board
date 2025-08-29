@@ -25,13 +25,48 @@
             <a class="header__btn header__btn--ghost" th:href="@{/}">탐색</a>
             <!-- 로그인 상태 -->
             <div class="header__login" th:if="${user != null}">
-                <!-- 이미지 넣는건 좋을듯 -->
-                <a class="header__btn header__btn--ghost">
-                    내 프로필
-                </a>
-                <form th:action="@{/logout}" method="post">
-                    <button type="submit" class="header__btn header__btn--primary">로그아웃</button>
-                </form>
+                <!-- 프로필 버튼 -->
+                <div class="header__user" data-menu-root>
+                    <button class="header__user-btn"
+                            type="button"
+                            aria-haspopup="menu"
+                            aria-expanded="false"
+                            data-menu-button>
+                        <img class="header__avatar"   alt="프로필 이미지" />
+                        <span class="header__user-name" >사용자</span>
+                        <span class="header__chevron" aria-hidden="true">▾</span>
+                    </button>
+
+                    <!-- 드롭다운 메뉴 -->
+                    <div class="header__menu" role="menu" hidden data-menu>
+                        <a role="menuitem" class="header__menu-item"
+                           >내 프로필</a>
+
+                        <a role="menuitem" class="header__menu-item"
+                           >저장한 레포</a>
+
+                        <a role="menuitem" class="header__menu-item"
+                           th:href="@{/users/settings}"
+                           >설정</a>
+
+                        <!-- 관리자 전용 예시 (thymeleaf-extras-springsecurity 사용 시) -->
+                        <!-- <a role="menuitem"
+                           th:if="${user != null and user.role.name() == 'ADMIN'}"
+                           th:href="@{/admin}">
+                           class="header__menu-item">관리자</a> -->
+
+                        <div class="header__menu-sep" role="separator"></div>
+
+                        <a role="menuitem" class="header__menu-item"
+                           >채팅하기</a>
+
+                        <form th:action="@{/logout}" method="post">
+                            <button type="submit" role="menuitem" class="header__menu-item header__menu-item--danger">
+                                로그아웃
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <!-- 비로그인 상태 -->
@@ -41,6 +76,7 @@
             </div>
         </div>
     </div>
+    <script defer th:src="@{/js/header.js}"></script>
 </header>
 </body>
 </html>

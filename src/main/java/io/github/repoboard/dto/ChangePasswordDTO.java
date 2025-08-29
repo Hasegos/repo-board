@@ -1,5 +1,7 @@
 package io.github.repoboard.dto;
 
+import io.github.repoboard.common.validation.annotation.ValidPassword;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,7 +9,13 @@ import lombok.Setter;
 @Setter
 public class ChangePasswordDTO {
 
+    @NotBlank
     private String currentPassword;
+
+    @ValidPassword
+    @NotBlank
     private String newPassword;
+
+    @NotBlank
     private String confirmPassword;
 }
