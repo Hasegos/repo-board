@@ -22,6 +22,9 @@ public class GithubUserDTO {
     /** GitHub 로그인 ID */
     private String login;
 
+    /** GitHub 고유 ID */
+    private String id;
+
     /** 사용자 표시 이름 */
     private String name;
 
