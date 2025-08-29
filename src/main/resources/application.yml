@@ -1,9 +1,7 @@
 spring:
   application:
     name: RepoBoard
-  aop:
-    proxy-target-class: true  # (기본 CGLIB 권장)
-    expose-proxy: true        # ← currentProxy() 사용을 위해 필수
+
   security:
     oauth2:
       client:
@@ -22,6 +20,25 @@ spring:
               - read:user
               - user:email
             redirect-uri: http://localhost:8080/login/oauth2/code/github
+
+  thymeleaf:
+    cache: true
+
+  web:
+    resources:
+      cache:
+        period: 365d
+      chain:
+        strategy:
+          content:
+            enabled: true
+            paths:
+              - "/**"
+
+  aop:
+    proxy-target-class: true  # (기본 CGLIB 권장)
+    expose-proxy: true        # ← currentProxy() 사용을 위해 필수
+
   h2:
     console:
       enabled: true
