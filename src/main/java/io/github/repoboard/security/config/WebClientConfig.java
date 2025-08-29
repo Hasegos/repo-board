@@ -3,7 +3,9 @@ package io.github.repoboard.security.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
@@ -27,7 +29,8 @@ public class WebClientConfig {
      */
     @Bean
     public WebClient githubWebClient(
-            @Value("${github.api.base-url:https://api.github.com}") String baseUrl
+            @Value("${github.api.base-url:https://api.github.com}") String baseUrl,
+            @Value("${github.api.token:}") String token
     ){
         HttpClient httpClient =  HttpClient.create()
                 .responseTimeout(Duration.ofSeconds(10));
@@ -36,7 +39,12 @@ public class WebClientConfig {
                 .baseUrl(baseUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .defaultHeader("Accept", "application/vnd.github.v3+json")
-                .defaultHeader("User-Agent", "RepoBoard-App")
+                .defaultHeaders(h -> {
+                    h.set(HttpHeaders.USER_AGENT, "RepoBoard-App");
+                    if(StringUtils.hasText(token)){
+                        h.setBearerAuth(token);
+                    }
+                })
                 .exchangeStrategies(
                         ExchangeStrategies.builder()
                                 .codecs(cfg -> cfg.defaultCodecs().maxInMemorySize(4 * 1024 * 1024))
