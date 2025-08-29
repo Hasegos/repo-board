@@ -3,6 +3,7 @@ package io.github.repoboard.service;
 import io.github.repoboard.dto.GithubRepoDTO;
 import io.github.repoboard.dto.GithubUserDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -78,6 +79,7 @@ public class GitHubApiService {
      * @return {@link GithubUserDTO} 객체
      * @throws RuntimeException 사용자 정보 조회 실패 시
      */
+    @Cacheable(value = "ghUser", key = "#username", sync = true)
     public GithubUserDTO getUser(String username){
         try{
             return githubWebClient.get()
@@ -94,17 +96,22 @@ public class GitHubApiService {
     }
 
     /**
-     * 특정 GitHub 사용자가 소유한 공개 레포지토리 목록을 페이징하여 모두 조회합니다.
+     * 특정 GitHub 사용자가 소유한 공개 레포지토리 목록을 페이징하여 모두 조회합니다.    *
      * <p>
      * GitHub API의 {@code /users/{username}/repos} 엔드포인트를 호출하며,
      * 인증 토큰 없이 호출하므로 비공개(private) 레포지토리는 포함되지 않습니다.
      * </p>
+     *
+     * 소유 레포 전체(공개) 조회 + 필요 시 fork 제외 (캐시)
+     * - 내부에서 GitHub 서버사이드 페이징(Link 헤더) 순회
+     * - 캐시 TTL(5분) 내에서는 재호출 없이 반환
      *
      * @param username    GitHub 사용자명
      * @param includeForks {@code true}면 fork 레포지토리 포함, {@code false}면 제외
      * @return {@link GithubRepoDTO} 리스트 (공개 레포만)
      * @throws RuntimeException API 호출 실패 시
      */
+    @Cacheable(value = "ghRepos", key = "#username + ':' + #includeForks", sync = true)
     public List<GithubRepoDTO> getOwnedRepos(String username, boolean includeForks){
 
         List<GithubRepoDTO> all = new ArrayList<>();
