@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>RepoBoard · 프로필</title>
+</head>
+<body>
+    <th:block th:fragment="setupForm">
+        <section class="profile-setup">
+            <h2>GitHub 프로필 연결</h2>
+            <form th:action="@{/users/profiles/setup}" method="post">
+                <input type="text" name="url" required
+                       placeholder="profile README 또는 https://github.com/사용자명">
+                <button type="submit">연결</button>
+            </form>
+        </section>
+    </th:block>
+</body>
+</html>
