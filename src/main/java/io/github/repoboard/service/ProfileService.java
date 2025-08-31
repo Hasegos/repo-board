@@ -1,10 +1,9 @@
 package io.github.repoboard.service;
 
-import io.github.repoboard.dto.ProfileDTO;
+import io.github.repoboard.dto.GithubUserDTO;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.User;
 import io.github.repoboard.repository.ProfileRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,26 +31,25 @@ public class ProfileService {
     }
 
     @Transactional(readOnly = true)
-    public Profile findProfileByUserId(Long userId){
-        return profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new EntityNotFoundException("프로필이 존재하지 않습니다."));
+    public Optional<Profile> findProfileByUserId(Long userId){
+        return profileRepository.findByUserId(userId);
+
     }
 
     @Transactional
-    public Profile registerProfile(Long userId, ProfileDTO dto, MultipartFile file) throws IOException{
+    public Profile registerProfile(Long userId, GithubUserDTO dto) throws IOException{
 
         User user = userService.findByUserId(userId);
         ensureProfileNotExists(user.getId());
 
         String imageUrl = null;
         String s3Key = null;
-        if(file != null && !file.isEmpty()){
-            try{
-                imageUrl = s3Service.uploadFile(file);
-                s3Key = extractS3KeyFromUrl(imageUrl);
-            } catch (IOException e){
-                throw new IOException("프로필 이미지 업로드 실패 : " + e);
-            }
+
+        try{
+            imageUrl = s3Service.uploadFromUrl(dto.getAvatarUrl());
+            s3Key = extractS3KeyFromUrl(imageUrl);
+        } catch (IOException e){
+            throw new IOException("프로필 이미지 업로드 실패 : " + e);
         }
 
         try{
@@ -72,10 +71,9 @@ public class ProfileService {
 
         if(file == null || file.isEmpty()) { return; }
 
-        Profile profile = findProfileByUserId(userId);
+        Optional<Profile> profile = findProfileByUserId(userId);
 
-
-        String oldKey = profile.getS3Key();
+        String oldKey = profile.get().getS3Key();
         String newImageUrl = null;
         String newS3Key = null;
 
@@ -87,7 +85,7 @@ public class ProfileService {
         }
 
         try{
-            profileDBService.updateProfileImageDB(profile, newImageUrl, newS3Key);
+            profileDBService.updateProfileImageDB(profile.get(), newImageUrl, newS3Key);
         }catch (Exception e){
             try{
                 s3Service.deleteFile(newS3Key);
@@ -109,10 +107,15 @@ public class ProfileService {
     @Transactional
     public void deleteProfileByUserId(Long userId){
 
-        Profile profile = findProfileByUserId(userId);
+       Optional<Profile> profile = findProfileByUserId(userId);
 
-        String s3Key = profile.getS3Key();
-        profileDBService.deleteProfileDB(profile.getId());
+       if(profile.get() == null){
+           log.info("해당 프로필 정보가 없습니다. profile : {}", profile.get());
+           return;
+       }
+
+        String s3Key = profile.get().getS3Key();
+        profileDBService.deleteProfileDB(profile.get().getId());
 
         if(s3Key != null && !s3Key.isEmpty()){
             try {

@@ -32,7 +32,9 @@
                             aria-haspopup="menu"
                             aria-expanded="false"
                             data-menu-button>
-                        <img class="header__avatar"   alt="프로필 이미지" />
+                        <img class="header__avatar"
+                             th:src="${user.profile != null ? user.profile.githubAvatarUrl : '/images/github.svg'}"
+                             alt="프로필 이미지" />
                         <span class="header__user-name" >사용자</span>
                         <span class="header__chevron" aria-hidden="true">▾</span>
                     </button>
@@ -40,6 +42,7 @@
                     <!-- 드롭다운 메뉴 -->
                     <div class="header__menu" role="menu" hidden data-menu>
                         <a role="menuitem" class="header__menu-item"
+                           th:href="@{/users/profiles}"
                            >내 프로필</a>
 
                         <a role="menuitem" class="header__menu-item"

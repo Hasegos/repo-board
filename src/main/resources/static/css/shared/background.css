@@ -10,4 +10,7 @@
   --red: #cf222e;
   --radius: 12px;
   --shadow: 0 1px 0 rgba(27,31,36,0.04), 0 1px 3px rgba(27,31,36,0.15);
+  --fg:#374151;
+  --accent:#2563eb;  /* 링크/포커스(blue-600) */
+  --line:#e5e7eb;    /* 보더 */
 }

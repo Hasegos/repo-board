@@ -27,29 +27,41 @@ public class Profile {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Column(name = "repository_url", columnDefinition = "TEXT")
-    private String repositoryUrl;
+    /** github 로그인 명 */
+    @Column(name = "github_login")
+    private String githubLogin;
 
-    @Column(name = "stacks", nullable = false)
-    private String stacks;
+    /** github 닉네임 */
+    @Column(name = "github_name", nullable = false)
+    private String githubName;
 
-    @Column(name = "experience", nullable = false)
-    private String experience;
+    /** github 자기소개 */
+    @Column(name = "github_bio")
+    private String githubBio;
 
-    @Column(name = "self_info",nullable = false, columnDefinition = "TEXT")
-    private String selfInfo;
+    /** github 본인 블로그 주소 */
+    @Column(name = "github_blog")
+    private String githubBlog;
 
-    @Column(name = "nickname", nullable = false)
-    private String nickname;
-
+    /** github follower 수 */
     @Column(name = "follower_count")
-    private Integer followerCount;
+    private Integer githubFollowers;
 
-    @Column(name = "repo_count")
-    private Integer repoCount;
+    /** github following 수 */
+    @Column(name = "following_count")
+    private Integer githubFollowing;
 
-    @Column(name = "image_url")
-    private String imageUrl;
+    /** github 이미지 주소 */
+    @Column(name = "github_avatar_url")
+    private String githubAvatarUrl;
+
+    /** github 본인 repo주소 */
+    @Column(name = "github_html_url")
+    private String githubHtmlUrl;
+    
+    /** github 공개된 Repo 수 */
+    @Column(name = "github_public_repos")
+    private Integer githubPublicRepos;
 
     @Column(name = "s3Key")
     private String s3Key;

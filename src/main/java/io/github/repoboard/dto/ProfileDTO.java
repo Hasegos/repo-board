@@ -7,11 +7,7 @@ import lombok.Setter;
 @Setter
 public class ProfileDTO {
 
-    private Long id;
-    private String nickname;
-    private String repositoryUrl;
-    private String stacks;
-    private String selfInfo;
-    private String experience;
-    private String imageUrl;
+    private String githubBio;
+    private String githubBlog;
+    private String githubAvatarUrl;
 }

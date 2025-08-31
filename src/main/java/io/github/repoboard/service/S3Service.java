@@ -13,6 +13,8 @@ import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.UUID;
 
 /**
@@ -62,11 +64,7 @@ public class S3Service {
             throw new IllegalArgumentException("파일이 존재하지 않습니다.");
         }
 
-        if(getFileType(file).contentEquals("")){
-            throw new IllegalArgumentException("허용되지 않은 이미지 타입입니다.");
-        }
-
-        String fileName = generateFileName(file.getOriginalFilename());
+        String fileName = generateUniqueKeyWithExtension(file.getContentType(), "trade-images");
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
@@ -76,6 +74,42 @@ public class S3Service {
         /* 메모리 복사를 줄이기 위해 InputStream 기반 업로드 */
         try(InputStream is = file.getInputStream()){
             s3Client.putObject(request, RequestBody.fromInputStream(is, file.getSize()));
+        }
+        return getFileUrl(fileName);
+    }
+
+    /**
+     * 이미지 URL로부터 데이터를 스트리밍하여 S3에 직접 업로드합니다.
+     *
+     * @param imageUrl 업로드할 이미지의 전체 URL
+     * @return 업로드된 오브젝트의 퍼블릭 URL
+     * @throws IOException 네트워크 오류 또는 파일 처리 오류 발생 시
+     */
+    public String uploadFromUrl(String imageUrl) throws IOException {
+        if(imageUrl == null || imageUrl.trim().isEmpty()){
+            throw new IllegalArgumentException("이미지 URL이 존재하지 않습니다.");
+        }
+
+        URL url = new URL(imageUrl);
+        URLConnection connection = url.openConnection();
+
+        connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+        String contentType = connection.getContentType();
+
+        if(!isValidImageType(contentType)){
+            throw new IllegalArgumentException("허용되지 않은 이미지 타입입니다. : " + contentType);
+        }
+
+        String fileName = generateUniqueKeyWithExtension(contentType, "trade-images");
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(fileName)
+                .contentType(contentType)
+                .build();
+
+        try (InputStream is = connection.getInputStream()){
+            s3Client.putObject(request, RequestBody.fromInputStream(is, connection.getContentLengthLong()));
         }
         return getFileUrl(fileName);
     }
@@ -112,35 +146,49 @@ public class S3Service {
     }
 
     /**
+     * Content-Type이 허용된 이미지 타입인지 검사한다.
+     *
+     * @param contentType HTTP Content-Type 헤더값
+     * @return 허용되는 이미지 타입이면 true
+     */
+    private boolean isValidImageType(String contentType) {
+        if (contentType == null) return false;
+
+        return contentType.equals(MediaType.IMAGE_JPEG_VALUE) ||
+                contentType.equals(MediaType.IMAGE_PNG_VALUE) ||
+                contentType.equals("image/jpg");
+    }
+
+    /**
      * 업로드 가능한 이미지 MIME 타입인지 검사하고 대표 확장자를 반환한다.
      *
-     * @param file 검사 대상 파일
+     * @param contentType  MIME 타입
      * @return 허용되는 경우 ".jpeg" 또는 ".png", 허용되지 않으면 빈 문자열
      */
-    private String getFileType(MultipartFile file){
-        String contentType = file.getContentType();
-        if(contentType != null){
-            MediaType mediaType = MediaType.parseMediaType(contentType);
-            switch (mediaType.toString()){
-                case MediaType.IMAGE_JPEG_VALUE -> { return ".jpeg"; }
-                case MediaType.IMAGE_PNG_VALUE -> { return ".png"; }
-            }
+    private String getExtensionFromContentType(String contentType){
+        if(contentType == null) return "";
+        if(contentType.equalsIgnoreCase(MediaType.IMAGE_JPEG_VALUE) ||
+            contentType.equalsIgnoreCase("image/jpg")){
+            return ".jpg";
+        }
+        if(contentType.equalsIgnoreCase(MediaType.IMAGE_PNG_VALUE)){
+            return ".png";
         }
         return "";
     }
 
     /**
-     * 충돌 방지를 위해 UUID를 포함한 오브젝트 키를 생성한다.
-     *
-     * <p>형태: {@code trade-images/{UUID}-{원본파일명}}</p>
-     *
-     * @param originalFileName 원본 파일명(null 가능)
-     * @return 생성된 오브젝트 키
+     * Content-Type을 기반으로 고유한 S3 파일 키(경로 포함)를 생성합니다.
+     * @param contentType MIME 타입
+     * @param prefix S3 내에서 사용할 폴더명 (예: "trade-images")
+     * @return 생성된 전체 S3 키 (예: "trade-images/uuid-string.jpg")
      */
-    private String generateFileName(String originalFileName){
-        String base = (originalFileName == null || originalFileName.isBlank())
-                ? "unknown"
-                : originalFileName.replaceAll("[^a-zA-Z0-9._-]", "-");
-        return "trade-images/" + UUID.randomUUID() + "-" + originalFileName;
+    private String generateUniqueKeyWithExtension(String contentType, String prefix){
+        String extension = getExtensionFromContentType(contentType);
+
+        if(extension.isEmpty()){
+            extension =".jpg";
+        }
+        return prefix + "/" + UUID.randomUUID() + extension;
     }
 }
