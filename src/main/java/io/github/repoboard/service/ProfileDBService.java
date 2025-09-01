@@ -27,12 +27,12 @@ public class ProfileDBService {
         Profile profile = new Profile();
         profile.setUser(user);
         profile.setGithubLogin(githubUserDTO.getLogin());
-        profile.setGithubName(githubUserDTO.getName());
+        profile.setGithubName(githubUserDTO.getName() != null ? githubUserDTO.getName() : githubUserDTO.getLogin());
         profile.setGithubBio(githubUserDTO.getBio());
         profile.setGithubBlog(githubUserDTO.getBlog());
         profile.setGithubFollowers(githubUserDTO.getFollowers());
         profile.setGithubFollowing(githubUserDTO.getFollowing());
-        profile.setGithubAvatarUrl(githubUserDTO.getAvatarUrl());
+        profile.setGithubAvatarUrl(imageUrl);
         profile.setGithubHtmlUrl(githubUserDTO.getHtmlUrl());
         profile.setGithubPublicRepos(githubUserDTO.getPublicRepos());
         profile.setS3Key(s3Key);
