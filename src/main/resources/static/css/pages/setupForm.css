@@ -1,2 +1,102 @@
 @import url("/css/shared/header.css");
 @import url("/css/shared/footer.css");
+
+/* ====== Layout ====== */
+.profile-setup {
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.profile-setup__card {
+  width: 100%;
+  max-width: 720px;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(2, 6, 23, 0.06);
+  padding: 32px;
+}
+
+/* ====== Typography ====== */
+.profile-setup__title {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.profile-setup__desc {
+  margin: 0 0 20px;
+  font-size: 14px;
+}
+
+.profile-setup__help {
+  margin: 10px 0 0;
+  color: #6e7781;
+  font-size: 12px;
+}
+
+/* ====== Form ====== */
+.profile-setup__row {
+  display: flex;
+  gap: 10px;
+}
+
+.profile-setup__input {
+  flex: 1 1 auto;
+  height:48px;
+  padding: 0 14px;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.profile-setup__input:focus {
+  border-color: #0969da;
+  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.2);
+}
+
+.profile-setup__btn {
+  flex: 0 0 auto;
+  height: 48px;
+  padding: 0 18px;
+  border: 1px solid #0969da;
+  border-radius: 10px;
+  background: #0969da;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+.profile-setup__btn:hover {
+  background: #0757b2;
+  border-color: #0757b2;
+}
+
+.profile-setup__btn:active {
+  transform: translateY(1px);
+}
+
+/* ====== States ====== */
+.profile-setup__input.is-invalid {
+  border-color: #d1242f;
+  box-shadow: 0 0 0 3px rgba(209, 36, 47, 0.15);
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 640px) {
+    .profile-setup__card {
+      padding: 24px;
+    }
+   .profile-setup__row {
+     flex-direction: column;
+   }
+   .profile-setup__btn {
+     width: 100%;
+   }
+}
