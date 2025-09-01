@@ -1,0 +1,21 @@
+/* === 전역 배너 컨테이너: 가운데 정렬 === */
+.page-alert-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+/* === 전역 배너 자체: 카드 스타일 + 내용 폭 === */
+.page-alert {
+  display: inline-flex;         /* 내용 크기만큼 */
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d0d7de;
+}
+
+.page-alert--error {
+  background: #ffebe9;
+  border-color: #ff818266;
+  color: #9a1119;
+}
