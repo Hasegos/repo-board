@@ -1,19 +1,20 @@
 package io.github.repoboard.service;
 
 import io.github.repoboard.dto.GithubRepoDTO;
+import io.github.repoboard.dto.GithubSearchResponse;
 import io.github.repoboard.dto.GithubUserDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,11 +33,19 @@ public class GitHubApiService {
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
     /**
+     * GitHub URL에서 username 자체 검증 (1~39자, 앞/뒤 하이픈 금지)
+     * 예 : {@code Hasegos}
+     */
+    private static final Pattern GH_USER = Pattern.compile(
+        "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$"
+    );
+
+    /**
      * GitHub 프로필 URL에서 username을 추출하기 위한 정규 표현식.
      * 예: {@code https://github.com/Hasegos} → {@code Hasegos}
      */
-    private static final Pattern USERNAME_IN_URL = Pattern.compile(
-            "^https?://github\\.com/([A-Za-z0-9-]+)/*$",
+    private static final Pattern GH_URL = Pattern.compile(
+     "^https?://(?:www\\.)?github\\.com/([A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?)(?:[/?#].*)?$",
             Pattern.CASE_INSENSITIVE
     );
 
@@ -50,18 +59,20 @@ public class GitHubApiService {
     public String extractUsername(String input){
 
         if(input == null || input.trim().isEmpty()){
-            throw new IllegalArgumentException("GitHub URL이 없습니다.");
+            throw new IllegalArgumentException("GitHub URL/사용자 명이 없습니다.");
         }
-
         String trimmed =  input.trim();
 
         /* username 만 있는 경우 */
         if(!trimmed.startsWith("http")){
-            return trimmed.replaceAll("[^A-Za-z0-9-]", "");
+            if(!GH_USER.matcher(trimmed).matches()){
+                throw new IllegalArgumentException("올바른 Github 사용자명이 아닙니다.");
+            }
+            return trimmed;
         }
 
         /* URL로 입력 받은 경우 */
-        Matcher m = USERNAME_IN_URL.matcher(trimmed);
+        Matcher m = GH_URL.matcher(trimmed);
         if(m.matches()){
             return m.group(1);
         }
@@ -96,55 +107,71 @@ public class GitHubApiService {
     }
 
     /**
-     * 특정 GitHub 사용자가 소유한 공개 레포지토리 목록을 페이징하여 모두 조회합니다.    *
+     * 특정 GitHub 사용자의 공개 레포지토리 목록을 페이지네이션하여 조회합니다.
      * <p>
      * GitHub API의 {@code /users/{username}/repos} 엔드포인트를 호출하며,
-     * 인증 토큰 없이 호출하므로 비공개(private) 레포지토리는 포함되지 않습니다.
+     * 요청된 페이지의 데이터만 가져옵니다.
      * </p>
-     *
-     * 소유 레포 전체(공개) 조회 + 필요 시 fork 제외 (캐시)
-     * - 내부에서 GitHub 서버사이드 페이징(Link 헤더) 순회
-     * - 캐시 TTL(5분) 내에서는 재호출 없이 반환
-     *
      * @param username    GitHub 사용자명
-     * @param includeForks {@code true}면 fork 레포지토리 포함, {@code false}면 제외
+     * @param pageable    페이지네이션 정보 (page,size)
      * @return {@link GithubRepoDTO} 리스트 (공개 레포만)
      * @throws RuntimeException API 호출 실패 시
      */
-    @Cacheable(value = "ghRepos", key = "#username + ':' + #includeForks", sync = true)
-    public List<GithubRepoDTO> getOwnedRepos(String username, boolean includeForks){
+    @Cacheable(value = "ghRepos", key = "#username + ':' + #pageable.pageNumber + ':' +  #pageable.pageSize", sync = true)
+    public Page<GithubRepoDTO> getOwnedRepos(String username, Pageable pageable){
 
-        List<GithubRepoDTO> all = new ArrayList<>();
-        int page = 1;
+        GithubUserDTO user = getUser(username);
+        long total = (user != null && user.getPublicRepos() != null)
+                ? user.getPublicRepos()
+                : 0;
 
-        while (true){
-            final int finalPage = page;
-            ResponseEntity<List<GithubRepoDTO>> entity =
-                    githubWebClient.get()
-                            .uri(uriBuilder -> uriBuilder
-                                    .path("/users/{username}/repos")
-                                    .queryParam("type", "owner")
-                                    .queryParam("sort", "updated")
-                                    .queryParam("per_page","100")
-                                    .queryParam("page", finalPage)
-                                    .build(username))
-                            .retrieve()
-                            .toEntityList(GithubRepoDTO.class)
-                            .timeout(TIMEOUT)
-                            .block();
+        int currentPage = pageable.getPageNumber() + 1;
 
-            List<GithubRepoDTO> pageData = Objects.requireNonNull(entity).getBody();
-            if(pageData == null || pageData.isEmpty()) break;
+        List<GithubRepoDTO> repos = githubWebClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/users/{username}/repos")
+                        .queryParam("type", "owner")
+                        .queryParam("sort", "pushed")
+                        .queryParam("per_page",pageable.getPageSize())
+                        .queryParam("page", currentPage)
+                        .build(username))
+                .retrieve()
+                .bodyToFlux(GithubRepoDTO.class)
+                .collectList()
+                .timeout(TIMEOUT)
+                .block();
 
-            if(!includeForks){
-                pageData.removeIf(repo -> Boolean.TRUE.equals(repo.getFork()));
-            }
-            all.addAll(pageData);
+        return new PageImpl<>(repos, pageable, total);
+    }
 
-            String link = entity.getHeaders().getFirst(HttpHeaders.LINK);
-            if(link == null || !link.contains("rel=\"next\"")) break;
-            page++;
+
+    @Cacheable(value = "ghSearch", key = "'lang:' + #language + ':page:' + #pageable.pageNumber" +
+            " + ':' + #pageable.pageSize ")
+   public Page<GithubRepoDTO> searchPublicRepos(String language, Pageable pageable){
+
+        String baseQuery = "is:public";
+        if(language != null && ! language.isBlank()){
+            baseQuery += " language:" + language;
         }
-        return all;
+        final String finalQuery = baseQuery;
+
+        GithubSearchResponse<GithubRepoDTO> response = githubWebClient.get()
+                .uri(uriBuilder ->  uriBuilder
+                        .path("/search/repositories")
+                        .queryParam("q", finalQuery)
+                        .queryParam("sort", "stars")
+                        .queryParam("order", "desc")
+                        .queryParam("per_page", pageable.getPageSize())
+                        .queryParam("page", pageable.getPageNumber() + 1)
+                        .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {})
+                .timeout(TIMEOUT)
+                .block();
+
+        if(response == null){
+            return Page.empty(pageable);
+        }
+        return new PageImpl<>(response.getItems(), pageable, response.getTotalCount());
     }
 }
