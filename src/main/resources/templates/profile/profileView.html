@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RepoBoard · 프로필</title>
+</head>
+<body>
+    <th:block th:fragment="profileView">
+        <div class="profile-page__container">
+            <!-- 프로필 헤더 (block: profile) -->
+            <section class="profile">
+                <img class="profile__avatar"
+                     th:src="${profile.avatarUrl != null ? profile.avatarUrl : '/images/github.svg'}"
+                     alt="프로필 이미지" />
+                <div class="profile__info">
+                    <h1 th:text="${profile.name != null ? profile.name : profile.login}">sample</h1>
+                    <div class="profile__username" th:text="'@' + ${profile.login}">@sample</div>
+
+                    <div class="profile__bio" th:text="${profile.bio}" th:if="${profile.bio}">
+                        sample 텍스트
+                    </div>
+
+                    <div class="profile__stats">
+                        <div class="profile__stat">
+                            <span class="profile__stat-number" th:text="${profile.followers}">1</span> 팔로워
+                        </div>
+                        <div class="profile__stat">
+                            <span class="profile__stat-number" th:text="${profile.following}">2</span> 팔로잉
+                        </div>
+                        <div class="profile__stat">
+                            <span class="profile__stat-number" th:text="${profile.publicRepos}">18</span> 공개 레포지토리
+                        </div>
+                    </div>
+
+                    <div class="profile__links">
+                        <a th:href="${profile.htmlUrl}" class="profile__link" target="_blank" rel="noreferrer">
+                            <img th:src="@{/images/github.svg}" alt="github"> GitHub 프로필
+                        </a>
+                        <a th:href="${profile.blog != null ? profile.blog : '#'}"
+                           th:attr="target=${profile.blog != '' ? '_blank' : null}"
+                           class="profile__link"
+                           rel="noreferrer">
+                            <img th:src="@{/images/blog.svg}" alt="blog"> 블로그
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 공개 레포지토리 (block: repos) -->
+            <section class="repos">
+                <h2 class="repos__title">공개 레포지토리</h2>
+
+                <div class="repos__tabs">
+                    <a class="repos__tab"
+                       th:href="@{/users/profiles(type='all', page=0, size=${repos.size})}"
+                       th:classappend="${currentType == 'all'} ? ' repos__tab--active' : ''">전체</a>
+                    <a class="repos__tab"
+                       th:href="@{/users/profiles(type='original', page=0, size=${repos.size})}"
+                       th:classappend="${currentType == 'original'} ? ' repos__tab--active' : ''">원본</a>
+                    <a class="repos__tab"
+                       th:href="@{/users/profiles(type='fork', page=0, size=${repos.size})}"
+                       th:classappend="${currentType == 'fork'} ? ' repos__tab--active' : ''">포크</a>
+                </div>
+
+                <div class="repos__grid" id="repoGrid">
+                    <div class="repos__card" th:if="${#lists.isEmpty(repos.content)}">
+                        공개 레포지토리가 없습니다.
+                    </div>
+
+                    <div class="repos__card" th:each="repo : ${repos.content}">
+                        <span class="badge badge--fork" th:if="${repo.fork}">🍴 Forked</span>
+
+                        <a class="repos__name" target="_blank" rel="noreferrer"
+                           th:href="${repo.htmlUrl}" th:text="${repo.name}">repo-name</a>
+
+                        <p class="repos__desc" th:text="${repo.description} ?: '설명이 없습니다.'">desc</p>
+
+                        <div class="repos__meta">
+                            <div class="repos__stat" th:if="${repo.language != null}">
+                                    <span class="repos__lang-dot"
+                                          th:classappend="${' repos__lang-dot--' + #strings.toLowerCase(repo.language)}"></span>
+                                <span th:text="${repo.language}">Java</span>
+                            </div>
+
+                            <div class="repos__stat">
+                                <img th:src="@{/images/star.svg}" alt="star">
+                                <span th:text="${repo.stargazersCount}">0</span>
+                            </div>
+
+                            <div class="repos__stat">
+                                <img th:src="@{/images/git.svg}" alt="gitLog">
+                                <span th:text="${repo.forksCount}">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pager" th:if="${repos.totalPages > 1}">
+                    <a class="pager__btn"
+                       th:href="${repos.first} ? '#' : @{/users/profiles(type=${currentType}, page=${repos.number - 1}, size=${repos.size})}"
+                       th:classappend="${repos.first} ? ' pager__btn--disabled'">이전</a>
+
+                    <div class="pager__info" th:text="${repos.number + 1} + ' / ' + ${repos.totalPages}">1 / 1</div>
+
+                    <a class="pager__btn"
+                       th:href="${repos.last} ? '#' : @{/users/profiles(type=${currentType}, page=${repos.number + 1}, size=${repos.size})}"
+                       th:classappend="${repos.last} ? ' pager__btn--disabled'">다음</a>
+                </div>
+            </section>
+        </div>
+    </th:block>
+</body>
+</html>

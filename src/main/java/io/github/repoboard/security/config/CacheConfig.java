@@ -66,13 +66,21 @@ public class CacheConfig {
         var reposCache = new CaffeineCache(
                 "ghRepos",
                 Caffeine.newBuilder()
-                        .maximumSize(1000)
+                        .maximumSize(5000)
                         .expireAfterWrite(Duration.ofMinutes(5))
                         .recordStats()
                         .build()
         );
+        var searchCache = new CaffeineCache(
+                "ghSearch",
+                Caffeine.newBuilder()
+                        .maximumSize(2000)
+                        .expireAfterWrite(Duration.ofMinutes(10))
+                        .recordStats()
+                        .build()
+        );
         var m = new SimpleCacheManager();
-        m.setCaches(List.of(userCache, reposCache));
+        m.setCaches(List.of(userCache, reposCache, searchCache));
         return m;
     }
 }

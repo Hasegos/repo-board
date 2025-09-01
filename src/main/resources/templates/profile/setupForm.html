@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>RepoBoard · 프로필</title>
+</head>
+<body>
+    <th:block th:fragment="setupForm">
+        <section class="profile-setup" role="region" aria-labelledby="setup-title">
+            <div class="profile-setup__card">
+                <h1 id="setup-title" class="profile-setup__title">GitHub 프로필 연결</h1>
+                <p class="profile-setup__desc">
+                    프로필 README 또는 GitHub <strong>사용자명/URL</strong>을 입력하세요.
+                </p>
+
+                <form th:action="@{/users/profiles/setup}" method="post" id="setupFrom" class="profile-setup__form">
+                    <div class="profile-setup__row">
+                        <input id="rb-url"
+                               class="profile-setup__input"
+                               type="text" name="url" required
+                               placeholder="profile README 또는 https://github.com/사용자명"
+                               autocomplete="off" />
+                        <button class="profile-setup__btn" type="submit">연결</button>
+                    </div>
+                    <p class="profile-setup__help">
+                        예) <code>octocat</code> 또는 <code>https://github.com/octocat</code>
+                    </p>
+                </form>
+            </div>
+        </section>
+    </th:block>
+</body>
+</html>
