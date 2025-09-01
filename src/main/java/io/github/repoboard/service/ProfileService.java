@@ -1,17 +1,24 @@
 package io.github.repoboard.service;
 
+import io.github.repoboard.dto.GithubRepoDTO;
 import io.github.repoboard.dto.GithubUserDTO;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.User;
 import io.github.repoboard.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,8 +27,10 @@ public class ProfileService {
 
     private final UserService userService;
     private final ProfileRepository profileRepository;
-    private final S3Service s3Service;
     private final ProfileDBService profileDBService;
+    private final GitHubApiService gitHubApiService;
+    private final S3Service s3Service;
+
 
     @Transactional(readOnly = true)
     public void ensureProfileNotExists(Long userId){
@@ -107,23 +116,24 @@ public class ProfileService {
     @Transactional
     public void deleteProfileByUserId(Long userId){
 
-       Optional<Profile> profile = findProfileByUserId(userId);
+       Optional<Profile> profileOptional = findProfileByUserId(userId);
 
-       if(profile.get() == null){
-           log.info("해당 프로필 정보가 없습니다. profile : {}", profile.get());
+       if(profileOptional.isEmpty()){
+           log.info("해당 프로필 정보가 없습니다. profile : {}", profileOptional);
            return;
        }
 
-        String s3Key = profile.get().getS3Key();
-        profileDBService.deleteProfileDB(profile.get().getId());
+       Profile profile = profileOptional.get();
+       String s3Key = profile.getS3Key();
+       profileDBService.deleteProfileDB(profile.getId());
 
-        if(s3Key != null && !s3Key.isEmpty()){
-            try {
-                s3Service.deleteFile(s3Key);
-            }catch (Exception ex){
-                log.error("롤백 중 S3 파일 삭제 실패 : key = " + s3Key, ex);
-            }
-        }
+       if(s3Key != null && !s3Key.isEmpty()){
+           try {
+               s3Service.deleteFile(s3Key);
+           }catch (Exception ex){
+               log.error("롤백 중 S3 파일 삭제 실패 : key = " + s3Key, ex);
+           }
+       }
     }
 
     private String extractS3KeyFromUrl(String imageUrl){
@@ -138,5 +148,20 @@ public class ProfileService {
         } catch (Exception e){
             throw new IllegalArgumentException("올바른 이미지 URL이 아닙니다.");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<GithubRepoDTO> loadProfileView(String username,
+                                               Pageable pageable,
+                                               String type){
+        Page<GithubRepoDTO> reposPage = gitHubApiService.getOwnedRepos(username, pageable);
+        List<GithubRepoDTO> filterContent = reposPage.getContent().stream()
+                .filter(repo -> switch (type) {
+                    case "original" -> !repo.getFork();
+                    case "fork" -> repo.getFork();
+                    default -> true;
+                }).collect(Collectors.toList());
+
+        return new PageImpl<>(filterContent, pageable, reposPage.getTotalElements());
     }
 }
