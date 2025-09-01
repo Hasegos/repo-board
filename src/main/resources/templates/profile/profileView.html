@@ -37,7 +37,10 @@
                         <a th:href="${profile.htmlUrl}" class="profile__link" target="_blank" rel="noreferrer">
                             <img th:src="@{/images/github.svg}" alt="github"> GitHub 프로필
                         </a>
-                        <a th:href="${profile.blog}" class="profile__link" target="_blank" rel="noreferrer" th:if="${profile.blog}">
+                        <a th:href="${profile.blog != null ? profile.blog : '#'}"
+                           th:attr="target=${profile.blog != '' ? '_blank' : null}"
+                           class="profile__link"
+                           rel="noreferrer">
                             <img th:src="@{/images/blog.svg}" alt="blog"> 블로그
                         </a>
                     </div>
