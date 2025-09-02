@@ -74,7 +74,7 @@ public class CacheConfig {
         var searchCache = new CaffeineCache(
                 "ghSearch",
                 Caffeine.newBuilder()
-                        .maximumSize(2000)
+                        .maximumSize(5000)
                         .expireAfterWrite(Duration.ofMinutes(10))
                         .recordStats()
                         .build()
