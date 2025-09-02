@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.time.Instant;
+
 /**
  * GitHub 레포지토리 정보를 담는 DTO.
  * <p>
@@ -48,4 +50,7 @@ public class GithubRepoDTO {
 
     /** 포크 여부 */
     private Boolean fork;
+
+    @JsonProperty("updated_at")
+    private Instant updatedAt;
 }
