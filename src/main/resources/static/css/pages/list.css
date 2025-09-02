@@ -299,34 +299,6 @@
 .loading-spinner__text {
     color: #6b7280;
 }
-
-/* ==========================================================================
-   Load More Button
-   ========================================================================== */
-
-.load-more {
-    text-align: center;
-}
-
-.load-more__btn {
-    background: #2563eb;
-    color: white;
-    padding: 0.75rem 2rem;
-    border-radius: 0.5rem;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    font-weight: 500;
-}
-
-.load-more__btn:hover {
-    background: #1d4ed8;
-}
-
-.load-more__btn--hidden {
-    display: none;
-}
-
 /* ==========================================================================
    End Message
    ========================================================================== */
