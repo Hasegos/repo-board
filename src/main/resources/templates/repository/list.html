@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RepoBoard - 리포지토리 검색</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/pages/list.css}" />
+</head>
+<body class="bg-gray-50">
+<header th:replace="~{fragments/header :: header}"></header>
+<main>
+    <div class="container mx-auto px-4 py-8">
+        <!-- 언어 필터 -->
+        <div class="language-filter">
+            <div class="language-filter__container">
+                <h2 class="language-filter__title">프로그래밍 언어</h2>
+                <div class="language-filter__buttons">
+                    <button onclick="changeLanguage('java')"
+                            class="language-btn"
+                            th:classappend="${currentLanguage == 'java'} ? 'language-btn--active' : ''">
+                        <i class="language-btn__icon fab fa-java text-orange-600"></i>
+                        <span class="language-btn__text--desktop">Java</span>
+                        <span class="language-btn__text--mobile">Java</span>
+                    </button>
+                    <button onclick="changeLanguage('javascript')"
+                            class="language-btn"
+                            th:classappend="${currentLanguage == 'javascript'} ? 'language-btn--active' : ''">
+                        <i class="language-btn__icon fab fa-js-square text-yellow-500"></i>
+                        <span class="language-btn__text--desktop">JavaScript</span>
+                        <span class="language-btn__text--mobile">JS</span>
+                    </button>
+                    <button onclick="changeLanguage('python')"
+                            class="language-btn"
+                            th:classappend="${currentLanguage == 'python'} ? 'language-btn--active' : ''">
+                        <i class="language-btn__icon fab fa-python text-blue-500"></i>
+                        <span class="language-btn__text--desktop">Python</span>
+                        <span class="language-btn__text--mobile">Python</span>
+                    </button>
+                    <button onclick="changeLanguage('typescript')"
+                            class="language-btn"
+                            th:classappend="${currentLanguage == 'typescript'} ? 'language-btn--active' : ''">
+                        <i class="language-btn__icon fab fa-js-square text-blue-600"></i>
+                        <span class="language-btn__text--desktop">TypeScript</span>
+                        <span class="language-btn__text--mobile">TS</span>
+                    </button>
+                    <button onclick="changeLanguage('go')"
+                            class="language-btn"
+                            th:classappend="${currentLanguage == 'go'} ? 'language-btn--active' : ''">
+                        <i class="language-btn__icon fab fa-golang text-cyan-500"></i>
+                        <span class="language-btn__text--desktop">Go</span>
+                        <span class="language-btn__text--mobile">Go</span>
+                    </button>
+                    <button onclick="changeLanguage('rust')"
+                            class="language-btn"
+                            th:classappend="${currentLanguage == 'rust'} ? 'language-btn--active' : ''">
+                        <i class="language-btn__icon fas fa-cog text-orange-700"></i>
+                        <span class="language-btn__text--desktop">Rust</span>
+                        <span class="language-btn__text--mobile">Rust</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 검색 결과 헤더 -->
+        <div class="search-header">
+            <div>
+                <h2 class="search-header__title">
+                    <span th:text="${currentLanguage}">Java</span> 리포지토리
+                </h2>
+                <p class="search-header__count" id="total-count">
+                    총 <span th:text="${repoPage?.totalElements ?: 0}">0</span>개의 리포지토리
+                </p>
+            </div>
+            <div class="search-header__sort">
+                <span class="search-header__sort-label">정렬:</span>
+                <select class="search-header__sort-select">
+                    <option>인기순</option>
+                    <option>최신순</option>
+                    <option>이름순</option>
+                    <option>스타 많은순</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 리포지토리 그리드 -->
+        <div id="repo-grid" class="repo-grid">
+            <!-- 초기 리포지토리 목록을 올바른 프래그먼트에서 가져오도록 수정 -->
+            <th:block th:replace="~{repository/repo-card :: repo-cards}"></th:block>
+        </div>
+
+        <!-- 로딩 스피너 -->
+        <div id="loading-spinner" class="loading-spinner">
+            <div class="loading-spinner__content">
+                <div class="loading-spinner__icon"></div>
+                <span class="loading-spinner__text">더 많은 리포지토리를 불러오는 중...</span>
+            </div>
+        </div>
+
+        <!-- 더보기 버튼 -->
+        <div class="load-more" id="load-more-container">
+            <button id="load-more-btn"
+                    class="load-more__btn"
+                    th:if="${repoPage?.hasNext}">
+                더 많은 리포지토리 보기
+            </button>
+        </div>
+
+        <!-- 끝 메시지 -->
+        <div id="end-message" class="end-message end-message--hidden">
+            <i class="end-message__icon fas fa-check-circle"></i>
+            <p>모든 리포지토리를 불러왔습니다!</p>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+
+<script th:inline="javascript">
+    let currentPage = /*[[${repoPage?.number}]]*/ 0;
+    let currentLanguage = /*[[${currentLanguage}]]*/ 'java';
+    let isLoading = false;
+
+    // 언어별 색상 매핑
+    const languageColors = {
+        'Java': '#b07219',
+        'JavaScript': '#f1e05a',
+        'Python': '#3572A5',
+        'TypeScript': '#2b7489',
+        'Go': '#00ADD8',
+        'Rust': '#dea584',
+        'C++': '#f34b7d',
+        'C': '#555555',
+        'C#': '#239120',
+        'PHP': '#4F5D95',
+        'Ruby': '#701516',
+        'Swift': '#ffac45',
+        'Kotlin': '#F18E33',
+        'Dart': '#00B4AB',
+        'Shell': '#89e051',
+        'HTML': '#e34c26',
+        'CSS': '#1572B6'
+    };
+
+    // 언어 변경 함수
+    function changeLanguage(language) {
+        if (currentLanguage === language) return;
+
+        currentLanguage = language;
+        currentPage = 0;
+
+        // URL 변경
+        window.location.href = `/search/repositories?language=${language}`;
+    }
+
+    // 더 많은 리포지토리 로드
+    function loadMoreRepositories() {
+         if (isLoading) return;
+
+        isLoading = true;
+        const nextPageToLoad = currentPage + 1;
+
+        // 로딩 스피너 표시
+        document.getElementById('loading-spinner').classList.add('loading-spinner--show');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.classList.add('load-more__btn--hidden');
+        }
+
+        fetch(`/search/repositories/more?language=${currentLanguage}&page=${nextPageToLoad}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(html => {
+                // 새로운 리포지토리 카드들 추가
+                const repoGrid = document.getElementById('repo-grid');
+
+
+                if(html.trim() !== ''){
+                    // 받은 HTML 조각을 그리드에 직접 추가
+                    repoGrid.insertAdjacentHTML('beforeend', html);
+
+                    // 새로 추가된 카드들에 대해서만 색상 적용 및 애니메이션 효과
+                    const newCards = repoGrid.querySelectorAll('.repo-card:not(.processed)');
+                    newCards.forEach(card => {
+                        const languageDot = card.querySelector('.language-dot');
+                        if (languageDot) {
+                            const language = languageDot.getAttribute('data-language');
+                            languageDot.style.backgroundColor = languageColors[language] || '#6b7280';
+                        }
+                        card.classList.add('processed', 'repo-card--fade-in');
+                    });
+
+                    currentPage = nextPageToLoad; // 성공 시에만 페이지 번호 업데이트
+
+                     // 브라우저 히스토리에 상태 저장 (URL 변경)
+                     const newUrl = `/search/repositories?language=${currentLanguage}&page=${currentPage}`;
+                     history.pushState({page: currentPage}, '', newUrl);
+
+                     // 다음 페이지가 있으면 버튼을 다시 보여주고, 없으면 숨김
+                     const tempDiv = document.createElement('div');
+                     tempDiv.innerHTML = html;
+                     const hasNextPage = tempDiv.children.length === 100;
+
+
+                    // 다음 페이지가 있으면 버튼을 다시 보여주고, 없으면 숨김
+                    if (hasNextPage) {
+                        if (loadMoreBtn) {
+                            loadMoreBtn.classList.remove('load-more__btn--hidden');
+                        }
+                    } else {
+                        const loadMoreContainer = document.getElementById('load-more-container');
+                         const endMessage = document.getElementById('end-message');
+                         if(loadMoreContainer) loadMoreContainer.style.display = 'none';
+                         if(endMessage) endMessage.classList.remove('end-message--hidden');
+                    }
+                }
+                else{
+                     // 더 이상 로드할 데이터가 없음
+                     const loadMoreContainer = document.getElementById('load-more-container');
+                     const endMessage = document.getElementById('end-message');
+                     if(loadMoreContainer) loadMoreContainer.style.display = 'none';
+                     if(endMessage) endMessage.classList.remove('end-message--hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading more repositories:', error);
+                alert('리포지토리를 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                if (loadMoreBtn) loadMoreBtn.classList.remove('load-more__btn--hidden'); // 재시도를 위해 버튼 다시 표시
+            })
+            .finally(() => {
+                isLoading = false;
+                document.getElementById('loading-spinner').classList.remove('loading-spinner--show');
+            });
+    }
+
+    // 초기 로드 시 언어 색상 적용 및 이벤트 리스너 등록
+    document.addEventListener('DOMContentLoaded', function() {
+        // 코드를 재사용하고 가독성을 높이기 위해, 스타일을 적용하는 로직을 별도의 함수로 분리합니다.
+         function applyStylesToCards(cards) {
+             cards.forEach(card => {
+                 const languageDot = card.querySelector('.language-dot');
+                 if (languageDot) {
+                     const language = languageDot.getAttribute('data-language');
+                     if (language && languageColors[language]) {
+                         languageDot.style.backgroundColor = languageColors[language];
+                     }
+                 }
+                 card.classList.add('processed', 'repo-card--fade-in');
+             });
+         }
+
+         const loadMoreBtn = document.getElementById('load-more-btn');
+         if (loadMoreBtn) {
+             loadMoreBtn.addEventListener('click', loadMoreRepositories);
+         }
+
+         // 초기 로드된 카드들에 스타일 적용
+         applyStylesToCards(document.querySelectorAll('.repo-card'));
+     });
+</script>
+</body>
+</html>
