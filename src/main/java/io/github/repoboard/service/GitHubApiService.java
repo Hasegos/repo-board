@@ -3,18 +3,25 @@ package io.github.repoboard.service;
 import io.github.repoboard.dto.GithubRepoDTO;
 import io.github.repoboard.dto.GithubSearchResponse;
 import io.github.repoboard.dto.GithubUserDTO;
+import io.github.repoboard.dto.QueryStrategyDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,7 +37,15 @@ import java.util.regex.Pattern;
 public class GitHubApiService {
 
     private final WebClient githubWebClient;
-    private static final Duration TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration TIMEOUT = Duration.ofSeconds(35);
+    private final AtomicInteger strategyIndex = new AtomicInteger(0);
+    private final CacheManager cacheManager;
+    private final List<QueryStrategyDTO> refreshStrategies = List.of(
+            new QueryStrategyDTO("stars:>3000", "stars"),
+            new QueryStrategyDTO("stars:>2000..2999", "updated"),
+            new QueryStrategyDTO("created:>=2024-01-01", "created"),
+            new QueryStrategyDTO("updated:>=2024-06-01", "updated")
+    );
 
     /**
      * GitHub URL에서 username 자체 검증 (1~39자, 앞/뒤 하이픈 금지)
@@ -144,36 +159,158 @@ public class GitHubApiService {
         return new PageImpl<>(repos, pageable, total);
     }
 
-
     @Cacheable(value = "ghSearch", key = "'lang:' + #language + ':page:' + (#pageable.pageNumber + 1)" +
-            " + ':' + #pageable.pageSize ")
-   public Page<GithubRepoDTO> searchPublicRepos(String language, Pageable pageable){
+            " + ':' + #pageable.pageSize")
+    public Page<GithubRepoDTO> searchPublicRepos(String language, Pageable pageable){
 
-        String baseQuery = "is:public";
+        String cacheKey = "lang:" + language + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
+        Cache cache = cacheManager.getCache("ghSearch");
+
+        Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
+        if (cached != null) {
+            System.out.println("📦 캐시 히트: " + cacheKey);
+            return cached;
+        }
+
+        List<String> conditions = new ArrayList<>();
+        conditions.add("is:public");
+
         if(language != null && ! language.isBlank()){
-            baseQuery += " language:" + language;
+            conditions.add("language:" + language);
+        }
+        conditions.add("stars:>1000");
+
+        final String finalQuery = String.join(" ", conditions);
+
+        System.out.println(finalQuery);
+        try {
+            Page<GithubRepoDTO> result = githubWebClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/search/repositories")
+                            .queryParam("q", finalQuery)
+                            .queryParam("sort", "stars")
+                            .queryParam("order", "desc")
+                            .queryParam("per_page", pageable.getPageSize())
+                            .queryParam("page", pageable.getPageNumber() + 1)
+                            .build())
+                    .accept(MediaType.parseMediaType("application/vnd.github.v3+json"))
+                    .exchangeToMono(response -> {
+                        System.out.println("🔎 [GitHub API 응답 상태]: " + response.statusCode());
+
+                        String contentType = response.headers().contentType()
+                                .map(MediaType::toString)
+                                .orElse("unknown");
+                        System.out.println("📄 [응답 Content-Type]: " + contentType);
+
+                        if (response.statusCode().is2xxSuccessful()) {
+                            if (contentType.contains("json") || contentType.contains("application/vnd.github")) {
+                                return response.bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {
+                                });
+                            } else {
+                                System.out.println("⚠️ 예상하지 못한 Content-Type, 텍스트로 읽기 시도");
+                                return response.bodyToMono(String.class)
+                                        .doOnNext(body -> System.out.println("📝 응답 내용: " + body.substring(0, Math.min(200, body.length()))))
+                                        .then(Mono.empty());
+                            }
+                        } else {
+                            return response.bodyToMono(String.class)
+                                    .doOnNext(body -> System.out.println("❌ [GitHub API 에러 응답]: " + body))
+                                    .then(Mono.empty());
+                        }
+                    })
+                    .timeout(TIMEOUT)
+                    .blockOptional()
+                    .map(res -> new PageImpl<>(res.getItems(), pageable, res.getTotalCount()))
+                    .orElseGet(() -> {
+                        System.out.println("⚠️ GitHub 응답이 null 또는 에러 발생");
+                        return new PageImpl<>(List.of(), pageable, 0);
+                    });
+
+            if (cache != null) {
+                cache.put(cacheKey, result);
+                System.out.println("캐시 저장 : " + cacheKey);
+            }
+            return result;
+        }
+        catch (Exception e){
+            System.err.println("검색 중 오류: " + e.getMessage());
+            e.printStackTrace();
+            return new PageImpl<>(List.of(), pageable, 0);
+        }
+    }
+
+    public Page<GithubRepoDTO> refreshPublicRepos(String language, Pageable pageable){
+
+        QueryStrategyDTO strategy = refreshStrategies.get(strategyIndex.getAndUpdate(
+                i -> (i + 1) % refreshStrategies.size()
+        ));
+
+        final String finalQuery = strategy.getQuery() +" language:" + language;
+        Cache cache = cacheManager.getCache("ghRefresh");
+        String cacheKey = "refresh:" + strategy.getQuery() + ":" + strategy.getSort() + ":" + language
+                + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
+
+        Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
+
+        if (cached != null) {
+            System.out.println("📦 캐시 히트: " + cacheKey);
+            return cached;
         }
 
-        baseQuery += "stars:>5000";
-        final String finalQuery = baseQuery;
+        System.out.println(finalQuery);
+        try {
+            Page<GithubRepoDTO> result = githubWebClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/search/repositories")
+                            .queryParam("q", finalQuery)
+                            .queryParam("sort", "stars")
+                            .queryParam("order", "desc")
+                            .queryParam("per_page", pageable.getPageSize())
+                            .queryParam("page", pageable.getPageNumber() + 1)
+                            .build())
+                    .accept(MediaType.parseMediaType("application/vnd.github.v3+json"))
+                    .exchangeToMono(response -> {
+                        System.out.println("🔎 [GitHub API 응답 상태]: " + response.statusCode());
 
-        GithubSearchResponse<GithubRepoDTO> response = githubWebClient.get()
-                .uri(uriBuilder ->  uriBuilder
-                        .path("/search/repositories")
-                        .queryParam("q", finalQuery)
-                        .queryParam("sort", "stars")
-                        .queryParam("order", "desc")
-                        .queryParam("per_page", pageable.getPageSize())
-                        .queryParam("page", pageable.getPageNumber() + 1)
-                        .build())
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {})
-                .timeout(TIMEOUT)
-                .block();
+                        String contentType = response.headers().contentType()
+                                .map(MediaType::toString)
+                                .orElse("unknown");
+                        System.out.println("📄 [응답 Content-Type]: " + contentType);
 
-        if(response == null){
-            return Page.empty(pageable);
+                        if (response.statusCode().is2xxSuccessful()) {
+                            if (contentType.contains("json") || contentType.contains("application/vnd.github")) {
+                                return response.bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {
+                                });
+                            } else {
+                                System.out.println("⚠️ 예상하지 못한 Content-Type, 텍스트로 읽기 시도");
+                                return response.bodyToMono(String.class)
+                                        .doOnNext(body -> System.out.println("📝 응답 내용: " + body.substring(0, Math.min(200, body.length()))))
+                                        .then(Mono.empty());
+                            }
+                        } else {
+                            return response.bodyToMono(String.class)
+                                    .doOnNext(body -> System.out.println("❌ [GitHub API 에러 응답]: " + body))
+                                    .then(Mono.empty());
+                        }
+                    })
+                    .timeout(TIMEOUT)
+                    .blockOptional()
+                    .map(res -> new PageImpl<>(res.getItems(), pageable, res.getTotalCount()))
+                    .orElseGet(() -> {
+                        System.out.println("⚠️ GitHub 응답이 null 또는 에러 발생");
+                        return new PageImpl<>(List.of(), pageable, 0);
+                    });
+
+            if (cache != null) {
+                cache.put(cacheKey, result);
+                System.out.println("캐시 저장 : " + cacheKey);
+            }
+            return result;
         }
-        return new PageImpl<>(response.getItems(), pageable, response.getTotalCount());
+        catch (Exception e){
+            System.err.println("검색 중 오류: " + e.getMessage());
+            e.printStackTrace();
+            return new PageImpl<>(List.of(), pageable, 0);
+        }
     }
 }
