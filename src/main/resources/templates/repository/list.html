@@ -82,6 +82,10 @@
                     <option>스타 많은순</option>
                 </select>
             </div>
+            <div id="search-metadata"
+                 th:attr="data-current-language=${currentLanguage},
+                         data-current-page=${repoPage.number}">
+            </div>
         </div>
 
         <!-- 리포지토리 그리드 -->
@@ -98,14 +102,8 @@
             </div>
         </div>
 
-        <!-- 더보기 버튼 -->
-        <div class="load-more" id="load-more-container">
-            <button id="load-more-btn"
-                    class="load-more__btn"
-                    th:if="${repoPage?.hasNext}">
-                더 많은 리포지토리 보기
-            </button>
-        </div>
+        <!-- 무한 스크롤 -->
+        <div id="scroll-trigger"></div>
 
         <!-- 끝 메시지 -->
         <div id="end-message" class="end-message end-message--hidden">
@@ -115,153 +113,6 @@
     </div>
 </main>
 <footer th:replace="~{fragments/footer :: footer}"></footer>
-
-
-<script th:inline="javascript">
-    let currentPage = /*[[${repoPage?.number}]]*/ 0;
-    let currentLanguage = /*[[${currentLanguage}]]*/ 'java';
-    let isLoading = false;
-
-    // 언어별 색상 매핑
-    const languageColors = {
-        'Java': '#b07219',
-        'JavaScript': '#f1e05a',
-        'Python': '#3572A5',
-        'TypeScript': '#2b7489',
-        'Go': '#00ADD8',
-        'Rust': '#dea584',
-        'C++': '#f34b7d',
-        'C': '#555555',
-        'C#': '#239120',
-        'PHP': '#4F5D95',
-        'Ruby': '#701516',
-        'Swift': '#ffac45',
-        'Kotlin': '#F18E33',
-        'Dart': '#00B4AB',
-        'Shell': '#89e051',
-        'HTML': '#e34c26',
-        'CSS': '#1572B6'
-    };
-
-    // 언어 변경 함수
-    function changeLanguage(language) {
-        if (currentLanguage === language) return;
-
-        currentLanguage = language;
-        currentPage = 0;
-
-        // URL 변경
-        window.location.href = `/search/repositories?language=${language}`;
-    }
-
-    // 더 많은 리포지토리 로드
-    function loadMoreRepositories() {
-         if (isLoading) return;
-
-        isLoading = true;
-        const nextPageToLoad = currentPage + 1;
-
-        // 로딩 스피너 표시
-        document.getElementById('loading-spinner').classList.add('loading-spinner--show');
-        const loadMoreBtn = document.getElementById('load-more-btn');
-        if (loadMoreBtn) {
-            loadMoreBtn.classList.add('load-more__btn--hidden');
-        }
-
-        fetch(`/search/repositories/more?language=${currentLanguage}&page=${nextPageToLoad}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(html => {
-                // 새로운 리포지토리 카드들 추가
-                const repoGrid = document.getElementById('repo-grid');
-
-
-                if(html.trim() !== ''){
-                    // 받은 HTML 조각을 그리드에 직접 추가
-                    repoGrid.insertAdjacentHTML('beforeend', html);
-
-                    // 새로 추가된 카드들에 대해서만 색상 적용 및 애니메이션 효과
-                    const newCards = repoGrid.querySelectorAll('.repo-card:not(.processed)');
-                    newCards.forEach(card => {
-                        const languageDot = card.querySelector('.language-dot');
-                        if (languageDot) {
-                            const language = languageDot.getAttribute('data-language');
-                            languageDot.style.backgroundColor = languageColors[language] || '#6b7280';
-                        }
-                        card.classList.add('processed', 'repo-card--fade-in');
-                    });
-
-                    currentPage = nextPageToLoad; // 성공 시에만 페이지 번호 업데이트
-
-                     // 브라우저 히스토리에 상태 저장 (URL 변경)
-                     const newUrl = `/search/repositories?language=${currentLanguage}&page=${currentPage}`;
-                     history.pushState({page: currentPage}, '', newUrl);
-
-                     // 다음 페이지가 있으면 버튼을 다시 보여주고, 없으면 숨김
-                     const tempDiv = document.createElement('div');
-                     tempDiv.innerHTML = html;
-                     const hasNextPage = tempDiv.children.length === 100;
-
-
-                    // 다음 페이지가 있으면 버튼을 다시 보여주고, 없으면 숨김
-                    if (hasNextPage) {
-                        if (loadMoreBtn) {
-                            loadMoreBtn.classList.remove('load-more__btn--hidden');
-                        }
-                    } else {
-                        const loadMoreContainer = document.getElementById('load-more-container');
-                         const endMessage = document.getElementById('end-message');
-                         if(loadMoreContainer) loadMoreContainer.style.display = 'none';
-                         if(endMessage) endMessage.classList.remove('end-message--hidden');
-                    }
-                }
-                else{
-                     // 더 이상 로드할 데이터가 없음
-                     const loadMoreContainer = document.getElementById('load-more-container');
-                     const endMessage = document.getElementById('end-message');
-                     if(loadMoreContainer) loadMoreContainer.style.display = 'none';
-                     if(endMessage) endMessage.classList.remove('end-message--hidden');
-                }
-            })
-            .catch(error => {
-                console.error('Error loading more repositories:', error);
-                alert('리포지토리를 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-                if (loadMoreBtn) loadMoreBtn.classList.remove('load-more__btn--hidden'); // 재시도를 위해 버튼 다시 표시
-            })
-            .finally(() => {
-                isLoading = false;
-                document.getElementById('loading-spinner').classList.remove('loading-spinner--show');
-            });
-    }
-
-    // 초기 로드 시 언어 색상 적용 및 이벤트 리스너 등록
-    document.addEventListener('DOMContentLoaded', function() {
-        // 코드를 재사용하고 가독성을 높이기 위해, 스타일을 적용하는 로직을 별도의 함수로 분리합니다.
-         function applyStylesToCards(cards) {
-             cards.forEach(card => {
-                 const languageDot = card.querySelector('.language-dot');
-                 if (languageDot) {
-                     const language = languageDot.getAttribute('data-language');
-                     if (language && languageColors[language]) {
-                         languageDot.style.backgroundColor = languageColors[language];
-                     }
-                 }
-                 card.classList.add('processed', 'repo-card--fade-in');
-             });
-         }
-
-         const loadMoreBtn = document.getElementById('load-more-btn');
-         if (loadMoreBtn) {
-             loadMoreBtn.addEventListener('click', loadMoreRepositories);
-         }
-
-         // 초기 로드된 카드들에 스타일 적용
-         applyStylesToCards(document.querySelectorAll('.repo-card'));
-     });
-</script>
+<script th:src="@{/js/list.js}"></script>
 </body>
 </html>

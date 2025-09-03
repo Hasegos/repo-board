@@ -145,7 +145,7 @@ public class GitHubApiService {
     }
 
 
-    @Cacheable(value = "ghSearch", key = "'lang:' + #language + ':page:' + #pageable.pageNumber" +
+    @Cacheable(value = "ghSearch", key = "'lang:' + #language + ':page:' + (#pageable.pageNumber + 1)" +
             " + ':' + #pageable.pageSize ")
    public Page<GithubRepoDTO> searchPublicRepos(String language, Pageable pageable){
 
@@ -153,6 +153,8 @@ public class GitHubApiService {
         if(language != null && ! language.isBlank()){
             baseQuery += " language:" + language;
         }
+
+        baseQuery += "stars:>5000";
         final String finalQuery = baseQuery;
 
         GithubSearchResponse<GithubRepoDTO> response = githubWebClient.get()
