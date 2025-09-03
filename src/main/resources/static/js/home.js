@@ -4,8 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentPage = parseInt(metadata.dataset.currentPage) || 0;
     let currentLanguage = metadata.dataset.currentLanguage || 'java';
 
-    let repoCache = {};
-    let cachePages = new Set();
+    const repoCache = new Map();
     let isLoading = false;
     let lastLoadAt = 0;
     let retryCount = 0;
@@ -13,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let rateLimitEndTime = 0;
     let isEnd = false;
 
-    const CACHE_PAGE_RANGE = 10;
+    const MAX_CACHE_SIZE = 20;
     const MAX_RETRY_COUNT = 3;
     const RATE_LIMIT_RETRY_DELAY = 30000; // 30초
     const NORMAL_RETRY_DELAY = 3000; // 3초
@@ -82,19 +81,19 @@ document.addEventListener('DOMContentLoaded', function () {
         updateSpinnerMessage(false);
     }
 
-    /** 캐싱 저장 + 범위 제한 */
+    /** 캐싱 저장 + 범위 제한 (LRU 방식) */
     function addToCache(page,html){
         const cacheKey =  `lang:${currentLanguage}|page:${page}`;
-        repoCache[cacheKey] = html;
-        cachePages.add(page);
 
-        for(const cachePage of Array.from(cachePages)){
-            if(Math.abs(cachePage - page) > CACHE_PAGE_RANGE){
-                const oldKey = `lang:${currentLanguage}|page:${cachePage}`;
-                delete repoCache[oldKey];
-                cachePages.delete(cachePage);
-            }
+        if(repoCache.has(cacheKey)){
+            repoCache.delete(cacheKey);
         }
+        repoCache.set(cacheKey, html);
+
+       if(repoCache.size > MAX_CACHE_SIZE){
+            const oldestKey = repoCache.keys().next().value;
+            repoCache.delete(oldestKey);
+       }
     }
 
     /** Github API Repo 호출 */
@@ -118,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
         spinner.classList.add('loading-spinner--show');
         updateSpinnerMessage(isRateLimited);
 
-        fetch(`/more?language=${currentLanguage}&page=${nextPage}`)
+        fetch(`/api/repos?language=${currentLanguage}&page=${nextPage}`)
             .then(res => {
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -267,4 +266,11 @@ document.addEventListener('DOMContentLoaded', function () {
             loadMoreRepositories();
         }
     });
+
+   document.getElementById('refresh-btn').addEventListener('click', () => {
+           const url = new URL(window.location.href);
+           url.searchParams.set('refresh', 'true');
+           url.searchParams.set('page', '0'); // 새로고침은 항상 첫 페이지로
+           window.location.href = url.toString();
+   });
 });
