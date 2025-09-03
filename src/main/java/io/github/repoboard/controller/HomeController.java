@@ -1,7 +1,6 @@
 package io.github.repoboard.controller;
 
 import io.github.repoboard.dto.GithubRepoDTO;
-import io.github.repoboard.model.User;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.GitHubApiService;
 import io.github.repoboard.service.UserService;
@@ -28,7 +27,7 @@ public class HomeController {
 
     @GetMapping
     public String showhome(@AuthenticationPrincipal CustomUserPrincipal principal,
-                           @RequestParam(required = false, defaultValue = "java") String language,
+                           @RequestParam(value = "language", required = false, defaultValue = "java") String language,
                            @RequestParam(defaultValue = "0") int page,
                            Model model){
         if(principal != null){
