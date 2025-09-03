@@ -35,7 +35,7 @@ public class WebClientConfig {
     @Value("${github.api.base-url}")
     private String baseUrl;
 
-    @Value("${github.api.tokens}")
+    @Value("${github.api.token}")
     private String rawTokens;
 
     private List<String> tokens;
