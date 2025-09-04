@@ -1,6 +1,8 @@
 let observer;
 document.addEventListener('DOMContentLoaded', function () {
     const metadata = document.getElementById('search-metadata');
+    const url = new URL(window.location.href);
+    const isRefresh = url.searchParams.get('refresh') === 'true';
     let currentPage = parseInt(metadata.dataset.currentPage) || 0;
     let currentLanguage = metadata.dataset.currentLanguage || 'java';
 
@@ -16,6 +18,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const MAX_RETRY_COUNT = 3;
     const RATE_LIMIT_RETRY_DELAY = 30000; // 30초
     const NORMAL_RETRY_DELAY = 3000; // 3초
+
+    if(isRefresh){
+        url.searchParams.delete('refresh');
+        history.replaceState(null, '', url.toString());
+    }
+
+    const refreshBtn = document.getElementById('refresh-btn');
+    if(refreshBtn){
+        refreshBtn.addEventListener('click', () => {
+           const nextUrl = new URL(window.location.href);
+           nextUrl.searchParams.set('refresh', 'true');
+           nextUrl.searchParams.set('page', '0'); // 새로고침은 항상 첫 페이지로
+           window.location.href = nextUrl.toString();
+        })
+    }
 
     const languageColors = {
         'Java': '#b07219', 'JavaScript': '#f1e05a', 'Python': '#3572A5', 'TypeScript': '#2b7489',
@@ -266,11 +283,4 @@ document.addEventListener('DOMContentLoaded', function () {
             loadMoreRepositories();
         }
     });
-
-   document.getElementById('refresh-btn').addEventListener('click', () => {
-           const url = new URL(window.location.href);
-           url.searchParams.set('refresh', 'true');
-           url.searchParams.set('page', '0'); // 새로고침은 항상 첫 페이지로
-           window.location.href = url.toString();
-   });
 });
