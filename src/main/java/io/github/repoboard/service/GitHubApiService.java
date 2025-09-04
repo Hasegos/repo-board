@@ -39,10 +39,16 @@ public class GitHubApiService {
     private final AtomicInteger strategyIndex = new AtomicInteger(0);
     private final CacheManager cacheManager;
     private final List<QueryStrategyDTO> refreshStrategies = List.of(
-            new QueryStrategyDTO("stars:>3000", "stars"),
-            new QueryStrategyDTO("stars:>2000..2999", "updated"),
+            new QueryStrategyDTO("stars:>5000", "stars"),
+            new QueryStrategyDTO("stars:2000..4999", "stars"),
             new QueryStrategyDTO("created:>=2024-01-01", "created"),
-            new QueryStrategyDTO("updated:>=2024-06-01", "updated")
+            new QueryStrategyDTO("updated:>=2024-06-01", "updated"),
+            new QueryStrategyDTO("forks:>500", "forks"),
+            new QueryStrategyDTO("size:>10000", "stars"),
+            new QueryStrategyDTO("topic:algorithm", "stars"),
+            new QueryStrategyDTO("topic:web" , "stars"),
+            new QueryStrategyDTO("topic:ai language:python", "stars"),
+            new QueryStrategyDTO("pushed:>=2024-08-01", "updated")
     );
 
     private static record QueryStrategyDTO(String query, String sort){}
@@ -162,41 +168,32 @@ public class GitHubApiService {
     public Page<GithubRepoDTO> fetchRepos(String language, Pageable pageable, boolean refresh){
 
         String finalQuery = null;
+        String cacheKey;
+        Cache cache;
 
         if(!refresh){
-            String cacheKey = "lang:" + language + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
-            Cache cache = cacheManager.getCache("ghSearch");
-
-            Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
-            if (cached != null) {
-                System.out.println("📦 캐시 히트: " + cacheKey);
-                return cached;
-            }
-
+            cacheKey = "lang:" + language + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
+            cache = cacheManager.getCache("ghSearch");
             finalQuery = "is:public stars:>1000 language:" + language;
-            System.out.println("Query : " + finalQuery);
-            return executeGithubSearch(cache, cacheKey, finalQuery, pageable);
         }else {
             QueryStrategyDTO strategy = refreshStrategies.get(strategyIndex.getAndUpdate(
                     i -> (i + 1) % refreshStrategies.size()
             ));
 
-
-            String cacheKey = "refresh:" + strategy.sort() + ":" + strategy.query() + ":" + language
-                    + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
-
-            Cache cache = cacheManager.getCache("ghReFresh");
-
-            Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
-            if (cached != null) {
-                System.out.println("📦 캐시 히트: " + cacheKey);
-                return cached;
-            }
-
+            String safeQuery = strategy.query().replaceAll("\\s+", "_");
             finalQuery = strategy.query() + " language:" + language;
-            System.out.println("Query : " + finalQuery);
-            return executeGithubSearch(cache, cacheKey, finalQuery, pageable);
+            cacheKey = "refresh:" + strategy.sort() + ":" + safeQuery + ":" + language
+                    + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
+            cache = cacheManager.getCache("ghReFresh");
         }
+        Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
+        if (cached != null) {
+            System.out.println("📦 캐시 히트: " + cacheKey);
+            return cached;
+        }
+
+        System.out.println("Query : " + finalQuery);
+        return executeGithubSearch(cache, cacheKey, finalQuery, pageable);
     }
 
     private Page<GithubRepoDTO> executeGithubSearch(Cache cache, String cacheKey, String query, Pageable pageable){
@@ -233,7 +230,11 @@ public class GitHubApiService {
                     })
                     .timeout(TIMEOUT)
                     .blockOptional()
-                    .map(res -> new PageImpl<>(res.getItems(), pageable, res.getTotalCount()))
+                    .map(res ->{
+                        System.out.println("🔢 totalCount: " + res.getTotalCount());
+                        return new PageImpl<>(res.getItems(), pageable, res.getTotalCount());
+                        }
+                    )
                     .orElseGet(() -> {
                         System.out.println("⚠️ GitHub 응답이 null 또는 에러 발생");
                         return new PageImpl<>(List.of(), pageable, 0);
