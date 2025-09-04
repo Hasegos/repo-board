@@ -4,7 +4,6 @@ import io.github.repoboard.dto.GithubRepoDTO;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.GitHubApiService;
 import io.github.repoboard.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,22 +31,21 @@ public class HomeController {
                            @RequestParam(value = "language", required = false, defaultValue = "java") String language,
                            @RequestParam(value = "refresh", required = false, defaultValue = "false") boolean refresh,
                            @RequestParam(defaultValue = "0") int page,
-                           HttpServletRequest request,
                            HttpServletResponse response,
                            Model model) throws IOException {
         if(principal != null){
             model.addAttribute("user", principal.getUser());
         }
 
-        if (refresh) {
-            response.sendRedirect("/?language=" + language + "&page=" + page);
-            return null;
-        }
-
         Pageable finalPageable = PageRequest.of(page, 50);
         Page<GithubRepoDTO> repoPage = gitHubApiService.fetchRepos(language,finalPageable, refresh);
         model.addAttribute("repoPage", repoPage);
         model.addAttribute("currentLanguage", language);
+
+        if (refresh) {
+            response.sendRedirect("/?language=" + language + "&page=" + page);
+            return null;
+        }
 
         return "home";
     }
