@@ -79,8 +79,16 @@ public class CacheConfig {
                         .recordStats()
                         .build()
         );
+        var refreshCache = new CaffeineCache(
+                "ghRefresh",
+                Caffeine.newBuilder()
+                        .maximumSize(5000)
+                        .expireAfterWrite(Duration.ofMinutes(10))
+                        .recordStats()
+                        .build()
+        );
         var m = new SimpleCacheManager();
-        m.setCaches(List.of(userCache, reposCache, searchCache));
+        m.setCaches(List.of(userCache, reposCache, searchCache, refreshCache));
         return m;
     }
 }
