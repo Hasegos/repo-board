@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentPage = parseInt(metadata.dataset.currentPage) || 0;
     let currentLanguage = metadata.dataset.currentLanguage || 'java';
 
+    if (url.searchParams.get('refresh') === 'true') {
+        url.searchParams.delete('refresh');
+        history.replaceState(null, '', url.toString());
+    }
+
     const repoCache = new Map();
     let isLoading = false;
     let lastLoadAt = 0;
@@ -19,15 +24,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const RATE_LIMIT_RETRY_DELAY = 30000; // 30초
     const NORMAL_RETRY_DELAY = 3000; // 3초
 
-    if(isRefresh){
-        url.searchParams.delete('refresh');
-        history.replaceState(null, '', url.toString());
-    }
-
     const refreshBtn = document.getElementById('refresh-btn');
     if(refreshBtn){
         refreshBtn.addEventListener('click', () => {
            const nextUrl = new URL(window.location.href);
+           const currentLanguage = metadata.dataset.currentLanguage || 'java';
+           nextUrl.searchParams.set('language', currentLanguage);
            nextUrl.searchParams.set('refresh', 'true');
            nextUrl.searchParams.set('page', '0'); // 새로고침은 항상 첫 페이지로
            window.location.href = nextUrl.toString();
@@ -134,7 +136,10 @@ document.addEventListener('DOMContentLoaded', function () {
         spinner.classList.add('loading-spinner--show');
         updateSpinnerMessage(isRateLimited);
 
-        fetch(`/api/repos?language=${currentLanguage}&page=${nextPage}`)
+        const refreshParam = isRefresh ? '&refresh=true' : '';
+        const requestUrl = `/api/repos?language=${currentLanguage}&page=${nextPage}${refreshParam}`
+
+        fetch(requestUrl)
             .then(res => {
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
