@@ -1,35 +1,35 @@
 let observer;
+let isRefresh = false;
 document.addEventListener('DOMContentLoaded', function () {
-    const metadata = document.getElementById('search-metadata');
-    const url = new URL(window.location.href);
-    const isRefresh = url.searchParams.get('refresh') === 'true';
-    let currentPage = parseInt(metadata.dataset.currentPage) || 0;
-    let currentLanguage = metadata.dataset.currentLanguage || 'java';
-
-    if (url.searchParams.get('refresh') === 'true') {
-        url.searchParams.delete('refresh');
-        history.replaceState(null, '', url.toString());
-    }
-
-    const repoCache = new Map();
     let isLoading = false;
     let lastLoadAt = 0;
     let retryCount = 0;
     let isRateLimited = false;
     let rateLimitEndTime = 0;
     let isEnd = false;
+    const repoCache = new Map();
 
     const MAX_CACHE_SIZE = 20;
     const MAX_RETRY_COUNT = 3;
     const RATE_LIMIT_RETRY_DELAY = 30000; // 30초
     const NORMAL_RETRY_DELAY = 3000; // 3초
 
+    const metadata = document.getElementById('search-metadata');
+    const url = new URL(window.location.href);
+    isRefresh = url.searchParams.get('refresh') === 'true';
+
+    if (isRefresh) {
+        url.searchParams.delete('refresh');
+        history.replaceState(null, '', url.toString());
+    }
+
+    let currentPage = parseInt(metadata.dataset.currentPage) || 0;
+    let currentLanguage = metadata.dataset.currentLanguage || 'java';
+
     const refreshBtn = document.getElementById('refresh-btn');
     if(refreshBtn){
         refreshBtn.addEventListener('click', () => {
            const nextUrl = new URL(window.location.href);
-           const currentLanguage = metadata.dataset.currentLanguage || 'java';
-           nextUrl.searchParams.set('language', currentLanguage);
            nextUrl.searchParams.set('refresh', 'true');
            nextUrl.searchParams.set('page', '0'); // 새로고침은 항상 첫 페이지로
            window.location.href = nextUrl.toString();
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /** 캐싱 저장 + 범위 제한 (LRU 방식) */
     function addToCache(page,html){
-        const cacheKey =  `lang:${currentLanguage}|page:${page}`;
+        const cacheKey = `lang:${currentLanguage}|page:${page}|refresh:${isRefresh}`;
 
         if(repoCache.has(cacheKey)){
             repoCache.delete(cacheKey);
@@ -119,10 +119,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadMoreRepositories() {
         const now = Date.now();
         const nextPage = currentPage + 1;
-        const cacheKey =  `lang:${currentLanguage}|page:${nextPage}`;
+        const cacheKey = `lang:${currentLanguage}|page:${nextPage}`;
 
-        if(repoCache[cacheKey]){
-          insertCachedHTML(repoCache[cacheKey],nextPage);
+        if(repoCache.has(cacheKey)){
+          insertCachedHTML(repoCache.get(cacheKey),nextPage);
           return;
         }
 
@@ -136,8 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
         spinner.classList.add('loading-spinner--show');
         updateSpinnerMessage(isRateLimited);
 
-        const refreshParam = isRefresh ? '&refresh=true' : '';
-        const requestUrl = `/api/repos?language=${currentLanguage}&page=${nextPage}${refreshParam}`
+        const requestUrl = `/api/repos?language=${currentLanguage}&page=${nextPage}`
 
         fetch(requestUrl)
             .then(res => {
