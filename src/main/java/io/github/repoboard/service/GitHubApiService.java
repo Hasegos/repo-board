@@ -3,6 +3,7 @@ package io.github.repoboard.service;
 import io.github.repoboard.dto.GithubRepoDTO;
 import io.github.repoboard.dto.GithubSearchResponse;
 import io.github.repoboard.dto.GithubUserDTO;
+import io.github.repoboard.dto.QueryStrategyDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -19,7 +20,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,22 +36,7 @@ public class GitHubApiService {
 
     private final WebClient githubWebClient;
     private static final Duration TIMEOUT = Duration.ofSeconds(35);
-    private final AtomicInteger strategyIndex = new AtomicInteger(0);
     private final CacheManager cacheManager;
-    private final List<QueryStrategyDTO> refreshStrategies = List.of(
-            new QueryStrategyDTO("stars:>5000", "stars"),
-            new QueryStrategyDTO("stars:2000..4999", "stars"),
-            new QueryStrategyDTO("created:>=2024-01-01", "created"),
-            new QueryStrategyDTO("updated:>=2024-06-01", "updated"),
-            new QueryStrategyDTO("forks:>500", "forks"),
-            new QueryStrategyDTO("size:>10000", "stars"),
-            new QueryStrategyDTO("topic:algorithm", "stars"),
-            new QueryStrategyDTO("topic:web" , "stars"),
-            new QueryStrategyDTO("topic:ai language:python", "stars"),
-            new QueryStrategyDTO("pushed:>=2024-08-01", "updated")
-    );
-
-    private static record QueryStrategyDTO(String query, String sort){}
 
     /**
      * GitHub URL에서 username 자체 검증 (1~39자, 앞/뒤 하이픈 금지)
@@ -165,26 +150,22 @@ public class GitHubApiService {
         return new PageImpl<>(repos, pageable, total);
     }
 
-    public Page<GithubRepoDTO> fetchRepos(String language, Pageable pageable, boolean refresh){
+    public Page<GithubRepoDTO> fetchRepos(String language, Pageable pageable, QueryStrategyDTO strategy){
 
         String finalQuery = null;
         String cacheKey;
         Cache cache;
 
-        if(!refresh){
+        if(strategy == null){
             cacheKey = "lang:" + language + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
             cache = cacheManager.getCache("ghSearch");
             finalQuery = "is:public stars:>1000 language:" + language;
         }else {
-            QueryStrategyDTO strategy = refreshStrategies.get(strategyIndex.getAndUpdate(
-                    i -> (i + 1) % refreshStrategies.size()
-            ));
-
-            String safeQuery = strategy.query().replaceAll("\\s+", "_");
-            finalQuery = strategy.query() + " language:" + language;
-            cacheKey = "refresh:" + strategy.sort() + ":" + safeQuery + ":" + language
+            finalQuery = strategy.getQuery() + " language:" + language;
+            String safeQuery = strategy.getQuery().replaceAll("\\s+", "_");
+            cacheKey = "refresh:" + strategy.getSort() + ":" + safeQuery + ":" + language
                     + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
-            cache = cacheManager.getCache("ghReFresh");
+            cache = cacheManager.getCache("ghRefresh");
         }
         Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
         if (cached != null) {
