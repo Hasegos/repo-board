@@ -409,16 +409,8 @@
         width: auto;
     }
 
-    .language-btn__text--mobile {
-        display: none;
-    }
-
     .language-btn__text--desktop {
         display: inline;
-    }
-
-    .repo-card__updated--mobile {
-        display: none;
     }
 
     .repo-card__updated--desktop {
@@ -432,9 +424,7 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .mobile-nav {
-        display: none;
-    }
+
 
     .desktop-nav {
         display: block;
@@ -450,17 +440,9 @@
 
 /* Mobile Specific */
 @media (max-width: 767px) {
-    .mobile-nav {
-        display: block;
-    }
 
     .desktop-nav {
         display: none;
-    }
-
-    .search-input-mobile {
-        width: 100%;
-        margin-bottom: 0.75rem;
     }
 
     .repo-card__stats {
