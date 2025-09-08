@@ -17,42 +17,86 @@
                 <div class="language-filter__container">
                     <h2 class="language-filter__title">프로그래밍 언어</h2>
                     <div class="language-filter__buttons">
+                        <!-- java -->
                         <button onclick="changeLanguage('java')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'java'} ? 'language-btn--active' : ''">
                             <i class="language-btn__icon fab fa-java text-orange-600"></i>
                             <span class="language-btn__text--desktop">Java</span>
                         </button>
-                        <button onclick="changeLanguage('javascript')"
-                                class="language-btn"
-                                th:classappend="${currentLanguage == 'javascript'} ? 'language-btn--active' : ''">
-                            <i class="language-btn__icon fab fa-js-square text-yellow-500"></i>
-                            <span class="language-btn__text--desktop">JavaScript</span>
-                        </button>
+
+                        <!-- python -->
                         <button onclick="changeLanguage('python')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'python'} ? 'language-btn--active' : ''">
                             <i class="language-btn__icon fab fa-python text-blue-500"></i>
                             <span class="language-btn__text--desktop">Python</span>
                         </button>
-                        <button onclick="changeLanguage('typescript')"
+
+                        <!-- C# -->
+                        <button onclick="changeLanguage('csharp')"
                                 class="language-btn"
-                                th:classappend="${currentLanguage == 'typescript'} ? 'language-btn--active' : ''">
-                            <i class="language-btn__icon fab fa-js-square text-blue-600"></i>
-                            <span class="language-btn__text--desktop">TypeScript</span>
+                                th:classappend="${currentLanguage == 'csharp'} ? 'language-btn--active' : ''">
+                            <i class="language-btn__icon fas fa-code text-green-600"></i>
+                            <span class="language-btn__text--desktop">C#</span>
                         </button>
+
+                        <!-- C++ -->
+                        <button onclick="changeLanguage('cpp')"
+                                class="language-btn"
+                                th:classappend="${currentLanguage == 'cpp'} ? 'language-btn--active' : ''">
+                            <i class="language-btn__icon fas fa-code text-pink-600"></i>
+                            <span class="language-btn__text--desktop">C++</span>
+                        </button>
+
+                        <!-- javascript -->
+                        <button onclick="changeLanguage('javascript')"
+                                class="language-btn"
+                                th:classappend="${currentLanguage == 'javascript'} ? 'language-btn--active' : ''">
+                            <i class="language-btn__icon fab fa-js-square text-yellow-500"></i>
+                            <span class="language-btn__text--desktop">JavaScript</span>
+                        </button>
+
+                        <!-- PHP -->
+                        <button onclick="changeLanguage('php')"
+                                class="language-btn"
+                                th:classappend="${currentLanguage == 'php'} ? 'language-btn--active' : ''">
+                            <i class="language-btn__icon fab fa-php text-indigo-500"></i>
+                            <span class="language-btn__text--desktop">PHP</span>
+                        </button>
+
+                        <!-- go -->
                         <button onclick="changeLanguage('go')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'go'} ? 'language-btn--active' : ''">
                             <i class="language-btn__icon fab fa-golang text-cyan-500"></i>
                             <span class="language-btn__text--desktop">Go</span>
                         </button>
-                        <button onclick="changeLanguage('rust')"
+
+                        <!-- Ruby -->
+                        <button onclick="changeLanguage('ruby')"
                                 class="language-btn"
-                                th:classappend="${currentLanguage == 'rust'} ? 'language-btn--active' : ''">
-                            <i class="language-btn__icon fas fa-cog text-orange-700"></i>
-                            <span class="language-btn__text--desktop">Rust</span>
+                                th:classappend="${currentLanguage == 'ruby'} ? 'language-btn--active' : ''">
+                            <i class="language-btn__icon fas fa-gem text-red-500"></i>
+                            <span class="language-btn__text--desktop">Ruby</span>
                         </button>
+
+                        <!-- Kotlin -->
+                        <button onclick="changeLanguage('kotlin')"
+                                class="language-btn"
+                                th:classappend="${currentLanguage == 'kotlin'} ? 'language-btn--active' : ''">
+                            <i class="language-btn__icon fas fa-code text-purple-500"></i>
+                            <span class="language-btn__text--desktop">Kotlin</span>
+                        </button>
+
+                        <!-- C -->
+                        <button onclick="changeLanguage('c')"
+                                class="language-btn"
+                                th:classappend="${currentLanguage == 'c'} ? 'language-btn--active' : ''">
+                            <i class="language-btn__icon fas fa-code text-gray-600"></i>
+                            <span class="language-btn__text--desktop">C</span>
+                        </button>
+
                     </div>
                 </div>
             </div>
@@ -72,8 +116,6 @@
                     <select id="sort-select" class="search-header__sort-select">
                         <option value="popular" th:selected="${sort == 'popular'}">인기순</option>
                         <option value="recent" th:selected="${sort == 'recent'}">최신순</option>
-                        <option value="name" th:selected="${sort == 'name'}">이름순</option>
-                        <option value="stars" th:selected="${sort == 'stars'}">스타 많은순</option>
                     </select>
                 </div>
                 <button id="refresh-btn" class="search-header__refresh-btn">새로운 리포지토리 보기</button>
