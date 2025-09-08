@@ -150,7 +150,7 @@ public class GitHubApiService {
         return new PageImpl<>(repos, pageable, total);
     }
 
-    public Page<GithubRepoDTO> fetchRepos(String language, Pageable pageable, QueryStrategyDTO strategy){
+    public Page<GithubRepoDTO> fetchRepos(String language, Pageable pageable, QueryStrategyDTO strategy, String sort){
 
         String finalQuery = null;
         String cacheKey;
@@ -175,6 +175,12 @@ public class GitHubApiService {
 
         System.out.println("Query : " + finalQuery);
         return executeGithubSearch(cache, cacheKey, finalQuery, pageable);
+    }
+    private String githubSort(String sortKey){
+        return switch (sortKey){
+            case "popular" -> "stars";
+            case "recent" ->
+        };
     }
 
     private Page<GithubRepoDTO> executeGithubSearch(Cache cache, String cacheKey, String query, Pageable pageable){
