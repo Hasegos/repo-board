@@ -5,6 +5,7 @@ import io.github.repoboard.dto.GithubSearchResponse;
 import io.github.repoboard.dto.GithubUserDTO;
 import io.github.repoboard.dto.QueryStrategyDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
@@ -30,6 +31,7 @@ import java.util.regex.Pattern;
  * API 호출 한도는 IP 기준 60 요청/시간으로 제한됩니다.
  * </p>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GitHubApiService {
@@ -174,16 +176,15 @@ public class GitHubApiService {
             System.out.println("📦 캐시 히트: " + cacheKey);
             return cached;
         }
-
         System.out.println("Query : " + finalQuery);
+        System.out.println("cacheKey : " + cacheKey);
         return executeGithubSearch(cache, cacheKey, finalQuery, pageable,githubSort);
     }
+
     private String getSortKey(String sortKey){
         return switch (sortKey){
             case "popular" -> "stars";
             case "recent" -> "updated";
-            case "name" -> "full_name";
-            case "stars" -> "stars";
             default -> "stars";
         };
     }
@@ -207,7 +208,7 @@ public class GitHubApiService {
                                 .orElse("unknown");
                         if (response.statusCode().is2xxSuccessful()) {
                             if (contentType.contains("json") || contentType.contains("application/vnd.github")) {
-                                return response.bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {
+                                    return response.bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {
                                 });
                             } else {
                                 System.out.println("⚠️ 예상하지 못한 Content-Type, 텍스트로 읽기 시도");
@@ -224,15 +225,14 @@ public class GitHubApiService {
                     .timeout(TIMEOUT)
                     .blockOptional()
                     .map(res ->{
-                        System.out.println("🔢 totalCount: " + res.getTotalCount());
-                        return new PageImpl<>(res.getItems(), pageable, res.getTotalCount());
+                            System.out.println("🔢 totalCount: " + res.getTotalCount());
+                            return new PageImpl<>(res.getItems(), pageable, res.getTotalCount());
                         }
                     )
                     .orElseGet(() -> {
                         System.out.println("⚠️ GitHub 응답이 null 또는 에러 발생");
                         return new PageImpl<>(List.of(), pageable, 0);
                     });
-
             if (cache != null) {
                 cache.put(cacheKey, result);
                 System.out.println("캐시 저장 : " + cacheKey);
