@@ -45,7 +45,7 @@ public class HomeController {
         }
         Sort sorting = getSortingOption(sort);
         Pageable finalPageable = PageRequest.of(page, 50, sorting);
-        Page<GithubRepoDTO> repoPage = gitHubApiService.fetchRepos(language,finalPageable, strategy, sorting);
+        Page<GithubRepoDTO> repoPage = gitHubApiService.fetchRepos(language,finalPageable, strategy, sort);
 
         model.addAttribute("repoPage", repoPage);
         model.addAttribute("currentLanguage", language);
@@ -57,13 +57,14 @@ public class HomeController {
     @GetMapping("/api/repos")
     public String loadMoreRepositories(@RequestParam(required = false, defaultValue = "java") String language,
                                        @RequestParam(defaultValue = "1") int page,
+                                       @RequestParam(defaultValue = "popular") String sort,
                                        HttpSession session,
                                        Model model){
         QueryStrategyDTO strategy = (QueryStrategyDTO) session.getAttribute("refreshStrategy");
 
         Sort sorting = getSortingOption(sort);
-        Pageable pageable = PageRequest.of(page, 50);
-        Page<GithubRepoDTO> repoPage = gitHubApiService.fetchRepos(language,pageable, strategy,);
+        Pageable pageable = PageRequest.of(page, 50, sorting);
+        Page<GithubRepoDTO> repoPage = gitHubApiService.fetchRepos(language,pageable, strategy,sort);
         model.addAttribute("repoPage", repoPage);
 
         return "fragments/repo-card :: repo-cards";
