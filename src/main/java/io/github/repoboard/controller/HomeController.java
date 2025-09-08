@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -43,8 +42,7 @@ public class HomeController {
         } else {
             strategy = (QueryStrategyDTO) session.getAttribute("refreshStrategy");
         }
-        Sort sorting = getSortingOption(sort);
-        Pageable finalPageable = PageRequest.of(page, 50, sorting);
+        Pageable finalPageable = PageRequest.of(page, 50);
         Page<GithubRepoDTO> repoPage = gitHubApiService.fetchRepos(language,finalPageable, strategy, sort);
 
         model.addAttribute("repoPage", repoPage);
@@ -57,25 +55,14 @@ public class HomeController {
     @GetMapping("/api/repos")
     public String loadMoreRepositories(@RequestParam(required = false, defaultValue = "java") String language,
                                        @RequestParam(defaultValue = "1") int page,
-                                       @RequestParam(defaultValue = "popular") String sort,
+                                       @RequestParam("sort") String sort,
                                        HttpSession session,
                                        Model model){
         QueryStrategyDTO strategy = (QueryStrategyDTO) session.getAttribute("refreshStrategy");
-
-        Sort sorting = getSortingOption(sort);
-        Pageable pageable = PageRequest.of(page, 50, sorting);
+        Pageable pageable = PageRequest.of(page, 50);
         Page<GithubRepoDTO> repoPage = gitHubApiService.fetchRepos(language,pageable, strategy,sort);
         model.addAttribute("repoPage", repoPage);
 
         return "fragments/repo-card :: repo-cards";
-    }
-
-    private Sort getSortingOption(String sortKey){
-        return switch (sortKey){
-            case "recent" -> Sort.by(Sort.Direction.DESC, "updated_at");
-            case "name" -> Sort.by(Sort.Direction.ASC, "full_name");
-            case "stars" -> Sort.by(Sort.Direction.DESC, "stargazers_count");
-            default -> Sort.unsorted();
-        };
     }
 }
