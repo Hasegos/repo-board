@@ -155,16 +155,18 @@ public class GitHubApiService {
         String finalQuery = null;
         String cacheKey;
         Cache cache;
+        String githubSort = getSortKey(sort);
 
         if(strategy == null){
-            cacheKey = "lang:" + language + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
-            cache = cacheManager.getCache("ghSearch");
             finalQuery = "is:public stars:>1000 language:" + language;
+            cacheKey = String.format("lang:%s:page:%d:size:%d:sort:%s",
+                    language, (pageable.getPageNumber() + 1), pageable.getPageSize(), githubSort);
+            cache = cacheManager.getCache("ghSearch");
         }else {
             finalQuery = strategy.getQuery() + " language:" + language;
             String safeQuery = strategy.getQuery().replaceAll("\\s+", "_");
-            cacheKey = "refresh:" + strategy.getSort() + ":" + safeQuery + ":" + language
-                    + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
+            cacheKey = String.format("refresh:%s:%s:%s:page:%d:size:%d:sort:%s",
+                    sort, safeQuery, language, (pageable.getPageNumber() + 1), pageable.getPageSize(), githubSort);
             cache = cacheManager.getCache("ghRefresh");
         }
         Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
@@ -174,22 +176,26 @@ public class GitHubApiService {
         }
 
         System.out.println("Query : " + finalQuery);
-        return executeGithubSearch(cache, cacheKey, finalQuery, pageable);
+        return executeGithubSearch(cache, cacheKey, finalQuery, pageable,githubSort);
     }
-    private String githubSort(String sortKey){
+    private String getSortKey(String sortKey){
         return switch (sortKey){
             case "popular" -> "stars";
-            case "recent" ->
+            case "recent" -> "updated";
+            case "name" -> "full_name";
+            case "stars" -> "stars";
+            default -> "stars";
         };
     }
 
-    private Page<GithubRepoDTO> executeGithubSearch(Cache cache, String cacheKey, String query, Pageable pageable){
+    private Page<GithubRepoDTO> executeGithubSearch(Cache cache, String cacheKey,
+                                                    String query, Pageable pageable, String sort){
         try {
             Page<GithubRepoDTO> result = githubWebClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/search/repositories")
                             .queryParam("q", query)
-                            .queryParam("sort", "stars")
+                            .queryParam("sort", sort)
                             .queryParam("order", "desc")
                             .queryParam("per_page", pageable.getPageSize())
                             .queryParam("page", pageable.getPageNumber() + 1)
