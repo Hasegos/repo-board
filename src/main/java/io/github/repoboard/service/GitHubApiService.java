@@ -5,6 +5,7 @@ import io.github.repoboard.dto.GithubSearchResponse;
 import io.github.repoboard.dto.GithubUserDTO;
 import io.github.repoboard.dto.QueryStrategyDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
@@ -30,6 +31,7 @@ import java.util.regex.Pattern;
  * API 호출 한도는 IP 기준 60 요청/시간으로 제한됩니다.
  * </p>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GitHubApiService {
@@ -150,21 +152,23 @@ public class GitHubApiService {
         return new PageImpl<>(repos, pageable, total);
     }
 
-    public Page<GithubRepoDTO> fetchRepos(String language, Pageable pageable, QueryStrategyDTO strategy){
+    public Page<GithubRepoDTO> fetchRepos(String language, Pageable pageable, QueryStrategyDTO strategy, String sort){
 
         String finalQuery = null;
         String cacheKey;
         Cache cache;
+        String githubSort = getSortKey(sort);
 
         if(strategy == null){
-            cacheKey = "lang:" + language + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
-            cache = cacheManager.getCache("ghSearch");
             finalQuery = "is:public stars:>1000 language:" + language;
+            cacheKey = String.format("lang:%s:page:%d:size:%d:sort:%s",
+                    language, (pageable.getPageNumber() + 1), pageable.getPageSize(), githubSort);
+            cache = cacheManager.getCache("ghSearch");
         }else {
             finalQuery = strategy.getQuery() + " language:" + language;
             String safeQuery = strategy.getQuery().replaceAll("\\s+", "_");
-            cacheKey = "refresh:" + strategy.getSort() + ":" + safeQuery + ":" + language
-                    + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
+            cacheKey = String.format("refresh:%s:%s:%s:page:%d:size:%d:sort:%s",
+                    sort, safeQuery, language, (pageable.getPageNumber() + 1), pageable.getPageSize(), githubSort);
             cache = cacheManager.getCache("ghRefresh");
         }
         Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
@@ -172,18 +176,27 @@ public class GitHubApiService {
             System.out.println("📦 캐시 히트: " + cacheKey);
             return cached;
         }
-
         System.out.println("Query : " + finalQuery);
-        return executeGithubSearch(cache, cacheKey, finalQuery, pageable);
+        System.out.println("cacheKey : " + cacheKey);
+        return executeGithubSearch(cache, cacheKey, finalQuery, pageable,githubSort);
     }
 
-    private Page<GithubRepoDTO> executeGithubSearch(Cache cache, String cacheKey, String query, Pageable pageable){
+    private String getSortKey(String sortKey){
+        return switch (sortKey){
+            case "popular" -> "stars";
+            case "recent" -> "updated";
+            default -> "stars";
+        };
+    }
+
+    private Page<GithubRepoDTO> executeGithubSearch(Cache cache, String cacheKey,
+                                                    String query, Pageable pageable, String sort){
         try {
             Page<GithubRepoDTO> result = githubWebClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/search/repositories")
                             .queryParam("q", query)
-                            .queryParam("sort", "stars")
+                            .queryParam("sort", sort)
                             .queryParam("order", "desc")
                             .queryParam("per_page", pageable.getPageSize())
                             .queryParam("page", pageable.getPageNumber() + 1)
@@ -195,7 +208,7 @@ public class GitHubApiService {
                                 .orElse("unknown");
                         if (response.statusCode().is2xxSuccessful()) {
                             if (contentType.contains("json") || contentType.contains("application/vnd.github")) {
-                                return response.bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {
+                                    return response.bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {
                                 });
                             } else {
                                 System.out.println("⚠️ 예상하지 못한 Content-Type, 텍스트로 읽기 시도");
@@ -212,15 +225,14 @@ public class GitHubApiService {
                     .timeout(TIMEOUT)
                     .blockOptional()
                     .map(res ->{
-                        System.out.println("🔢 totalCount: " + res.getTotalCount());
-                        return new PageImpl<>(res.getItems(), pageable, res.getTotalCount());
+                            System.out.println("🔢 totalCount: " + res.getTotalCount());
+                            return new PageImpl<>(res.getItems(), pageable, res.getTotalCount());
                         }
                     )
                     .orElseGet(() -> {
                         System.out.println("⚠️ GitHub 응답이 null 또는 에러 발생");
                         return new PageImpl<>(List.of(), pageable, 0);
                     });
-
             if (cache != null) {
                 cache.put(cacheKey, result);
                 System.out.println("캐시 저장 : " + cacheKey);

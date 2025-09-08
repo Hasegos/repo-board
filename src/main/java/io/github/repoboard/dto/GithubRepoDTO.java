@@ -51,6 +51,7 @@ public class GithubRepoDTO {
     /** 포크 여부 */
     private Boolean fork;
 
+    /** 메타데이터가 수정된 날짜 */
     @JsonProperty("updated_at")
     private Instant updatedAt;
 }

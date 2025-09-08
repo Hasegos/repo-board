@@ -1,9 +1,5 @@
 @import url("/css/shared/header.css");
 @import url("/css/shared/footer.css");
-
-@import url("/css/shared/header.css");
-@import url("/css/shared/footer.css");
-
 /* ==========================================================================
    Loading States
    ========================================================================== */
@@ -228,6 +224,29 @@
     width: auto;
 }
 
+.search-header__refresh-btn {
+    padding: 10px 16px;
+    background-color: #2563eb; /* Tailwind의 blue-600 */
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.search-header__refresh-btn:hover {
+  background-color: #1e40af; /* blue-800 */
+  transform: translateY(-1px);
+}
+
+.search-header__refresh-btn:active {
+  background-color: #1e3a8a; /* 더 진한 blue */
+  transform: scale(0.98);
+}
+
 /* ==========================================================================
    Repository Grid
    ========================================================================== */
@@ -390,16 +409,8 @@
         width: auto;
     }
 
-    .language-btn__text--mobile {
-        display: none;
-    }
-
     .language-btn__text--desktop {
         display: inline;
-    }
-
-    .repo-card__updated--mobile {
-        display: none;
     }
 
     .repo-card__updated--desktop {
@@ -413,9 +424,7 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .mobile-nav {
-        display: none;
-    }
+
 
     .desktop-nav {
         display: block;
@@ -431,17 +440,9 @@
 
 /* Mobile Specific */
 @media (max-width: 767px) {
-    .mobile-nav {
-        display: block;
-    }
 
     .desktop-nav {
         display: none;
-    }
-
-    .search-input-mobile {
-        width: 100%;
-        margin-bottom: 0.75rem;
     }
 
     .repo-card__stats {
