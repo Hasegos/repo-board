@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (isRefresh) {
         url.searchParams.delete('refresh');
+        url.searchParams.delete('page');
         history.replaceState(null, '', url.toString());
     }
 
@@ -34,6 +35,17 @@ document.addEventListener('DOMContentLoaded', function () {
            nextUrl.searchParams.set('page', '0'); // 새로고침은 항상 첫 페이지로
            window.location.href = nextUrl.toString();
         })
+    }
+
+    const sortSelect = document.getElementById('sort-select');
+    if(sortSelect){
+        sortSelect.addEventListener('change', () => {
+            const selectedSort =  sortSelect.value;
+            const nextUrl = new URL(window.location.href);
+            nextUrl.searchParams.set('sort', sortSelect.value);
+            nextUrl.searchParams.set('page', '0');
+            window.location.href = nextUrl.toString();
+        });
     }
 
     const languageColors = {
