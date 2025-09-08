@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentPage = parseInt(metadata.dataset.currentPage) || 0;
     let currentLanguage = metadata.dataset.currentLanguage || 'java';
+    let currentSort = metadata.dataset.currentSort || 'popular';
 
     const refreshBtn = document.getElementById('refresh-btn');
     if(refreshBtn){
@@ -148,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
         spinner.classList.add('loading-spinner--show');
         updateSpinnerMessage(isRateLimited);
 
-        const requestUrl = `/api/repos?language=${currentLanguage}&page=${nextPage}`
+        const requestUrl = `/api/repos?language=${currentLanguage}&page=${nextPage}&sort=${currentSort}`
 
         fetch(requestUrl)
             .then(res => {
