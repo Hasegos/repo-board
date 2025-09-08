@@ -98,13 +98,19 @@ public class WebClientConfig {
                     headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
                 })
                 .filter((request, next) -> {
-                    String token = getNextToken();
+                    boolean alreadyHasAuthorization = request.headers().containsKey(HttpHeaders.AUTHORIZATION);
                     ClientRequest filtered = ClientRequest.from(request)
                             .headers(h -> {
                                 h.set(HttpHeaders.USER_AGENT, "PostmanRuntime/7.45.0");
                                 h.set(HttpHeaders.ACCEPT, "application/vnd.github.v3+json");
-                                h.setBearerAuth(token);
-                                System.out.println("🔻 요청 헤더 설정됨: " + h);
+                                if(!alreadyHasAuthorization){
+                                    String token = getNextToken();
+                                    h.setBearerAuth(token);
+                                    System.out.println("🔻 WebClientConfig에서 설정한 토큰: " + token);
+                                }
+                                else{
+                                    System.out.println("✅ Authorization 헤더가 이미 존재 → 토큰 덮어쓰기 생략");
+                                }
                             })
                             .build();
                     return next.exchange(filtered)
