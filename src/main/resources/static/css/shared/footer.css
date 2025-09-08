@@ -1,0 +1,50 @@
+.footer{
+  border-top:1px solid var(--line);
+  text-align:center;
+  font-size:.95rem;
+}
+
+.footer .footer__inner{
+  max-width:880px;
+  margin:0 auto;
+  padding:20px 12px 28px;
+}
+
+.footer p{
+  margin:6px 0;
+}
+
+.footer a{
+  color:var(--accent);
+}
+
+.footer a:hover{
+  text-decoration:underline;
+}
+
+.footer__data{
+  font-weight:700;
+  letter-spacing:.04em;
+}
+
+.footer__owner{
+  font-weight:700;
+  color:#1e40af;
+  background:rgba(37,99,235,.08);
+  border:1px solid rgba(37,99,235,.25);
+  padding:.15rem .5rem;
+  border-radius:9999px;
+}
+
+.footer__disclaimer-text{
+  display:inline-block;
+  padding:.45rem .65rem;
+  border-radius:.5rem;
+  background:#f1f5f9;
+  border:1px solid #e2e8f0;
+}
+
+.footer__copy,
+.footer__contact{
+  color:var(--muted);
+}

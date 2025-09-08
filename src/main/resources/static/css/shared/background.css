@@ -1,0 +1,16 @@
+:root {
+  --bg: #f6f8fa;            /* GitHub light 배경 느낌 */
+  --panel: #ffffff;
+  --border: #d0d7de;
+  --text: #24292f;
+  --muted: #57606a;
+  --blue: #0969da;          /* GitHub 파란색 */
+  --blue-hover: #0757b2;
+  --green: #1a7f37;
+  --red: #cf222e;
+  --radius: 12px;
+  --shadow: 0 1px 0 rgba(27,31,36,0.04), 0 1px 3px rgba(27,31,36,0.15);
+  --fg:#374151;
+  --accent:#2563eb;  /* 링크/포커스(blue-600) */
+  --line:#e5e7eb;    /* 보더 */
+}

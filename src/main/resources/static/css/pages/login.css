@@ -1,0 +1,161 @@
+@import url("/css/shared/header.css");
+@import url("/css/shared/footer.css");
+
+/* ===== Block: auth ===== */
+.auth {
+  max-width: 420px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.auth__panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.auth__title {
+  display:flex;
+  justify-content:center;
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.auth__subtitle {
+  margin: 6px 0 18px;
+  color: var(--muted);
+}
+
+.auth__meta {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.auth__hint {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.auth__submit {
+  margin-top: 2px;
+}
+
+.auth__form {
+  display: grid;
+  gap: 10px;
+}
+
+.auth__form-row {
+  display: flex;
+  justify-content:end;
+}
+
+/* ===== Block: oauth ===== */
+.oauth {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.oauth__provider {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ===== Block: divider ===== */
+.divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+  margin: 14px 0;
+  color: var(--muted);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  height: 1px;
+  background: var(--border);
+  display: block;
+}
+
+/* ===== Block: field ===== */
+.field {
+  display: grid;
+  gap: 10px;
+}
+
+.field__label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.field__input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: var(--text);
+}
+
+.field__help {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ===== Block: button ===== */
+.button {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+
+.button--primary {
+  background: var(--blue);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.button--primary:hover {
+  background: var(--blue-hover);
+}
+
+/* ===== Block: link ===== */
+.link {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ===== Block: alert ===== */
+.alert {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+}
+
+.alert--error {
+  background: #fff4f4;
+  color: var(--red);
+}

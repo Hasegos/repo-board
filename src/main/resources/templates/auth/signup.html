@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RepoBoard · 회원가입</title>
+    <link rel="stylesheet" th:href="@{/css/pages/signup.css}" />
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <main class="auth">
+        <section class="auth__panel" aria-labelledby="signup-title">
+            <h1 id="signup-title" class="auth__title">회원가입</h1>
+            <p class="auth__subtitle">GitHub 연동은 자동으로 오픈프로필을 생성/동기화합니다.</p>
+
+            <!-- OAuth (로그인 CSS의 .oauth / .oauth__provider / .button 사용) -->
+            <div class="oauth">
+                <a class="button oauth__provider" th:href="@{/oauth2/authorization/github}">
+                    <img th:src="@{/images/github.svg}" alt="GitHub 회원가입">
+                    GitHub로 가입하기
+                </a>
+                <a class="button oauth__provider" th:href="@{/oauth2/authorization/google}">
+                    <img th:src="@{/images/google.svg}" alt="Google 회원가입">
+                    Google로 가입하기
+                </a>
+            </div>
+
+            <div class="divider">또는</div>
+
+            <form class="auth__form"
+                  id="signupForm"
+                  th:action="@{/users/signup}"
+                  th:object="${userDTO}"
+                  method="post">
+                <!-- 이메일 -->
+                <div class="field">
+                    <label class="field__label" for="email">이메일</label>
+                    <input id="email"
+                           type="email"
+                           class="field__input"
+                           placeholder="you@example.com"
+                           th:field="*{username}"
+                           autocomplete="email"
+                           required
+                    />
+                    <div th:if="${#fields.hasErrors('username')}"
+                         th:errors="*{username}"
+                         class="error-text"></div>
+                    <div id="usernameError" class="error-text"></div>
+                </div>
+
+                <!-- 비밀번호 -->
+                <div class="field">
+                    <label class="field__label" for="password">비밀번호</label>
+                    <input id="password"
+                           type="password"
+                           class="field__input"
+                           placeholder="영문·숫자·특수문자 포함 8자 이상"
+                           minlength="8"
+                           th:field="*{password}"
+                           autocomplete="new-password"
+                           required
+                    />
+                    <div th:if="${#fields.hasErrors('password')}"
+                         th:errors="*{password}"
+                         class="error-text"></div>
+                    <div id="passwordError" class="error-text"></div>
+                </div>
+
+                <!-- 비밀번호 확인 (== 비밀번호) -->
+                <div class="field">
+                    <label class="field__label" for="passwordConfirm">비밀번호 확인</label>
+                    <input id="passwordConfirm"
+                           type="password"
+                           class="field__input"
+                           placeholder="비밀번호 재입력"
+                           minlength="8"
+                           required
+                           th:field="*{passwordConfirm}"
+                           autocomplete="new-password"
+                    />
+                    <div th:if="${#fields.hasErrors('passwordConfirm')}"
+                         th:errors="*{passwordConfirm}"
+                         class="error-text"></div>
+                    <div id="confirmError" class="error-text"></div>
+                </div>
+                <button class="button button--primary auth__submit" type="submit" id="signupBtn">회원가입</button>
+            </form>
+            <p class="auth__meta">이미 계정이 있나요? <a class="link" th:href="@{/users/login}">로그인</a></p>
+            <p class="auth__hint">* GitHub로 로그인/가입 시, 개인 계정의 공개 레포만 동기화됩니다. 조직 계정은 지원하지 않습니다.</p>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <script th:src="@{/js/signup.js}"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>헤더 페이지</title>
+    <link rel="stylesheet" th:href="@{/css/shared/header.css}" />
+</head>
+<body>
+<header th:fragment="header" class="header">
+    <div class="header__inner">
+        <a class="header__logo" th:href="@{/}" aria-label="RepoBoard 홈">
+            <img class="header__logo-icon" th:src="@{/images/logo.svg}" alt="메인으로 돌아가기" />
+            <strong class="header__brand">RepoBoard</strong>
+        </a>
+
+        <div class="header__search">
+            <input class="header__search-input"
+                   type="search"
+                   placeholder="레포지토리, 사용자, 태그 검색…"
+                   aria-label="검색" />
+        </div>
+
+        <div class="header__nav">
+            <a class="header__btn header__btn--ghost" th:href="@{/}">탐색</a>
+            <!-- 로그인 상태 -->
+            <div class="header__login" th:if="${user != null}">
+                <!-- 프로필 버튼 -->
+                <div class="header__user" data-menu-root>
+                    <button class="header__user-btn"
+                            type="button"
+                            aria-haspopup="menu"
+                            aria-expanded="false"
+                            data-menu-button>
+                        <img class="header__avatar"
+                             th:src="${user.profile != null ? user.profile.githubAvatarUrl : '/images/github.svg'}"
+                             alt="프로필 이미지" />
+                        <span class="header__user-name" >사용자</span>
+                        <span class="header__chevron" aria-hidden="true">▾</span>
+                    </button>
+
+                    <!-- 드롭다운 메뉴 -->
+                    <div class="header__menu" role="menu" hidden data-menu>
+                        <a role="menuitem" class="header__menu-item"
+                           th:href="@{/users/profiles}"
+                           >내 프로필</a>
+
+                        <a role="menuitem" class="header__menu-item"
+                           >저장한 레포</a>
+
+                        <a role="menuitem" class="header__menu-item"
+                           th:href="@{/users/settings}"
+                           >설정</a>
+
+                        <!-- 관리자 전용 예시 (thymeleaf-extras-springsecurity 사용 시) -->
+                        <!-- <a role="menuitem"
+                           th:if="${user != null and user.role.name() == 'ADMIN'}"
+                           th:href="@{/admin}">
+                           class="header__menu-item">관리자</a> -->
+
+                        <div class="header__menu-sep" role="separator"></div>
+
+                        <a role="menuitem" class="header__menu-item"
+                           >채팅하기</a>
+
+                        <form th:action="@{/logout}" method="post">
+                            <button type="submit" role="menuitem" class="header__menu-item header__menu-item--danger">
+                                로그아웃
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 비로그인 상태 -->
+            <div class="header__unLogin" th:if="${user == null}">
+                <a class="header__btn header__btn--primary" th:href="@{/users/login}">로그인</a>
+                <a class="header__btn header__btn--ghost" th:href="@{/users/signup}">회원가입</a>
+            </div>
+        </div>
+    </div>
+    <script defer th:src="@{/js/header.js}"></script>
+</header>
+</body>
+</html>

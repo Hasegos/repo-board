@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>RepoBoard 설정</title>
+    <link rel="stylesheet" th:href="@{/css/pages/settings.css}">
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <main class="settings" aria-labelledby="title">
+        <h1 id="title" class="settings__title"
+            th:text="${authType != 'LOCAL'}
+            ? '설정 (소셜 로그인 사용자)'
+            : '설정 (폼 로그인 사용자)'">
+            설정
+        </h1>
+        <div class="settings__layout">
+            <nav class="settings__sidebar" aria-label="설정 메뉴">
+                <a class="settings__tab settings__tab--active" href="#account" th:if="${authType == 'LOCAL'}">계정</a>
+                <a class="settings__tab" href="#security" th:if="${authType == 'LOCAL'}">보안</a>
+                <a class="settings__tab" href="#danger">위험 구역</a>
+            </nav>
+            <section class="settings__content">
+                <!-- 계정 카드 (LOCAL 전용) -->
+                <article id="account" class="card" th:if="${authType == 'LOCAL'}">
+                    <h2 class="card__title">계정</h2>
+                    <div class="card__body" th:object="${user}">
+                        <dl class="account-info">
+                            <dt class="account-info__term">로그인 유형</dt>
+                            <dd class="account-info__desc" th:text="*{provider}">
+                                폼 로그인 (LOCAL)
+                            </dd>
+                            <dt class="account-info__term">이메일</dt>
+                            <dd class="account-info__desc">
+                                <span th:text="*{username}">you@example.com</span>
+                            </dd>
+                            <dt class="account-info__term">가입일</dt>
+                            <dd class="account-info__desc" th:text="${#temporals.format(user.createdAt, 'yyyy.MM.dd HH:mm')}">2025.08.27 12:34</dd>
+
+                            <dt class="account-info__term" th:if="${authType == 'LOCAL'}">비밀번호 변경일</dt>
+                            <dd class="account-info__desc" th:if="${authType == 'LOCAL'}"
+                                th:text="${user.updatedAt != null
+                                    ? #temporals.format(user.updatedAt, 'yyyy.MM.dd HH:mm')
+                                    : '기록 없음'}">
+                            </dd>
+                            <dt class="account-info__term">계정 상태</dt>
+                            <dd class="account-info__desc">
+                                <span class="badge badge--ok" th:text="${user.status}">ACTIVE</span>
+                            </dd>
+                        </dl>
+                    </div>
+                </article>
+
+                <!-- 보안 카드 (LOCAL 전용) -->
+                <article id="security" class="card" th:if="${authType == 'LOCAL'}">
+                    <h2 class="card__title">보안</h2>
+                    <div class="card__body">
+                        <form id="changePwForm"
+                              th:action="@{/users/settings/password}"
+                              method="post"
+                              th:object="${ChangePasswordDTO}">
+
+                            <div class="field">
+                                <label class="field__label" for="cur">현재 비밀번호</label>
+                                <input id="cur"
+                                       class="field__input"
+                                       type="password"
+                                       autocomplete="current-password"
+                                       th:field="*{currentPassword}"
+                                       required />
+                                <p class="field__error" id="curError"></p>
+                                <p class="field__error" th:if="${#fields.hasErrors('currentPassword')}"
+                                   th:errors="*{currentPassword}"></p>
+                            </div>
+
+                            <div class="field">
+                                <label class="field__label" for="new">새 비밀번호</label>
+                                <input id="new"
+                                       class="field__input"
+                                       type="password"
+                                       minlength="8"
+                                       placeholder="영문·숫자·특수문자 포함 8자 이상"
+                                       autocomplete="new-password"
+                                       th:field="*{newPassword}"
+                                       required />
+                                <p class="field__error" id="newError"></p>
+                            </div>
+
+                            <div class="field">
+                                <label class="field__label" for="new2">새 비밀번호 확인</label>
+                                <input id="new2"
+                                       class="field__input"
+                                       type="password"
+                                       minlength="8"
+                                       autocomplete="new-password"
+                                       th:field="*{confirmPassword}"
+                                       required />
+                                <p class="field__error" id="confirmError"></p>
+                            </div>
+
+                            <button class="button button--primary" type="submit">비밀번호 변경</button>
+                        </form>
+                    </div>
+                </article>
+
+                <!-- 안내 카드 (소셜 로그인 전용) -->
+                <article class="card" th:if="${authType != 'LOCAL'}">
+                    <h2 class="card__title">안내</h2>
+                    <div class="card__body">
+                        <p>소셜 로그인(GitHub/Google) 계정은 이메일·비밀번호 변경을 이 화면에서 지원하지 않습니다.</p>
+                        <p>닉네임/프로필 변경은 <strong>오픈프로필</strong>에서 관리합니다.</p>
+                    </div>
+                </article>
+
+                <!-- 위험 구역 -->
+                <article id="danger" class="card card--danger">
+                    <h2 class="card__title">위험 구역</h2>
+                    <form th:action="@{/users/settings/delete}" method="post"
+                          onsubmit="return confirm('계정 탈퇴시 모든 내용이 삭제됩니다.')">
+                        <div class="card__body">
+                            <p class="danger-zone__text">계정을 삭제하면 복구할 수 없습니다.</p>
+                            <button class="button button--danger" type="submit">계정 삭제</button>
+                        </div>
+                    </form>
+                </article>
+            </section>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <script th:src="@{/js/settings.js}"></script>
+</body>
+</html>

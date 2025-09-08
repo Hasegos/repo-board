@@ -1,0 +1,238 @@
+@import url("/css/shared/header.css");
+@import url("/css/shared/footer.css");
+
+/* ----- Page container ----- */
+.profile-page__container{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  color: var(--text);
+}
+
+/* ----- Profile header (block: profile) ----- */
+.profile{
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+  align-items: center;
+}
+
+.profile__avatar{
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.profile__info h1{
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.profile__username{
+  font-size: 18px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.profile__bio{
+  font-size: 16px;
+  margin-bottom: 16px;
+  max-width: 560px;
+}
+
+.profile__stats{
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.profile__stat{
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.profile__stat-number{
+  font-weight: 700;
+  color: var(--text);
+}
+
+.profile__links{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.profile__link{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--blue);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: .15s ease;
+}
+
+.profile__link:hover{
+  background: var(--badge);
+  border-color: var(--badge-border);
+}
+
+/* ------- Repos section (block: repos)  ------- */
+.repos__title{
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* tabs */
+.repos__tabs{
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.repos__tab{
+  display:inline-block;
+  padding: 8px 14px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  transition: .15s ease;
+}
+
+.repos__tab:hover{
+  border-color: var(--blue);
+}
+
+.repos__tab--active{
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+}
+
+/* grid + cards */
+.repos__grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px,1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.repos__card{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  transition: border-color .15s ease, transform .15s ease;
+}
+
+.repos__card:hover{
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+
+.repos__name{
+  display:block;
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.repos__name:hover{
+  color: var(--blue-hover);
+}
+
+.repos__desc{
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.repos__meta{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.repos__stat{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+/* language dot */
+.repos__lang-dot{
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display:inline-block;
+}
+
+.repos__lang-dot--java{ background:#b07219; }
+.repos__lang-dot--javascript{ background:#f1e05a; }
+.repos__lang-dot--html{ background:#e34c26; }
+.repos__lang-dot--c{ background:#555555; }
+.repos__lang-dot--c\#{ background:#239120; }
+.repos__lang-dot--null{ background:#586069; }
+
+/* badge (fork) */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:30px;
+  border:1px solid var(--badge-border);
+  background: var(--badge);
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+/* -------- Pagination (block: pager) -------- */
+.pager{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pager__btn{
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:14px;
+  background:#fff;
+  color: var(--text);
+  border:1px solid var(--border);
+  transition:.15s ease;
+  cursor:pointer;
+}
+
+.pager__btn:hover{
+  border-color: var(--blue);
+}
+
+.pager__btn--disabled{
+  opacity:.5;
+  pointer-events:none;
+  cursor:not-allowed;
+}
+
+.pager__info{
+  color: var(--muted);
+  font-size:14px;
+}

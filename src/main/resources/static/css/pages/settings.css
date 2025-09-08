@@ -1,0 +1,194 @@
+@import url("/css/shared/header.css");
+@import url("/css/shared/footer.css");
+
+/* =======================
+   Block: settings
+   ======================= */
+.settings {
+  max-width: 1024px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.settings__title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 0 1rem;
+}
+
+.settings__layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1rem;
+}
+
+.settings__content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Element: tab */
+.settings__tab {
+  display: block;
+  padding: .6rem .8rem;
+  border-radius: .5rem;
+  color: #111827;
+  text-decoration: none;
+}
+.settings__tab:hover {
+  background: #e5e7eb;
+}
+.settings__tab--active {
+  background: #dbeafe;
+  color: #1e40af;
+  font-weight: 700;
+}
+
+/* Anchor sections scroll offset */
+#account, #security, #danger {
+  scroll-margin-top: 72px;
+}
+
+/* =======================
+   Block: card
+   ======================= */
+.card {
+  background: var(--card);
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 1rem 1rem .25rem;
+  margin: 0 0 8px;
+}
+
+.card__body {
+  padding: 1rem;
+  display: grid;
+  gap: .85rem;
+}
+
+.card--danger {
+  border-color: #fecaca;
+}
+
+/* =======================
+   Block: field
+   ======================= */
+.field {
+  display: grid;
+  gap: .35rem;
+}
+
+.field__label {
+  font-weight: 600;
+}
+
+.field__input {
+  padding: .6rem .75rem;
+  border: 1px solid #d1d5db;
+  border-radius: .5rem;
+}
+
+.field__error {
+  color: var(--red);
+}
+
+/* =======================
+   Block: button
+   ======================= */
+.button {
+  padding: .6rem .9rem;
+  border: 1px solid #d1d5db;
+  border-radius: .5rem;
+  background: #fff;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.button--primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.button--danger {
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
+/* =======================
+   Block: account-info
+   ======================= */
+.account-info {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  column-gap: 18px;
+  row-gap: 10px;
+}
+
+.account-info__term {
+  font-weight: 700;
+}
+
+.account-info__desc {
+  line-height: 1.7;
+}
+
+/* divider between rows (skip first row) */
+.account-info__term:not(:first-of-type),
+.account-info__desc:nth-of-type(n+2) {
+  padding-top: 10px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+/* =======================
+   Block: badge
+   ======================= */
+.badge {
+  padding: 2px 8px;
+  border-radius: 50px;
+  border: 1px solid #e2e8f0;
+  display: inline-block;
+}
+
+.badge--ok {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+/* =======================
+   Block: danger-zone
+   ======================= */
+.danger-zone__text {
+  margin: .2rem 0 .8rem;
+}
+
+/* =======================
+   Responsive
+   ======================= */
+@media (max-width: 860px) {
+  .settings__layout { grid-template-columns: 1fr; }
+  .settings__sidebar { position: static; display: flex; gap: .5rem; }
+}
+
+@media (max-width: 640px) {
+  .account-info {
+    grid-template-columns: 1fr;
+    row-gap: 6px;
+  }
+  .account-info__term {
+    margin-top: 6px;
+  }
+  .account-info__term:not(:first-of-type),
+  .account-info__desc:nth-of-type(n+2) {
+    border-top: 1px dashed #e5e7eb;
+    padding-top: 8px;
+  }
+}

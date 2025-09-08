@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RepoBoard · 프로필</title>
+    <link rel="stylesheet" th:href="@{/css/pages/profile.css}">
+    <th:block th:if="${onboarding}">
+        <link rel="stylesheet" th:href="@{/css/pages/setupForm.css}" />
+    </th:block>
+
+    <th:block th:if="${!onboarding}">
+        <link rel="stylesheet" th:href="@{/css/pages/profileView.css}" />
+    </th:block>
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <main class="layout__container">
+        <th:block th:if="${onboarding}">
+            <th:block th:replace="~{profile/setupForm :: setupForm}"></th:block>
+        </th:block>
+
+        <th:block th:if="${!onboarding}">
+            <th:block th:replace="~{profile/profileView :: profileView}"></th:block>
+        </th:block>
+
+        <div class="page-alert-wrap" th:if="${error}">
+            <div class="page-alert page-alert--error" role="alert" aria-live="polite"
+                 id="urlError"
+                 th:text="${error}">오류 메시지</div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
