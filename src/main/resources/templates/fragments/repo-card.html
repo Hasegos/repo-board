@@ -36,7 +36,6 @@
                     <div class="language-badge" th:if="${repo.language}">
                         <div class="language-dot" th:attr="data-language=${repo.language}"></div>
                         <span class="language-badge__text--desktop" th:text="${repo.language}">Language</span>
-                        <span class="language-badge__text--mobile" th:text="${repo.language.substring(0,1)}">L</span>
                     </div>
                     <div class="repo-stat">
                         <i class="repo-stat__icon repo-stat__icon--star fas fa-star"></i>
@@ -49,7 +48,6 @@
                 </div>
                 <div class="repo-card__updated" th:if="${repo.updatedAt != null}">
                     <span class="repo-card__updated--desktop" th:text="${#temporals.format(repo.updatedAt, 'yyyy-MM-dd')}">2024-01-01</span>
-                    <span class="repo-card__updated--mobile" th:text="${#temporals.format(repo.updatedAt, 'MM/dd')}">01/01</span>
                 </div>
             </div>
         </div>
