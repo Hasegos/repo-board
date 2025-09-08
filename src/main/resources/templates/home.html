@@ -22,42 +22,36 @@
                                 th:classappend="${currentLanguage == 'java'} ? 'language-btn--active' : ''">
                             <i class="language-btn__icon fab fa-java text-orange-600"></i>
                             <span class="language-btn__text--desktop">Java</span>
-                            <span class="language-btn__text--mobile">Java</span>
                         </button>
                         <button onclick="changeLanguage('javascript')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'javascript'} ? 'language-btn--active' : ''">
                             <i class="language-btn__icon fab fa-js-square text-yellow-500"></i>
                             <span class="language-btn__text--desktop">JavaScript</span>
-                            <span class="language-btn__text--mobile">JS</span>
                         </button>
                         <button onclick="changeLanguage('python')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'python'} ? 'language-btn--active' : ''">
                             <i class="language-btn__icon fab fa-python text-blue-500"></i>
                             <span class="language-btn__text--desktop">Python</span>
-                            <span class="language-btn__text--mobile">Python</span>
                         </button>
                         <button onclick="changeLanguage('typescript')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'typescript'} ? 'language-btn--active' : ''">
                             <i class="language-btn__icon fab fa-js-square text-blue-600"></i>
                             <span class="language-btn__text--desktop">TypeScript</span>
-                            <span class="language-btn__text--mobile">TS</span>
                         </button>
                         <button onclick="changeLanguage('go')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'go'} ? 'language-btn--active' : ''">
                             <i class="language-btn__icon fab fa-golang text-cyan-500"></i>
                             <span class="language-btn__text--desktop">Go</span>
-                            <span class="language-btn__text--mobile">Go</span>
                         </button>
                         <button onclick="changeLanguage('rust')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'rust'} ? 'language-btn--active' : ''">
                             <i class="language-btn__icon fas fa-cog text-orange-700"></i>
                             <span class="language-btn__text--desktop">Rust</span>
-                            <span class="language-btn__text--mobile">Rust</span>
                         </button>
                     </div>
                 </div>
@@ -75,14 +69,14 @@
                 </div>
                 <div class="search-header__sort">
                     <span class="search-header__sort-label">정렬:</span>
-                    <select class="search-header__sort-select">
-                        <option>인기순</option>
-                        <option>최신순</option>
-                        <option>이름순</option>
-                        <option>스타 많은순</option>
+                    <select id="sort-select" class="search-header__sort-select">
+                        <option value="popular" th:selected="${sort == 'popular'}">인기순</option>
+                        <option value="recent" th:selected="${sort == 'recent'}">최신순</option>
+                        <option value="name" th:selected="${sort == 'name'}">이름순</option>
+                        <option value="stars" th:selected="${sort == 'stars'}">스타 많은순</option>
                     </select>
                 </div>
-                <button id="refresh-btn">새로운 리포지토리 보기</button>
+                <button id="refresh-btn" class="search-header__refresh-btn">새로운 리포지토리 보기</button>
                 <div id="search-metadata"
                      th:attr="data-current-language=${currentLanguage},
                          data-current-page=${repoPage.number}">
