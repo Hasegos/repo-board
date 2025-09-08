@@ -26,14 +26,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentPage = parseInt(metadata.dataset.currentPage) || 0;
     let currentLanguage = metadata.dataset.currentLanguage || 'java';
-    let currentSort = metadata.dataset.currentSort || 'popular';
+    let currentSort = url.searchParams.get('sort') || 'popular';
 
     const refreshBtn = document.getElementById('refresh-btn');
     if(refreshBtn){
         refreshBtn.addEventListener('click', () => {
            const nextUrl = new URL(window.location.href);
            nextUrl.searchParams.set('refresh', 'true');
-           nextUrl.searchParams.set('page', '0'); // 새로고침은 항상 첫 페이지로
+           nextUrl.searchParams.set('page', '0');
            window.location.href = nextUrl.toString();
         })
     }
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /** 캐싱 저장 + 범위 제한 (LRU 방식) */
     function addToCache(page,html){
-        const cacheKey = `lang:${currentLanguage}|page:${page}|refresh:${isRefresh}`;
+        const cacheKey = `lang:${currentLanguage}|page:${page}|sort:${currentSort}|refresh:${isRefresh}`;
 
         if(repoCache.has(cacheKey)){
             repoCache.delete(cacheKey);
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadMoreRepositories() {
         const now = Date.now();
         const nextPage = currentPage + 1;
-        const cacheKey = `lang:${currentLanguage}|page:${nextPage}`;
+        const cacheKey = `lang:${currentLanguage}|page:${nextPage}|sort:${currentSort}`;
 
         if(repoCache.has(cacheKey)){
           insertCachedHTML(repoCache.get(cacheKey),nextPage);
