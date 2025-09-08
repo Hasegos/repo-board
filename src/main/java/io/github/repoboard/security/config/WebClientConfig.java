@@ -8,13 +8,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ClientRequest;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.util.retry.Retry;
-import org.springframework.http.HttpStatus;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -40,7 +38,6 @@ public class WebClientConfig {
 
     private List<String> tokens;
     private final AtomicInteger tokenIndex = new AtomicInteger(0);
-    private final Object rateLimitLock = new Object();
     private final Map<String, Long> tokenLastUserMap = new ConcurrentHashMap<>();
     private static final Duration REQUEST_INTERVAL = Duration.ofSeconds(1);
 
