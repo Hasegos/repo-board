@@ -67,3 +67,8 @@ github:
   api:
     base-url: https://api.github.com
     token: ${GITHUB_API_TOKEN}
+
+logging:
+  level:
+    root: INFO
+    io.github.repoboard.security.config.WebClientConfig: DEBUG
