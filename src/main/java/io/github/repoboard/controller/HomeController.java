@@ -63,6 +63,6 @@ public class HomeController {
         Page<GithubRepoDTO> repoPage = gitHubApiService.fetchRepos(language,pageable, strategy,sort);
         model.addAttribute("repoPage", repoPage);
 
-        return "fragments/repo-card :: repo-cards";
+        return "fragments/repo_card :: repo-cards";
     }
 }
