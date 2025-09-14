@@ -1,13 +1,11 @@
 package io.github.repoboard.model;
 
-import io.github.repoboard.model.enums.RepoVisibleType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
@@ -17,13 +15,12 @@ import java.time.Instant;
     uniqueConstraints = {
         @UniqueConstraint(
             name = "ux_saved_repo_user_owner_name",
-            columnNames = {"user_id", "owner", "name"}
+            columnNames = {"user_id", "owner_login", "name"}
         )
     },
     indexes = {
         @Index(name = "idx_saved_repo_user", columnList = "user_id"),
-        @Index(name = "idx_saved_repo_owner_name", columnList = "owner,name"),
-        @Index(name = "idx_saved_repo_view", columnList = "view_count")
+        @Index(name = "idx_saved_repo_owner_name", columnList = "owner_login,name")
     }
 )
 @Getter
@@ -36,9 +33,12 @@ public class SavedRepo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY,optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "repo_github_id", nullable = false)
+    private Integer repoGithubId;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -52,13 +52,6 @@ public class SavedRepo {
     @Column(name = "language_main", nullable = false)
     private String languageMain;
 
-    @Column(name = "view_count", nullable = false)
-    private Integer viewCount = 0;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "item_visibility", nullable = false)
-    private RepoVisibleType itemVisibility = RepoVisibleType.PUBLIC;
-
     @Column(name = "stars")
     private Integer stars;
 
@@ -68,17 +61,19 @@ public class SavedRepo {
     @Column(name = "forks")
     private Integer forks;
 
-    @Column(name = "readme_excerpt",columnDefinition = "TEXT")
+    @Column(name = "readme_excerpt", columnDefinition = "TEXT")
     private String readmeExcerpt;
 
-    @Column(name = "owner", nullable = false)
-    private String owner;
+    @Embedded
+    private RepoOwner owner;
+
+    @Column(name = "is_pinned")
+    private boolean isPinned;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 }
