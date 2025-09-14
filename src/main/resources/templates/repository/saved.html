@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>저장한 레포지토리</title>
+    <link rel="stylesheet" th:src="@{/css/pages/saved.css}">
+
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <main>
+        <div class="saved-repos">
+            <h1 class="saved-repos__title">저장한 레포지토리</h1>
+
+            <div class="saved-repos__filters">
+                <select name="language">
+                    <option value="">언어 필터</option>
+                    <option value="Java">Java</option>
+                    <option value="Python">Python</option>
+                    <option value="JavaScript">JavaScript</option>
+                    <option value="C++">C++</option>
+                </select>
+
+                <select name="sort">
+                    <option value="latest">최신순</option>
+                    <option value="stars">별점순</option>
+                    <option value="forks">포크순</option>
+                </select>
+            </div>
+
+            <div th:if="${savedRepos.isEmpty()}" class="saved-repos__empty-message">
+                저장한 레포지토리가 없습니다.
+            </div>
+
+            <div th:if="${not #lists.isEmpty(savedRepos)}" class="repo-list">
+                <div th:each="repo : ${savedRepos}" class="repo-card">
+                    <div class="repo-card__header">
+                        <a th:href="${repo.htmlUrl}" target="_blank" class="repo-card__title" th:text="${repo.name}">레포지토리 이름</a>
+                        <div class="repo-card__actions">
+                            <form th:action="@{/saved-repos/pin/{id}(id=${repo.id})}" method="post">
+                                <button type="submit" class="btn btn--pin">
+                                    <img th:src="@{/images/pin-icon.svg}" alt="핀">
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn--toggle" onclick="toggleReadme(this)">자세히 보기</button>
+                            <form th:action="@{/saved-repos/delete/{id}(id=${repo.id})}" method="post">
+                                <button type="submit" class="btn btn--delete">삭제</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <p class="repo-card__description" th:text="${repo.description}">레포지토리 설명</p>
+
+                    <div class="repo-card__meta">
+                        <span th:text="'⭐ ' + ${repo.stargazersCount}">⭐ 0</span>
+                        <span th:text="'🍴 ' + ${repo.forksCount}">🍴 0</span>
+                        <span th:text="${repo.language}">언어</span>
+                        <span th:if="${repo.updatedAt != null}" th:text="'업데이트: ' + ${#temporals.format(repo.updatedAt, 'yyyy-MM-dd')}">업데이트 날짜</span>
+                    </div>
+
+                    <div class="repo-card__note">
+                        <span th:if="${repo.isPinned}">📌 고정된 레포지토리</span>
+                        <span th:if="${repo.isPrivate}">🔒 비공개</span>
+                    </div>
+
+                    <div class="repo-card__preview" th:if="${repo.readmePreview != null}" th:text="${repo.readmePreview}">
+                        README 미리보기 내용
+                    </div>
+
+                    <div class="repo-card__memo">
+                        <form th:action="@{/saved-repos/memo/{id}(id=${repo.id})}" method="post">
+                            <textarea name="memo" placeholder="메모를 입력하세요..." th:text="${repo.memo}" readonly></textarea>
+                            <button type="submit" class="btn" style="margin-top: 8px;">메모 저장</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <script>
+        function toggleReadme(button) {
+            const preview = button.closest('.repo-card').querySelector('.repo-card__preview');
+            button.classList.toggle('expanded');
+            preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>
