@@ -1,0 +1,158 @@
+@import url("/css/shared/header.css");
+@import url("/css/shared/footer.css");
+
+.saved-repos {
+    max-width: 880px;
+    margin: 40px auto;
+    padding: 0 16px;
+}
+
+.saved-repos__title {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.saved-repos__filters {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.saved-repos__filters select {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+}
+
+.repo-list {
+    display: grid;
+    gap: 20px;
+}
+
+.repo-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.repo-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.repo-card__title {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--blue);
+    text-decoration: none;
+}
+
+.repo-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.repo-card__description {
+    margin: 12px 0;
+    color: var(--text);
+}
+
+.repo-card__actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    background: var(--blue);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn:hover {
+    background: var(--blue-hover);
+}
+
+.btn--delete {
+    background: var(--red);
+}
+
+.btn--delete:hover {
+    background: #a71822;
+}
+
+.btn--pin {
+    background: transparent;
+    padding: 6px 8px;
+}
+
+.btn--pin img {
+    width: 18px;
+    height: 18px;
+}
+
+.saved-repos__empty-message {
+    text-align: center;
+    color: var(--muted);
+    margin-top: 60px;
+    font-size: 16px;
+}
+
+.repo-card__note {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+}
+
+.repo-card__preview {
+    margin-top: 10px;
+    background: #f0f4f8;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    white-space: pre-line;
+    display: none;
+}
+
+.btn--toggle::after {
+    content: '▼';
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+.btn--toggle.expanded::after {
+    content: '▲';
+}
+
+.repo-card__memo {
+    margin-top: 12px;
+}
+
+.repo-card__memo textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    resize: none;
+    height: 100px;
+}
