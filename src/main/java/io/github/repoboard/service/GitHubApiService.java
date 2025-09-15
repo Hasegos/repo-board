@@ -13,6 +13,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -164,26 +165,48 @@ public class GitHubApiService {
     @Cacheable(value = "ghRepoById", key = "#repoId", sync = true)
     public GithubRepoDTO getRepositoryId(Long repoId){
         try {
-            Mono<GithubRepoDTO> repoDTOMono =  githubWebClient.get()
+            return githubWebClient.get()
                     .uri("/repositories/{id}", repoId)
                     .retrieve()
                     .bodyToMono(GithubRepoDTO.class)
-                    .timeout(TIMEOUT);
-
-            GithubRepoDTO repo = repoDTOMono.block();
-            if(repo == null){
-                throw new IllegalArgumentException("해당 레포지토리를 찾을 수 없습니다.");
-            }
-
-            Mono<String> readmeMono = githubWebClient.get()
-                    .uri("")
-
+                    .timeout(TIMEOUT)
+                    .block();
         }catch (WebClientResponseException.NotFound e){
             return null;
         }catch (Exception e){
             throw new RuntimeException("레포지토리 정보 조회 중 오류 발생", e);
         }
+    }
 
+    /**
+     *  GitHub 레포지토리의 README 를 Id 기반으로 조회합니다.
+     *
+     * <p>
+     * GitHub API의 {@code /repos/{owner}/{repo}/readme} 엔드포인트를 호출합니다.
+     * </p>
+     * @param repoId 레포지토리의 고유 ID
+     * @return {@link String} 객체 (없으면 null)
+     */
+    @Cacheable(value = "ghRepoReadmeById" , key = "#repoId", sync = true)
+    public String getReadmeById(Long repoId){
+        GithubRepoDTO repo = getRepositoryId(repoId);
+        if(repo == null || repo.getOwner() == null){
+            throw new IllegalArgumentException("레포지토리 정보를 찾을 수 없거나 Owner 정보가 없습니다.");
+        }
+        try{
+            return githubWebClient.get()
+                    .uri("/repos/{owner}/{repo}/readme",
+                            repo.getOwner().getLogin(), repo.getName())
+                    .header(HttpHeaders.ACCEPT, "application/vnd.github.v3.raw")
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .timeout(TIMEOUT)
+                    .block();
+        } catch (WebClientResponseException.NotFound e){
+            return null;
+        }catch (Exception e){
+            throw new RuntimeException("레포지토리 정보 조회 중 오류 발생");
+        }
     }
 
     /**
