@@ -1,4 +1,4 @@
-package io.github.repoboard.dto;
+package io.github.repoboard.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;

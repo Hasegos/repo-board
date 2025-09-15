@@ -1,4 +1,4 @@
-package io.github.repoboard.dto;
+package io.github.repoboard.dto.auth;
 
 import io.github.repoboard.common.validation.annotation.ValidPassword;
 import io.github.repoboard.common.validation.annotation.ValidUsername;

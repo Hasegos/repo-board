@@ -1,9 +1,6 @@
-package io.github.repoboard.dto;
+package io.github.repoboard.dto.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 
@@ -11,13 +8,14 @@ import java.time.Instant;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class SavedRepoDTO {
 
-    private Integer repoGithubId;
+    private Long repoGithubId;
     private String name;
     private String htmlUrl;
     private String description;
-    private String languageMain;
+    private String language;
     private Integer stars;
     private Integer forks;
     private String readmeExcerpt;

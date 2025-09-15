@@ -1,4 +1,4 @@
-package io.github.repoboard.dto;
+package io.github.repoboard.dto.github;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -54,4 +54,8 @@ public class GithubRepoDTO {
     /** 메타데이터가 수정된 날짜 */
     @JsonProperty("updated_at")
     private Instant updatedAt;
+
+    /** 소유자 정보 */
+    @JsonProperty("owner")
+    private GithubRepoOwnerDTO owner;
 }
