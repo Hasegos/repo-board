@@ -1,6 +1,6 @@
 package io.github.repoboard.common.util;
 
-import io.github.repoboard.dto.QueryStrategyDTO;
+import io.github.repoboard.dto.strategy.QueryStrategyDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package io.github.repoboard.dto;
+package io.github.repoboard.dto.strategy;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

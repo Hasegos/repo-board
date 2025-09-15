@@ -1,4 +1,4 @@
-package io.github.repoboard.dto;
+package io.github.repoboard.dto.request;
 
 import io.github.repoboard.common.validation.annotation.ValidPassword;
 import jakarta.validation.constraints.NotBlank;

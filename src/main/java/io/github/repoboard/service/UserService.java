@@ -1,7 +1,7 @@
 package io.github.repoboard.service;
 
-import io.github.repoboard.dto.ChangePasswordDTO;
-import io.github.repoboard.dto.UserDTO;
+import io.github.repoboard.dto.request.ChangePasswordDTO;
+import io.github.repoboard.dto.auth.UserDTO;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.User;
 import io.github.repoboard.model.enums.UserProvider;
@@ -10,7 +10,6 @@ import io.github.repoboard.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;

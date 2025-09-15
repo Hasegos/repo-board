@@ -26,6 +26,10 @@
                     </p>
                 </div>
             </div>
+            <form action="/users/saved/repos" method="post">
+                <input type="hidden" name="id" th:value="${repo.id}">
+                <button>저장</button>
+            </form>
 
             <p class="repo-card__description" th:text="${repo.description ?: '설명이 없습니다.'}">
                 Repository description

@@ -1,6 +1,6 @@
 package io.github.repoboard.controller;
 
-import io.github.repoboard.dto.ChangePasswordDTO;
+import io.github.repoboard.dto.request.ChangePasswordDTO;
 import io.github.repoboard.model.User;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.UserService;

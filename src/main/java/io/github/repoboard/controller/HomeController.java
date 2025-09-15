@@ -1,8 +1,8 @@
 package io.github.repoboard.controller;
 
 import io.github.repoboard.common.util.QueryStrategyHolder;
-import io.github.repoboard.dto.GithubRepoDTO;
-import io.github.repoboard.dto.QueryStrategyDTO;
+import io.github.repoboard.dto.github.GithubRepoDTO;
+import io.github.repoboard.dto.strategy.QueryStrategyDTO;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.GitHubApiService;
 import jakarta.servlet.http.HttpSession;
