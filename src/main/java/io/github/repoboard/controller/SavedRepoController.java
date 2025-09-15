@@ -36,12 +36,6 @@ public class SavedRepoController {
         return "repository/saved";
     }
 
-    @GetMapping("/{id}/readme")
-    public ResponseEntity<String> getReadmeByRepoId(@PathVariable Long id){
-        String readme = gitHubApiService.getReadmeById(id);
-        return ResponseEntity.ok(readme);
-    }
-
     @PostMapping
     public String saveRepo(@AuthenticationPrincipal CustomUserPrincipal principal,
                            @RequestParam("id") Long id){
@@ -50,5 +44,11 @@ public class SavedRepoController {
         savedRepoService.savedRepoById(id, user);
 
         return "redirect:/users/saved/repos";
+    }
+
+    @GetMapping("/{repoId}/readme")
+    public ResponseEntity<String> getReadmeByRepoId(@PathVariable Long repoId){
+        String readme = gitHubApiService.getReadmeById(repoId);
+        return ResponseEntity.ok(readme);
     }
 }
