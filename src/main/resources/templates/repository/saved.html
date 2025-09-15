@@ -2,8 +2,9 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>저장한 레포지토리</title>
-    <link rel="stylesheet" th:src="@{/css/pages/saved.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/saved.css}" />
 </head>
 <body>
     <header th:replace="~{fragments/header :: header}"></header>
@@ -32,16 +33,19 @@
             </div>
 
             <div th:if="${not #lists.isEmpty(savedRepos)}" class="repo-list">
-                <div th:each="repo : ${savedRepos}" class="repo-card">
+                <div th:each="repo : ${savedRepos}" class="repo-card" th:attr="data-repo-id=${repo.repoGithubId}">
                     <div class="repo-card__header">
                         <a th:href="${repo.htmlUrl}" target="_blank" class="repo-card__title" th:text="${repo.name}">레포지토리 이름</a>
                         <div class="repo-card__actions">
                             <form th:action="@{/saved-repos/pin/{id}(id=${repo.id})}" method="post">
                                 <button type="submit" class="btn btn--pin">
-                                    <img th:src="@{/images/pin-icon.svg}" alt="핀">
+                                    <img alt="핀">
                                 </button>
                             </form>
-                            <button type="button" class="btn btn--toggle" onclick="toggleReadme(this)">자세히 보기</button>
+                            <button type="button" class="btn btn--toggle" onclick="toggleReadme(this)">
+                                <span class="toggle-label">자세히 보기</span>
+                                <span class="arrow">▼</span>
+                            </button>
                             <form th:action="@{/saved-repos/delete/{id}(id=${repo.id})}" method="post">
                                 <button type="submit" class="btn btn--delete">삭제</button>
                             </form>
@@ -61,15 +65,10 @@
                         <span th:if="${repo.isPinned}">📌 고정된 레포지토리</span>
                     </div>
 
-                    <!-- 📌 README 펼치기 버튼 -->
-                    <button type="button" class="btn btn--toggle" onclick="toggleReadme(this)">
-                        <span class="toggle-label">Readme 상세히 보기</span>
-                        <span class="arrow">▼</span>
-                    </button>
-
-                    <!-- 📘 README 내용 박스 -->
+                    <!-- README -->
                     <div class="repo-card__readme">
-                        <div class="readme-content loading">로딩 중...</div>
+                        <h3 class="readme-title">📘 README</h3>
+                        <div class="readme-content loading collapsed">로딩 중...</div>
                     </div>
 
                     <div class="repo-card__memo">
