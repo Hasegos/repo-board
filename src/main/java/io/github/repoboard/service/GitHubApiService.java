@@ -40,6 +40,7 @@ public class GitHubApiService {
     private final WebClient githubWebClient;
     private static final Duration TIMEOUT = Duration.ofSeconds(35);
     private final CacheManager cacheManager;
+    private final MarkdownService markdownService;
 
     /**
      * GitHub URL에서 username 자체 검증 (1~39자, 앞/뒤 하이픈 금지)
@@ -194,7 +195,7 @@ public class GitHubApiService {
             throw new IllegalArgumentException("레포지토리 정보를 찾을 수 없거나 Owner 정보가 없습니다.");
         }
         try{
-            return githubWebClient.get()
+            String markdown = githubWebClient.get()
                     .uri("/repos/{owner}/{repo}/readme",
                             repo.getOwner().getLogin(), repo.getName())
                     .header(HttpHeaders.ACCEPT, "application/vnd.github.v3.raw")
@@ -202,6 +203,7 @@ public class GitHubApiService {
                     .bodyToMono(String.class)
                     .timeout(TIMEOUT)
                     .block();
+            return markdownService.toSafeHtml(markdown);
         } catch (WebClientResponseException.NotFound e){
             return null;
         }catch (Exception e){
