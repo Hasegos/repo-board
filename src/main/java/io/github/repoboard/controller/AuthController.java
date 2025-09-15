@@ -1,6 +1,6 @@
 package io.github.repoboard.controller;
 
-import io.github.repoboard.dto.UserDTO;
+import io.github.repoboard.dto.auth.UserDTO;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.UserService;
 import jakarta.servlet.http.HttpSession;

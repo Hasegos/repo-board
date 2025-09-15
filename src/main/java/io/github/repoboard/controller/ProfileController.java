@@ -1,7 +1,7 @@
 package io.github.repoboard.controller;
 
-import io.github.repoboard.dto.GithubRepoDTO;
-import io.github.repoboard.dto.GithubUserDTO;
+import io.github.repoboard.dto.github.GithubRepoDTO;
+import io.github.repoboard.dto.github.GithubUserDTO;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.User;
 import io.github.repoboard.model.enums.UserProvider;

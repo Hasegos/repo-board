@@ -1,7 +1,7 @@
 package io.github.repoboard.service;
 
-import io.github.repoboard.dto.GithubRepoDTO;
-import io.github.repoboard.dto.GithubUserDTO;
+import io.github.repoboard.dto.github.GithubRepoDTO;
+import io.github.repoboard.dto.github.GithubUserDTO;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.User;
 import io.github.repoboard.repository.ProfileRepository;
