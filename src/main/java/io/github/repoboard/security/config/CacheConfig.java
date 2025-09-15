@@ -71,6 +71,14 @@ public class CacheConfig {
                         .recordStats()
                         .build()
         );
+        var repoByIdCache = new CaffeineCache(
+                "ghRepoById",
+                Caffeine.newBuilder()
+                        .maximumSize(5000)
+                        .expireAfterWrite(Duration.ofMinutes(5))
+                        .recordStats()
+                        .build()
+        );
         var searchCache = new CaffeineCache(
                 "ghSearch",
                 Caffeine.newBuilder()
@@ -88,7 +96,8 @@ public class CacheConfig {
                         .build()
         );
         var m = new SimpleCacheManager();
-        m.setCaches(List.of(userCache, reposCache, searchCache, refreshCache));
+        m.setCaches(List.of(userCache, reposCache,repoByIdCache,
+                searchCache, refreshCache));
         return m;
     }
 }
