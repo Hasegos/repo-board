@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>저장한 레포지토리</title>
     <link rel="stylesheet" th:src="@{/css/pages/saved.css}">
-
 </head>
 <body>
     <header th:replace="~{fragments/header :: header}"></header>
@@ -54,22 +53,28 @@
                     <div class="repo-card__meta">
                         <span th:text="'⭐ ' + ${repo.stars}">⭐ 0</span>
                         <span th:text="'🍴 ' + ${repo.forks}">🍴 0</span>
-                        <span th:text="${repo.language}">언어</span>
+                        <span th:text="${repo.languageMain}">언어</span>
                         <span th:if="${repo.updatedAt != null}" th:text="'업데이트: ' + ${#temporals.format(repo.updatedAt, 'yyyy-MM-dd')}">업데이트 날짜</span>
                     </div>
 
                     <div class="repo-card__note">
                         <span th:if="${repo.isPinned}">📌 고정된 레포지토리</span>
-                        <span th:if="${repo.isPrivate}">🔒 비공개</span>
                     </div>
 
-                    <div class="repo-card__preview" th:if="${repo.readmePreview != null}" th:text="${repo.readmePreview}">
-                        README 미리보기 내용
+                    <!-- 📌 README 펼치기 버튼 -->
+                    <button type="button" class="btn btn--toggle" onclick="toggleReadme(this)">
+                        <span class="toggle-label">Readme 상세히 보기</span>
+                        <span class="arrow">▼</span>
+                    </button>
+
+                    <!-- 📘 README 내용 박스 -->
+                    <div class="repo-card__readme">
+                        <div class="readme-content loading">로딩 중...</div>
                     </div>
 
                     <div class="repo-card__memo">
                         <form th:action="@{/saved-repos/memo/{id}(id=${repo.id})}" method="post">
-                            <textarea name="memo" placeholder="메모를 입력하세요..." th:text="${repo.memo}" readonly></textarea>
+                            <textarea name="memo" placeholder="메모를 입력하세요..." th:text="${repo.note}" readonly></textarea>
                             <button type="submit" class="btn" style="margin-top: 8px;">메모 저장</button>
                         </form>
                     </div>
@@ -78,12 +83,6 @@
         </div>
     </main>
     <footer th:replace="~{fragments/footer :: footer}"></footer>
-    <script>
-        function toggleReadme(button) {
-            const preview = button.closest('.repo-card').querySelector('.repo-card__preview');
-            button.classList.toggle('expanded');
-            preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
-        }
-    </script>
+    <script th:src="@{/js/saved.js}"></script>
 </body>
 </html>
