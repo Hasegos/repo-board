@@ -38,7 +38,7 @@ public class SavedRepo {
     private User user;
 
     @Column(name = "repo_github_id", nullable = false)
-    private Integer repoGithubId;
+    private Long repoGithubId;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -63,6 +63,9 @@ public class SavedRepo {
 
     @Column(name = "readme_excerpt", columnDefinition = "TEXT")
     private String readmeExcerpt;
+
+    @Column(name ="readme_full", columnDefinition = "TEXT")
+    private String readmeFull;
 
     @Embedded
     private RepoOwner owner;
