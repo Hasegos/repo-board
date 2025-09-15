@@ -61,12 +61,6 @@ public class SavedRepo {
     @Column(name = "forks")
     private Integer forks;
 
-    @Column(name = "readme_excerpt", columnDefinition = "TEXT")
-    private String readmeExcerpt;
-
-    @Column(name ="readme_full", columnDefinition = "TEXT")
-    private String readmeFull;
-
     @Embedded
     private RepoOwner owner;
 
