@@ -1,9 +1,9 @@
 package io.github.repoboard.service;
 
-import io.github.repoboard.dto.GithubRepoDTO;
-import io.github.repoboard.dto.GithubSearchResponse;
-import io.github.repoboard.dto.GithubUserDTO;
-import io.github.repoboard.dto.QueryStrategyDTO;
+import io.github.repoboard.dto.github.GithubRepoDTO;
+import io.github.repoboard.dto.github.GithubSearchResponse;
+import io.github.repoboard.dto.github.GithubUserDTO;
+import io.github.repoboard.dto.strategy.QueryStrategyDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
@@ -152,6 +152,53 @@ public class GitHubApiService {
         return new PageImpl<>(repos, pageable, total);
     }
 
+    /**
+     * GitHub 레포지토리를 ID 기반으로 단건 조회합니다.
+     * <p>
+     * GitHub API의 {@code /repositories/{id}} 엔드포인트를 호출합니다.
+     * </p>
+     *
+     * @param repoId 레포지토리 고유 ID
+     * @return {@link GithubRepoDTO} 객체 (없으면 null)
+     */
+    @Cacheable(value = "ghRepoById", key = "#repoId", sync = true)
+    public GithubRepoDTO getRepositoryId(Long repoId){
+        try {
+            Mono<GithubRepoDTO> repoDTOMono =  githubWebClient.get()
+                    .uri("/repositories/{id}", repoId)
+                    .retrieve()
+                    .bodyToMono(GithubRepoDTO.class)
+                    .timeout(TIMEOUT);
+
+            GithubRepoDTO repo = repoDTOMono.block();
+            if(repo == null){
+                throw new IllegalArgumentException("해당 레포지토리를 찾을 수 없습니다.");
+            }
+
+            Mono<String> readmeMono = githubWebClient.get()
+                    .uri("")
+
+        }catch (WebClientResponseException.NotFound e){
+            return null;
+        }catch (Exception e){
+            throw new RuntimeException("레포지토리 정보 조회 중 오류 발생", e);
+        }
+
+    }
+
+    /**
+     * 언어, 정렬, 커스텀 전략(QueryStrategyDTO)에 기반하여 GitHub 레포지토리를 검색합니다.
+     * <p>
+     * - 기본 전략: {@code is:public stars:>1000 language:<언어>} <br>
+     * - 사용자 정의 전략: strategy.getQuery() + {@code language:<언어>}
+     * </p>
+     *
+     * @param language 언어 필터 (예: Java, Python)
+     * @param pageable 페이지네이션 정보
+     * @param strategy 검색 전략 (nullable)
+     * @param sort 정렬 기준 (popular=stars, recent=updated)
+     * @return {@link Page} 형태의 검색 결과
+     */
     public Page<GithubRepoDTO> fetchRepos(String language, Pageable pageable, QueryStrategyDTO strategy, String sort){
 
         String finalQuery = null;
@@ -176,11 +223,15 @@ public class GitHubApiService {
             System.out.println("📦 캐시 히트: " + cacheKey);
             return cached;
         }
-        System.out.println("Query : " + finalQuery);
-        System.out.println("cacheKey : " + cacheKey);
         return executeGithubSearch(cache, cacheKey, finalQuery, pageable,githubSort);
     }
 
+    /**
+     * 주어진 sortKey를 GitHub API에서 지원하는 sort 파라미터로 매핑합니다.
+     *
+     * @param sortKey 사용자 정의 정렬 키 (popular/recent)
+     * @return GitHub API에서 사용하는 정렬 키 (stars/updated)
+     */
     private String getSortKey(String sortKey){
         return switch (sortKey){
             case "popular" -> "stars";
@@ -189,6 +240,16 @@ public class GitHubApiService {
         };
     }
 
+    /**
+     * 실제 GitHub API 호출을 실행하여 검색 결과를 반환합니다.
+     *
+     * @param cache    캐시 인스턴스 (ghSearch/ghRefresh)
+     * @param cacheKey 캐시 키
+     * @param query    GitHub 검색 쿼리
+     * @param pageable 페이지네이션 정보
+     * @param sort     정렬 기준 (stars/updated)
+     * @return {@link Page} 형태의 {@link GithubRepoDTO} 결과
+     */
     private Page<GithubRepoDTO> executeGithubSearch(Cache cache, String cacheKey,
                                                     String query, Pageable pageable, String sort){
         try {
