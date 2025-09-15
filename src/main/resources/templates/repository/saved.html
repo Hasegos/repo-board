@@ -52,8 +52,8 @@
                     <p class="repo-card__description" th:text="${repo.description}">레포지토리 설명</p>
 
                     <div class="repo-card__meta">
-                        <span th:text="'⭐ ' + ${repo.stargazersCount}">⭐ 0</span>
-                        <span th:text="'🍴 ' + ${repo.forksCount}">🍴 0</span>
+                        <span th:text="'⭐ ' + ${repo.stars}">⭐ 0</span>
+                        <span th:text="'🍴 ' + ${repo.forks}">🍴 0</span>
                         <span th:text="${repo.language}">언어</span>
                         <span th:if="${repo.updatedAt != null}" th:text="'업데이트: ' + ${#temporals.format(repo.updatedAt, 'yyyy-MM-dd')}">업데이트 날짜</span>
                     </div>
