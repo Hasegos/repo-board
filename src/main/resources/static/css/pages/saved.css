@@ -1,17 +1,20 @@
 @import url("/css/shared/header.css");
 @import url("/css/shared/footer.css");
 
+/* 전체 레이아웃 */
 .saved-repos {
-    max-width: 880px;
+    max-width: 1600px;
     margin: 40px auto;
     padding: 0 16px;
 }
 
+/* 제목 */
 .saved-repos__title {
     text-align: center;
     margin-bottom: 24px;
 }
 
+/* 필터 */
 .saved-repos__filters {
     display: flex;
     gap: 12px;
@@ -27,35 +30,43 @@
     font-size: 14px;
 }
 
+/* 카드 목록 */
 .repo-list {
     display: grid;
-    gap: 20px;
+    gap:10px;
+    align-items: start;
 }
 
+/* 개별 카드 */
 .repo-card {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 20px;
     box-shadow: var(--shadow);
     display: flex;
+    padding:20px;
+    justify-content: center;
     flex-direction: column;
-    position: relative;
+    height: 100%;
 }
 
+/* 카드 헤더 */
 .repo-card__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
+/* 제목 링크 */
 .repo-card__title {
     font-size: 20px;
     font-weight: bold;
     color: var(--blue);
     text-decoration: none;
+    max-width:220px;
 }
 
+/* 메타 정보 */
 .repo-card__meta {
     display: flex;
     flex-wrap: wrap;
@@ -64,17 +75,21 @@
     color: var(--muted);
 }
 
+/* 설명 */
 .repo-card__description {
     margin: 12px 0;
     color: var(--text);
 }
 
+/* 액션 버튼 */
 .repo-card__actions {
-    margin-top: 12px;
     display: flex;
-    gap: 10px;
+    gap:10px;
+    align-items: center;
+    flex-wrap:wrap;
 }
 
+/* 공통 버튼 */
 .btn {
     background: var(--blue);
     color: white;
@@ -92,6 +107,7 @@
     background: var(--blue-hover);
 }
 
+/* 삭제 버튼 */
 .btn--delete {
     background: var(--red);
 }
@@ -100,6 +116,7 @@
     background: #a71822;
 }
 
+/* 핀 버튼 */
 .btn--pin {
     background: transparent;
     padding: 6px 8px;
@@ -110,6 +127,7 @@
     height: 18px;
 }
 
+/* 비어 있을 때 메시지 */
 .saved-repos__empty-message {
     text-align: center;
     color: var(--muted);
@@ -117,31 +135,67 @@
     font-size: 16px;
 }
 
+/* 노트 (고정 여부 등) */
 .repo-card__note {
     font-size: 13px;
     color: var(--muted);
     margin-top: 8px;
 }
 
+/* 자세히 보기 버튼 안쪽 화살표 */
 .btn--toggle .arrow {
     font-size: 12px;
     margin-left: 4px;
+    transition: transform 0.2s ease;
 }
 
+/* 펼쳐진 경우 화살표 회전 (▼ → ▲) */
+.repo-card.open .btn--toggle .arrow {
+    transform: rotate(180deg);
+}
+
+/* README 박스 전체 (항상 보이되 내용만 접힘) */
 .repo-card__readme {
     background-color: #f9f9f9;
     padding: 12px;
     margin-top: 10px;
     border-radius: 4px;
-    white-space: pre-wrap;
-    font-family: monospace;
+    border-left: 4px solid var(--blue);
+}
+
+/* README 제목 항상 표시 */
+.repo-card__readme h3 {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+/* README 본문 영역 */
+.readme-content {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: auto;
+    background-color: #f9f9f9;
+    padding: 12px;
+    border: 1px solid #e1e4e8;
+    font-family: "Courier New", monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap
+    word-break: break-word;       /* 긴 단어 줄바꿈 */
+    overflow-wrap: break-word;
+}
+
+/* 접힌 상태 */
+.readme-content.collapsed {
     display: none;
 }
 
+/* README 로딩 상태 */
 .readme-content.loading {
     color: gray;
 }
 
+/* 메모 */
 .repo-card__memo {
     margin-top: 12px;
 }
@@ -153,4 +207,17 @@
     border: 1px solid var(--border);
     resize: none;
     height: 100px;
+}
+
+/* 반응형 대응 */
+@media (min-width: 640px) {
+    .repo-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 1024px) {
+    .repo-list {
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    }
 }
