@@ -123,25 +123,23 @@
     margin-top: 8px;
 }
 
-.repo-card__preview {
-    margin-top: 10px;
-    background: #f0f4f8;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #333;
-    white-space: pre-line;
-    display: none;
-}
-
-.btn--toggle::after {
-    content: '▼';
+.btn--toggle .arrow {
     font-size: 12px;
     margin-left: 4px;
 }
 
-.btn--toggle.expanded::after {
-    content: '▲';
+.repo-card__readme {
+    background-color: #f9f9f9;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    display: none;
+}
+
+.readme-content.loading {
+    color: gray;
 }
 
 .repo-card__memo {
