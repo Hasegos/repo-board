@@ -9,6 +9,8 @@
 
     @Repository
     public interface SavedRepoRepository extends JpaRepository<SavedRepo, Long> {
-        Optional<SavedRepo> findByRepoGithubIdAndUserId(Integer repoGithubId, Long userId);
+        Optional<SavedRepo> findByRepoGithubIdAndUserId(Long repoGithubId, Long userId);
         List<SavedRepo> findAllByUserId(Long userId);
+        void deleteByRepoGithubIdAndUserId(Long repoGithubId, Long userId);
+        boolean existsByRepoGithubIdAndUserId(Long repoGithubId, Long userId);
     }
