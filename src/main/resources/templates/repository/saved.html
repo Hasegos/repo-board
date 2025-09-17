@@ -12,6 +12,10 @@
         <div class="saved-repos">
             <h1 class="saved-repos__title">저장한 레포지토리</h1>
 
+            <div th:if="${errorMessage}" class="error-box">
+                <p th:text="${errorMessage}"></p>
+            </div>
+
             <div class="saved-repos__filters">
                 <select name="language">
                     <option value="">언어 필터</option>
@@ -28,54 +32,26 @@
                 </select>
             </div>
 
-            <div th:if="${savedRepos.isEmpty()}" class="saved-repos__empty-message">
-                저장한 레포지토리가 없습니다.
+            <div class="pinned-repos-section">
+                <h2 class="section-title">📌 고정된 레포지토리</h2>
+                <div th:if="${#lists.isEmpty(pinnedRepos)}" class="saved-repos__empty-message">
+                    고정된 레포지토리가 없습니다.
+                </div>
+                <div class="repo-list">
+                    <div th:each="repo : ${pinnedRepos}">
+                        <div th:replace="fragments/saved_card :: repoCardFragment(repo=${repo})"></div>
+                    </div>
+                </div>
             </div>
 
-            <div th:if="${not #lists.isEmpty(savedRepos)}" class="repo-list">
-                <div th:each="repo : ${savedRepos}" class="repo-card" th:attr="data-repo-id=${repo.repoGithubId}">
-                    <div class="repo-card__header">
-                        <a th:href="${repo.htmlUrl}" target="_blank" class="repo-card__title" th:text="${repo.name}">레포지토리 이름</a>
-                        <div class="repo-card__actions">
-                            <form th:action="@{/saved-repos/pin/{id}(id=${repo.id})}" method="post">
-                                <button type="submit" class="btn btn--pin">
-                                    <img alt="핀">
-                                </button>
-                            </form>
-                            <button type="button" class="btn btn--toggle" onclick="toggleReadme(this)">
-                                <span class="toggle-label">자세히 보기</span>
-                                <span class="arrow">▼</span>
-                            </button>
-                            <form th:action="@{/saved-repos/delete/{id}(id=${repo.id})}" method="post">
-                                <button type="submit" class="btn btn--delete">삭제</button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <p class="repo-card__description" th:text="${repo.description}">레포지토리 설명</p>
-
-                    <div class="repo-card__meta">
-                        <span th:text="'⭐ ' + ${repo.stars}">⭐ 0</span>
-                        <span th:text="'🍴 ' + ${repo.forks}">🍴 0</span>
-                        <span th:text="${repo.languageMain}">언어</span>
-                        <span th:if="${repo.updatedAt != null}" th:text="'업데이트: ' + ${#temporals.format(repo.updatedAt, 'yyyy-MM-dd')}">업데이트 날짜</span>
-                    </div>
-
-                    <div class="repo-card__note">
-                        <span th:if="${repo.isPinned}">📌 고정된 레포지토리</span>
-                    </div>
-
-                    <!-- README -->
-                    <div class="repo-card__readme">
-                        <h3 class="readme-title">📘 README</h3>
-                        <div class="readme-content loading collapsed">로딩 중...</div>
-                    </div>
-
-                    <div class="repo-card__memo">
-                        <form th:action="@{/saved-repos/memo/{id}(id=${repo.id})}" method="post">
-                            <textarea name="memo" placeholder="메모를 입력하세요..." th:text="${repo.note}" readonly></textarea>
-                            <button type="submit" class="btn" style="margin-top: 8px;">메모 저장</button>
-                        </form>
+            <div class="unpinned-repos-section">
+                <h2 class="section-title">🗂 저장한 레포지토리</h2>
+                <div th:if="${#lists.isEmpty(unpinnedRepos)}" class="saved-repos__empty-message">
+                    저장한 레포지토리가 없습니다.
+                </div>
+                <div class="repo-list">
+                    <div th:each="repo : ${unpinnedRepos}">
+                        <div th:replace="fragments/saved_card :: repoCardFragment(repo=${repo})"></div>
                     </div>
                 </div>
             </div>
