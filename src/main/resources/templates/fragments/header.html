@@ -1,12 +1,3 @@
-<!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>헤더 페이지</title>
-    <link rel="stylesheet" th:href="@{/css/shared/header.css}" />
-</head>
-<body>
 <header th:fragment="header" class="header">
     <div class="header__inner">
         <a class="header__logo" th:href="@{/}" aria-label="RepoBoard 홈">
@@ -82,5 +73,3 @@
     </div>
     <script defer th:src="@{/js/header.js}"></script>
 </header>
-</body>
-</html>
