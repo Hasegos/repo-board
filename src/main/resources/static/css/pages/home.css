@@ -45,6 +45,21 @@
     min-width: 0;
 }
 
+/* 저장 버튼 */
+.save-btn {
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    border: 1px solid #d0d7de;
+    color: #24292f;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.save-btn:hover {
+    background-color: #f6f8fa;
+}
+
 .repo-card__title {
     font-weight: 600;
     font-size: 1.125rem;
