@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', function () {
     let rateLimitEndTime = 0;
     let isEnd = false;
     const repoCache = new Map();
+    const errorDiv = document.getElementById('save-error');
+    const message = errorDiv?.dataset?.message;
+
+    if(message){
+        alert(message);
+    }
 
     const MAX_CACHE_SIZE = 20;
     const MAX_RETRY_COUNT = 3;
