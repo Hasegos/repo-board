@@ -1,0 +1,47 @@
+<th:block th:fragment="repoCardFragment(repo)">
+    <div class="repo-card" th:attr="data-repo-id=${repo.repoGithubId}">
+        <div class="repo-card__header">
+            <a th:href="${repo.htmlUrl}" target="_blank" class="repo-card__title" th:text="${repo.name}">레포지토리 이름</a>
+            <div class="repo-card__actions">
+                <form th:action="@{/users/saved/repos/pin/{repoGithubId}(repoGithubId=${repo.repoGithubId})}"
+                      method="post">
+                    <input type="hidden" name="isPinned" th:value="${!repo.isPinned}">
+                    <button type="submit" class="btn btn--pin">
+                        <img th:src="@{/images/pin.svg}" alt="고정">
+                    </button>
+                </form>
+                <button type="button" class="btn btn--toggle" onclick="toggleReadme(this)">
+                    <span class="toggle-label">자세히 보기</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <form th:action="@{/users/saved/repos/delete/{repoGithubId}(repoGithubId=${repo.repoGithubId})}"
+                      method="post">
+                    <button type="submit" class="btn btn--delete">삭제</button>
+                </form>
+            </div>
+        </div>
+
+        <p class="repo-card__description" th:text="${repo.description}">레포지토리 설명</p>
+
+        <div class="repo-card__meta">
+            <span th:text="'⭐ ' + ${repo.stars}">⭐ 0</span>
+            <span th:text="'🍴 ' + ${repo.forks}">🍴 0</span>
+            <span th:text="${repo.languageMain}">언어</span>
+            <span th:if="${repo.updatedAt != null}" th:text="'업데이트: ' + ${#temporals.format(repo.updatedAt, 'yyyy-MM-dd')}">업데이트 날짜</span>
+        </div>
+
+        <!-- README -->
+        <div class="repo-card__readme">
+            <h3 class="readme-title">📘 README</h3>
+            <div class="readme-content loading collapsed">로딩 중...</div>
+        </div>
+
+        <!-- Note -->
+        <div class="repo-card__memo">
+            <form th:action="@{/users/saved/repos/note/{repoGithubId}(repoGithubId=${repo.repoGithubId})}" method="post">
+                <textarea name="note" placeholder="메모를 입력하세요..." th:text="${repo.note}"></textarea>
+                <button type="submit" class="btn">메모 저장</button>
+            </form>
+        </div>
+    </div>
+</th:block>
