@@ -1,5 +1,6 @@
 package io.github.repoboard.service;
 
+import io.github.repoboard.common.exception.SavedRepoNotFoundException;
 import io.github.repoboard.dto.github.GithubRepoDTO;
 import io.github.repoboard.dto.request.SavedRepoDTO;
 import io.github.repoboard.model.RepoOwner;
@@ -25,6 +26,10 @@ public class SavedRepoService {
     }
 
     public SavedRepo savedRepoById(Long repoGithubId, User user){
+        boolean existing = savedRepoRepository.existsByRepoGithubIdAndUserId(repoGithubId, user.getId());
+        if(existing){
+            throw new IllegalArgumentException("이미 저장한 레포지토리 입니다.");
+        }
 
         GithubRepoDTO dto = gitHubApiService.getRepositoryId(repoGithubId);
         if(dto == null){
@@ -36,7 +41,6 @@ public class SavedRepoService {
 
     @Transactional
     public SavedRepo savedReposDB(SavedRepoDTO savedRepoDTO, User user){
-
         SavedRepo savedRepo = new SavedRepo();
         savedRepo.setUser(user);
         savedRepo.setRepoGithubId(savedRepoDTO.getRepoGithubId());
@@ -57,21 +61,27 @@ public class SavedRepoService {
     }
 
     @Transactional
-    public SavedRepo updateSavedRepoDB(Integer savedGithubId, Long userId, String note, boolean isPinned){
-
+    public SavedRepo updateSavedRepoNote(Long savedGithubId, Long userId, String note){
         SavedRepo savedRepo = savedRepoRepository.findByRepoGithubIdAndUserId(savedGithubId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("저장한 레포지토리가 존재하지 않습니다."));
-
+                .orElseThrow(SavedRepoNotFoundException :: new);
         savedRepo.setNote(note);
-        savedRepo.setPinned(isPinned);
-
         return savedRepoRepository.save(savedRepo);
     }
 
     @Transactional
-    public void deleteSavedRepoDB(Integer savedGithubId, Long userId){
-        savedRepoRepository.findByRepoGithubIdAndUserId(savedGithubId, userId)
-                .ifPresent(savedRepoRepository::delete);
+    public SavedRepo updatedSavedRepoPin(Long savedGithubId, Long userId, boolean isPinned){
+        SavedRepo savedRepo = savedRepoRepository.findByRepoGithubIdAndUserId(savedGithubId, userId)
+                .orElseThrow(SavedRepoNotFoundException :: new);
+        savedRepo.setPinned(isPinned);
+        return savedRepoRepository.save(savedRepo);
+    }
+
+    @Transactional
+    public void deleteSavedRepoDB(Long savedGithubId, Long userId){
+        SavedRepo savedRepo = savedRepoRepository.findByRepoGithubIdAndUserId(savedGithubId, userId)
+                .orElseThrow(SavedRepoNotFoundException::new);
+
+        savedRepoRepository.deleteByRepoGithubIdAndUserId(savedRepo.getRepoGithubId(), userId);
     }
 
     private SavedRepoDTO convertToSavedRepoDTO(GithubRepoDTO dto){
