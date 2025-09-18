@@ -30,8 +30,19 @@
     font-size: 14px;
 }
 
+/* 고정 / 해제 목록 */
+.pinned-repos-section, .unpinned-repos-section {
+    margin-top:20px;
+}
+
+.section-title{
+    display:flex;
+    justify-content:center;
+}
+
 /* 카드 목록 */
 .repo-list {
+    margin-top:20px;
     display: grid;
     gap:10px;
     align-items: start;
@@ -123,8 +134,8 @@
 }
 
 .btn--pin img {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
 }
 
 /* 비어 있을 때 메시지 */
@@ -207,6 +218,16 @@
     border: 1px solid var(--border);
     resize: none;
     height: 100px;
+}
+
+.error-box {
+  background: #ffeaea;
+  color: #b20000;
+  border: 1px solid #ffcccc;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 /* 반응형 대응 */

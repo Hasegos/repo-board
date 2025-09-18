@@ -1,35 +1,24 @@
-<!doctype html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <title>푸터 페이지</title>
-</head>
-<body>
-    <footer th:fragment="footer" role="contentinfo" class="footer">
-        <div class="footer__inner">
-            <p class="footer__copy">
-                Copyright <span th:text="${#temporals.format(T(java.time.LocalDate).now(),'yyyy')}">2025</span>.
-                RepoBoard. all rights reserved.
-            </p>
+<footer th:fragment="footer" role="contentinfo" class="footer">
+    <div class="footer__inner">
+        <p class="footer__copy">
+            Copyright <span th:text="${#temporals.format(T(java.time.LocalDate).now(),'yyyy')}">2025</span>.
+            RepoBoard. all rights reserved.
+        </p>
 
-            <p class="footer__by">
-                by <strong class="footer__owner">아이언</strong>
-            </p>
+        <p class="footer__by">
+            by <strong class="footer__owner">아이언</strong>
+        </p>
 
-            <p class="footer__data">DATA BASED ON GITHUB OPEN API</p>
+        <p class="footer__data">DATA BASED ON GITHUB OPEN API</p>
 
-            <p class="footer__disclaimer">
-                <strong class="footer__disclaimer-text">
-                    RepoBoard is not associated with GitHub, Inc. and does not provide any warranty.
-                </strong>
-            </p>
+        <p class="footer__disclaimer">
+            <strong class="footer__disclaimer-text">
+                RepoBoard is not associated with GitHub, Inc. and does not provide any warranty.
+            </strong>
+        </p>
 
-            <p class="footer__contact">
-                contact : <a>chr010206@naver.com</a>
-            </p>
-        </div>
-    </footer>
-</body>
-</html>
+        <p class="footer__contact">
+            contact : <a>chr010206@naver.com</a>
+        </p>
+    </div>
+</footer>

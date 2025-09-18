@@ -65,7 +65,7 @@ public class SavedRepo {
     private RepoOwner owner;
 
     @Column(name = "is_pinned")
-    private boolean isPinned;
+    private boolean isPinned = false;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
