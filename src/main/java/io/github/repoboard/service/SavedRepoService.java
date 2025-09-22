@@ -8,10 +8,12 @@ import io.github.repoboard.model.SavedRepo;
 import io.github.repoboard.model.User;
 import io.github.repoboard.repository.SavedRepoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,10 +22,53 @@ public class SavedRepoService {
     private final SavedRepoRepository savedRepoRepository;
     private final GitHubApiService gitHubApiService;
 
-    @Transactional(readOnly = true)
-    public List<SavedRepo> getSavedReposByUserId(Long userId){
-        return savedRepoRepository.findAllByUserId(userId);
+    private Pageable applySort(Pageable pageable, String sort){
+        Sort sortOption = switch (sort){
+            case "recent" -> Sort.by(Sort.Direction.DESC, "updatedAt");
+            case "popular" -> Sort.by(Sort.Direction.DESC, "stars");
+            default -> Sort.by(Sort.Direction.DESC, "id");
+        };
+
+        if(pageable.isUnpaged()){
+            return Pageable.unpaged(sortOption);
+        }
+
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sortOption);
     }
+
+    /**
+     * 고정된 레포지토리 찾기
+     * @param userId
+     * @param language
+     * @param sort
+     * @return
+     */
+    public Page<SavedRepo> findPinnedRepos(Long userId, String language, String sort,Pageable pageable){
+        Pageable finalPageable = applySort(pageable, sort);
+
+        if(language == null || language.isBlank()){
+            return savedRepoRepository.findAllByUserIdAndIsPinnedTrue(userId, finalPageable);
+        }
+        return savedRepoRepository.findAllByUserIdAndIsPinnedTrueAndLanguageMainIgnoreCase(userId, language, finalPageable);
+    }
+
+    /**
+     * 고정되지 않은 레포지토리
+     * @param userId
+     * @param language
+     * @param sort
+     * @param pageable
+     * @return
+     */
+    public Page<SavedRepo> findUnpinnedRepos(Long userId, String language, String sort, Pageable pageable){
+        Pageable finalPageable = applySort(pageable, sort);
+
+       if(language == null || language.isBlank()){
+           return savedRepoRepository.findAllByUserIdAndIsPinnedFalse(userId, finalPageable);
+       }
+       return savedRepoRepository.findAllByUserIdAndIsPinnedFalseAndLanguageMainIgnoreCase(userId, language, finalPageable);
+    }
+
 
     public SavedRepo savedRepoById(Long repoGithubId, User user){
         boolean existing = savedRepoRepository.existsByRepoGithubIdAndUserId(repoGithubId, user.getId());
