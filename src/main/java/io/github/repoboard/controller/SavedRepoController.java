@@ -7,6 +7,8 @@ import io.github.repoboard.service.GitHubApiService;
 import io.github.repoboard.service.SavedRepoService;
 import io.github.repoboard.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -14,7 +16,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/users/saved/repos")
@@ -27,21 +32,27 @@ public class SavedRepoController {
 
     @GetMapping
     public String showSavedRepo(@AuthenticationPrincipal CustomUserPrincipal principal,
+                                @RequestParam(required = false) String language,
+                                @RequestParam(required = false, defaultValue = "popular") String sort,
+                                @RequestParam(defaultValue = "0") int pinnedPage,
+                                @RequestParam(defaultValue = "0") int unpinnedPage,
                                 Model model){
         User user = userService.findByUserId(principal.getUser().getId());
-        List<SavedRepo> savedRepos = savedRepoService.getSavedReposByUserId(user.getId());
 
-        List<SavedRepo> pinnedRepos = savedRepos.stream()
-                        .filter(SavedRepo :: isPinned)
-                        .toList();
+        Page<SavedRepo> pinnedRepos = savedRepoService.findPinnedRepos(user.getId(), language, sort, PageRequest.of(pinnedPage,4));
+        Page<SavedRepo> unpinnedRepos = savedRepoService.findUnpinnedRepos(user.getId(), language, sort, PageRequest.of(unpinnedPage,8));
 
-        List<SavedRepo> unpinnedRepos = savedRepos.stream()
-                        .filter(savedRepo -> !savedRepo.isPinned())
-                        .toList();
+        Set<String> languageOptions = user.getSavedRepos().stream()
+                .map(SavedRepo::getLanguageMain)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(TreeSet::new));
 
         model.addAttribute("user",principal.getUser());
         model.addAttribute("pinnedRepos", pinnedRepos);
         model.addAttribute("unpinnedRepos", unpinnedRepos);
+        model.addAttribute("languageOptions", languageOptions);
+        model.addAttribute("selectedLanguage", language);
+        model.addAttribute("sort", sort);
 
         return "repository/saved";
     }
@@ -49,9 +60,9 @@ public class SavedRepoController {
     @GetMapping("/{repoId}/readme")
     public ResponseEntity<String> getReadmeByRepoId(@PathVariable Long repoId){
         String readme = gitHubApiService.getReadmeById(repoId);
-
         return ResponseEntity.ok(readme);
     }
+
 
     @PostMapping
     public String saveRepo(@AuthenticationPrincipal CustomUserPrincipal principal,
