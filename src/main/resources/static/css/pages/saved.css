@@ -230,6 +230,41 @@
   font-weight: 500;
 }
 
+/* -------- Pagination (block: pager) -------- */
+.pager{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pager__btn{
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:14px;
+  background:#fff;
+  color: var(--text);
+  border:1px solid var(--border);
+  transition:.15s ease;
+  cursor:pointer;
+}
+
+.pager__btn:hover{
+  border-color: var(--blue);
+}
+
+.pager__btn--disabled{
+  opacity:.5;
+  pointer-events:none;
+  cursor:not-allowed;
+}
+
+.pager__info{
+  color: var(--muted);
+  font-size:14px;
+}
+
 /* 반응형 대응 */
 @media (min-width: 640px) {
     .repo-list {

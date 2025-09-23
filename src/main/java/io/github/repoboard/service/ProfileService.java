@@ -30,7 +30,6 @@ public class ProfileService {
     private final GitHubApiService gitHubApiService;
     private final S3Service s3Service;
 
-
     @Transactional(readOnly = true)
     public void ensureProfileNotExists(Long userId){
         if(profileRepository.existsByUserId(userId)){
@@ -41,7 +40,6 @@ public class ProfileService {
     @Transactional(readOnly = true)
     public Optional<Profile> findProfileByUserId(Long userId){
         return profileRepository.findByUserId(userId);
-
     }
 
     @Transactional
