@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RepoBoard</title>
+    <link rel="stylesheet" th:href="@{/css/pages/home.css}" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+<main>
+    <div class="container mx-auto px-4 py-8">
+        <!-- 검색 결과 헤더 -->
+        <div class="search-header">
+            <div>
+                <h2 class="search-header__title">
+                    <span th:text="${query}">검색어</span> 결과
+                </h2>
+                <p class="search-header__count" id="total-count">
+                    총 <span th:text="${repoPage?.totalElements ?: 0}">0</span>개의 리포지토리
+                </p>
+            </div>
+            <div class="search-header__sort">
+                <span class="search-header__sort-label">정렬:</span>
+                <select id="sort-select" class="search-header__sort-select">
+                    <option value="popular" th:selected="${sort == 'popular'}">인기순</option>
+                    <option value="recent" th:selected="${sort == 'recent'}">최신순</option>
+                </select>
+            </div>
+            <div id="search-metadata"
+                 th:attr="data-current-page=${repoPage.number},
+                          data-current-sort=${sort}">
+            </div>
+        </div>
+
+        <!-- 리포지토리 그리드 -->
+        <div id="repo-grid" class="repo-grid">
+            <!-- 초기 리포지토리 목록을 올바른 프래그먼트에서 가져오도록 수정 -->
+            <th:block th:replace="~{fragments/repo_card :: repo-cards}"></th:block>
+        </div>
+
+        <!-- 로딩 스피너 -->
+        <div id="loading-spinner" class="loading-spinner">
+            <div class="loading-spinner__content">
+                <div class="loading-spinner__icon"></div>
+                <span class="loading-spinner__text">더 많은 리포지토리를 불러오는 중...</span>
+            </div>
+        </div>
+
+        <!-- 무한 스크롤 -->
+        <div id="scroll-trigger"></div>
+
+        <!-- 끝 메시지 -->
+        <div id="end-message" class="end-message end-message--hidden">
+            <i class="end-message__icon fas fa-check-circle"></i>
+            <p>모든 리포지토리를 불러왔습니다!</p>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script th:src="@{/js/search.js}"></script>
+</body>
+</html>

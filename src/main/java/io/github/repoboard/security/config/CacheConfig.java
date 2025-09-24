@@ -103,9 +103,17 @@ public class CacheConfig {
                         .recordStats()
                         .build()
         );
+        var queryCache = new CaffeineCache(
+                "ghQuerySearch",
+                Caffeine.newBuilder()
+                        .maximumSize(5000)
+                        .expireAfterWrite(Duration.ofMinutes(10))
+                        .recordStats()
+                        .build()
+        );
         var m = new SimpleCacheManager();
         m.setCaches(List.of(userCache, reposCache,repoByIdCache,
-                repoByReadmeCache, searchCache, refreshCache));
+                repoByReadmeCache, searchCache, refreshCache, queryCache));
         return m;
     }
 }

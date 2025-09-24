@@ -5,12 +5,14 @@
             <strong class="header__brand">RepoBoard</strong>
         </a>
 
-        <div class="header__search">
+
+        <form th:action="@{/search/repositories}" method="Get" class="header__search" >
             <input class="header__search-input"
+                   name="q"
                    type="search"
                    placeholder="레포지토리, 사용자, 태그 검색…"
                    aria-label="검색" />
-        </div>
+        </form>
 
         <div class="header__nav">
             <a class="header__btn header__btn--ghost" th:href="@{/}">탐색</a>

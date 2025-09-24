@@ -163,7 +163,7 @@ public class GitHubApiService {
      * @param repoId 레포지토리 고유 ID
      * @return {@link GithubRepoDTO} 객체 (없으면 null)
      */
-    @Cacheable(value = "ghRepoById", key = "#repoId", sync = true)
+    @Cacheable(value = "ghRepoById", key = "'repos:' + #repoId", sync = true)
     public GithubRepoDTO getRepositoryId(Long repoId){
         try {
             return githubWebClient.get()
@@ -188,7 +188,7 @@ public class GitHubApiService {
      * @param repoId 레포지토리의 고유 ID
      * @return {@link String} 객체 (없으면 null)
      */
-    @Cacheable(value = "ghRepoReadmeById" , key = "#repoId", sync = true)
+    @Cacheable(value = "ghRepoReadmeById" , key = "'readme:' + #repoId", sync = true)
     public String getReadmeById(Long repoId){
         GithubRepoDTO repo = getRepositoryId(repoId);
         if(repo == null || repo.getOwner() == null){
@@ -249,6 +249,33 @@ public class GitHubApiService {
             return cached;
         }
         return executeGithubSearch(cache, cacheKey, finalQuery, pageable,githubSort);
+    }
+
+    /**
+     * GitHub 저장소를 주어진 검색어로 검색하여 페이지 단위로 결과를 반환합니다.
+     *
+     * <p>검색어는 이름, 설명, README에서 일치 항목을 찾으며, 결과는 캐시(`ghQuerySearch`)에 저장됩니다.</p>
+     *
+     * @param query 사용자가 입력한 검색어
+     * @param pageable 페이징 정보
+     * @param sort 정렬 기준
+     * @return 검색 결과로 구성된 {@link Page} 객체. {@link GithubRepoDTO} 타입의 페이지 결과를 포함합니다.
+     */
+    public Page<GithubRepoDTO> fetchReposByQuery(String query, Pageable pageable, String sort){
+        String githubSort = getSortKey(sort);
+        String safeQuery = query.replaceAll("\\s+","_");
+        String cacheKey = String.format("query:%s:page:%d:size:%d:sort:%s",
+                safeQuery, (pageable.getPageNumber() + 1), pageable.getPageSize(), githubSort);
+
+        Cache cache = cacheManager.getCache("ghQuerySearch");
+        Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
+        if (cached != null) {
+            System.out.println("📦 캐시 히트: " + cacheKey);
+            return cached;
+        }
+
+        String finalQuery = query +" in:name,description,readme";
+        return executeGithubSearch(cache, cacheKey, finalQuery, pageable, githubSort);
     }
 
     /**
