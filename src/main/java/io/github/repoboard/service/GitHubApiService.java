@@ -163,7 +163,7 @@ public class GitHubApiService {
      * @param repoId 레포지토리 고유 ID
      * @return {@link GithubRepoDTO} 객체 (없으면 null)
      */
-    @Cacheable(value = "ghRepoById", key = "#repoId", sync = true)
+    @Cacheable(value = "ghRepoById", key = "'repos:' + #repoId", sync = true)
     public GithubRepoDTO getRepositoryId(Long repoId){
         try {
             return githubWebClient.get()
@@ -188,7 +188,7 @@ public class GitHubApiService {
      * @param repoId 레포지토리의 고유 ID
      * @return {@link String} 객체 (없으면 null)
      */
-    @Cacheable(value = "ghRepoReadmeById" , key = "#repoId", sync = true)
+    @Cacheable(value = "ghRepoReadmeById" , key = "'readme:' + #repoId", sync = true)
     public String getReadmeById(Long repoId){
         GithubRepoDTO repo = getRepositoryId(repoId);
         if(repo == null || repo.getOwner() == null){
