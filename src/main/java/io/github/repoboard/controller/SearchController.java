@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Controller
@@ -35,10 +37,11 @@ public class SearchController {
     public String redirectSearch(@RequestParam("type") String type,
                                  @RequestParam("q") String query){
         String safeQuery = SanitizeUtil.sanitizeQuery(query);
+        String encode = URLEncoder.encode(safeQuery, StandardCharsets.UTF_8);
         if("users".equals(type)){
-            return "redirect:/search/users?q=" + safeQuery;
+            return "redirect:/search/users?q=" + encode;
         }
-        return "redirect:/search/repositories?q=" + safeQuery;
+        return "redirect:/search/repositories?q=" + encode;
     }
 
     @GetMapping("/repositories")
