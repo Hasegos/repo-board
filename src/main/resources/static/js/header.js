@@ -47,6 +47,6 @@ document.addEventListener('DOMContentLoaded', function () {
         v = v.replace(/<[^>]*>/g, '');
         v = v.replace(/[{}[\]<>\"']/g, '');
 
-        input.value = encodeURIComponent(v);
+        input.value = v;
     });
 });
