@@ -17,11 +17,8 @@ public class SanitizeUtil {
     public static String sanitizeQuery(String raw) {
         if (raw == null || raw.isBlank()) return "";
 
-        // 0) 클라이언트가 encodeURIComponent 했을 가능성 고려 -> 디코드
-        String decoded = URLDecoder.decode(raw, StandardCharsets.UTF_8);
-
         // 1) HTML 태그 제거
-        String s = Jsoup.clean(decoded, Safelist.none());
+        String s = Jsoup.clean(raw, Safelist.none());
 
         // 2) Markdown 이미지/링크 제거: ![alt](url) / [text](url)
         s = s.replaceAll("!\\[[^\\]]*\\]\\([^)]*\\)", "");
