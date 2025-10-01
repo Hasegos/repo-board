@@ -36,6 +36,27 @@
   display: flex;
 }
 
+.header__search-type {
+    background-color: #1c1f24;   /* 검색창 배경색과 통일 */
+    color: #fff;                 /* 텍스트 흰색 */
+    border: 1px solid #30363d;   /* 검색창 border와 맞춤 */
+    border-right: none;          /* input과 자연스럽게 연결 */
+    padding: 0 0.75rem;          /* 좌우 여백 */
+    font-size: 0.9rem;           /* input 글씨 크기와 맞춤 */
+    height: 36px;                /* 검색창 높이와 동일하게 */
+    border-radius: 6px 0 0 6px;  /* 왼쪽만 둥글게 */
+    outline: none;
+    appearance: none;            /* 브라우저 기본 select 화살표 제거 */
+    cursor: pointer;
+}
+
+/* 드롭다운 화살표 커스텀 */
+.header__search-type::after {
+    content: "▾";
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+}
+
 .header__search-input {
   width: 100%;
   padding: 8px 12px;

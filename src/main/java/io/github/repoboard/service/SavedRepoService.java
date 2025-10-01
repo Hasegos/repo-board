@@ -69,6 +69,23 @@ public class SavedRepoService {
        return savedRepoRepository.findAllByUserIdAndIsPinnedFalseAndLanguageMainIgnoreCase(userId, language, finalPageable);
     }
 
+    /**
+     * 사용자의 전체 저장 레포지토리 반환 (Pinned/UnPinned 상관 없음)
+     * @param userId 사용자 ID
+     * @param language 언어 필터
+     * @param sort 정렬 기준
+     * @param pageable 페이지 정보
+     * @return Page<SavedRepo>
+     */
+    public Page<SavedRepo> findAllSavedRepos(Long userId, String language, String sort, Pageable pageable){
+        Pageable finalPageable = applySort(pageable, sort);
+
+        if(language == null || language.isBlank()){
+            return savedRepoRepository.findAllByUserId(userId, finalPageable);
+        }
+
+        return savedRepoRepository.findAllByUserIdAndLanguageMainIgnoreCase(userId, language, finalPageable);
+    }
 
     public SavedRepo savedRepoById(Long repoGithubId, User user){
         boolean existing = savedRepoRepository.existsByRepoGithubIdAndUserId(repoGithubId, user.getId());

@@ -37,6 +37,10 @@ public class ProfileService {
         }
     }
 
+    public Optional<Profile> findProfileByGithubLogin(String githubLogin){
+        return profileRepository.findByGithubLogin(githubLogin);
+    }
+
     @Transactional(readOnly = true)
     public Optional<Profile> findProfileByUserId(Long userId){
         return profileRepository.findByUserId(userId);

@@ -1,0 +1,218 @@
+@import url("/css/shared/header.css");
+@import url("/css/shared/footer.css");
+
+/* 전체 레이아웃 */
+.layout__container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* 제목 */
+.page-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+/* 에러 메시지 */
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.alert--error {
+  background: #1f1718;        /* 너무 튀지 않게 톤다운 */
+  border: 1px solid #da3633;  /* GitHub 에러색 계열 */
+  color: #f85149;
+}
+
+/* 유저 검색 결과 카드 */
+.user-search-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.user-card {
+  background: #161b22; /* GitHub 다크모드 카드 색상 */
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 20px;
+  color: #c9d1d9;
+}
+
+/* 프로필 영역 */
+.user-card__profile {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.user-card__avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 1px solid #444c56;
+  background: #0d1117;
+}
+
+.user-card__nickname {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0;
+  color: #f0f6fc;
+}
+
+.user-card__username {
+  font-size: 0.9rem;
+  color: #8b949e;
+}
+
+.user-card__bio {
+  margin: 6px 0;
+  font-size: 0.9rem;
+  color: #c9d1d9;
+}
+
+.user-card__stats {
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  color: #8b949e;
+}
+
+.user-card__links {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.user-card__link {
+  font-size: 0.85rem;
+  color: #58a6ff;
+  text-decoration: none;
+}
+
+.user-card__link:hover {
+  text-decoration: underline;
+}
+
+/* 저장한 레포 섹션 */
+.user-card__repos-title {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  color: #f0f6fc;
+}
+
+.repo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.repo-preview-card {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.repo-preview-card__name {
+  font-weight: 600;
+  color: #58a6ff;
+  text-decoration: none;
+}
+
+.repo-preview-card__name:hover {
+  text-decoration: underline;
+}
+
+.repo-preview-card__owner-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.repo-preview-card__owner {
+  font-weight: 500;
+  margin-right: 4px;
+  color: #c9d1d9;
+}
+
+.repo-preview-card__desc {
+  font-size: 0.85rem;
+  color: #8b949e;
+  margin: 4px 0;
+}
+
+.repo-preview-card__meta {
+  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: #c9d1d9;
+}
+
+.btn {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  text-decoration: none;
+  border: 1px solid #30363d;
+  background: #21262d;
+  color: #c9d1d9;
+  margin-right: 0.5rem;
+}
+
+.btn:hover {
+  background: #30363d;
+}
+
+.btn--primary {
+  background: #238636;
+  border-color: #2ea043;
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: #2ea043;
+}
+
+/* 페이지네이션 */
+.pager {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pager__btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.pager__btn:hover {
+  background: #30363d;
+}
+
+.pager__btn--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.pager__info {
+  font-size: 0.85rem;
+  color: #8b949e;
+}

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width,initial-scale=1.0">
+    <title>RepoBoard</title>
+    <link rel="stylesheet" th:href="@{/css/pages/search-user.css}" />
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <main class="layout__container">
+        <h1 class="page-title">"[(${search})]" 검색 결과</h1>
+
+        <!-- 유저 없음 -->
+        <div th:if="${errorMessage != null}" class="alert alert--error">
+            <p th:text="${errorMessage}">해당 유저의 프로필이 존재하지 않습니다.</p>
+        </div>
+
+        <!-- 유저 있음 -->
+        <div th:if="${errorMessage == null}" class="user-search-grid">
+            <!-- 유저 카드 -->
+            <div  class="user-card" >
+                <!-- 프로필 영역 -->
+                <section class="user-card__profile">
+                    <img th:src="${profile.githubAvatarUrl}" alt="프로필" class="user-card__avatar"/>
+                    <div class="user-card__info">
+                        <h2 th:text="${profile.githubName}" class="user-card__nickname">닉네임</h2>
+                        <div class="user-card__username" th:text="'@' + ${profile.githubLogin}">@login</div>
+                        <p th:text="${profile.githubBio}" class="user-card__bio">소개 텍스트</p>
+                        <div class="user-card__stats">
+                            <span>팔로워: <span th:text="${profile.githubFollowers}">0</span></span> ·
+                            <span>팔로잉: <span th:text="${profile.githubFollowing}">0</span></span> ·
+                            <span>공개 레포: <span th:text="${profile.githubPublicRepos}">0</span></span>
+                        </div>
+                        <div class="user-card__links">
+                            <a th:href="${profile.githubHtmlUrl}" target="_blank" class="user-card__link">GitHub</a>
+                            <a th:if="${profile.githubBlog != null}" th:href="${profile.githubBlog}" target="_blank" class="user-card__link">Blog</a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 저장한 레포 미리보기 -->
+                <section class="user-card__repos">
+                    <h3 class="user-card__repos-title">최근 저장한 레포</h3>
+                    <div class="repo-preview-grid">
+                        <div th:each="repo : ${savedRepos.content}" class="repo-preview-card">
+
+                            <!-- 레포 이름 + owner -->
+                            <a th:href="${repo.htmlUrl}" target="_blank" class="repo-preview-card__name">
+                                <span>
+                                    <img th:src="${repo.owner.ownerAvatarUrl}" alt="owner avatar" class="repo-preview-card__owner-avatar"/>
+                                </span>
+                                <span>
+                                  <a th:href="${repo.owner.ownerHtmlUrl}" target="_blank" class="repo-preview-card__owner"
+                                     th:text="${repo.owner.ownerLogin}">owner</a>/<span th:text="${repo.name}">레포지토리</span>
+                                </span>
+                            </a>
+
+                            <!-- 설명 -->
+                            <p class="repo-preview-card__desc" th:text="${repo.description} ?: '설명이 없습니다.'">
+                                설명이 없습니다.
+                            </p>
+
+                            <!-- 메타 정보 -->
+                            <div class="repo-preview-card__meta">
+                                <span class="repo-preview-card__language" th:text="${repo.languageMain}">Java</span>
+                                <span class="repo-preview-card__stars" th:text="'★ ' + ${repo.stars}">★ 0</span>
+                                <span class="repo-preview-card__forks" th:text="'⑂ ' + ${repo.forks}">⑂ 0</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="pager" th:if="${errorMessage == null and savedRepos.totalPages > 1}">
+            <!-- 이전 -->
+            <a class="pager__btn"
+               th:href="${savedRepos.first} ? '#' : @{/search/users(
+                     q=${search},
+                     page=${savedRepos.number - 1},
+                     sort=${sort},
+                     language=${language}
+               )}"
+               th:classappend="${savedRepos.first} ? ' pager__btn--disabled'">
+                이전
+            </a>
+
+            <!-- 현재 / 전체 -->
+            <div class="pager__info"
+                 th:text="${savedRepos.number + 1} + ' / ' + ${savedRepos.totalPages}">
+                1 / 1
+            </div>
+
+            <!-- 다음 -->
+            <a class="pager__btn"
+               th:href="${savedRepos.last} ? '#' : @{/search/users(
+                    q=${search},
+                    page=${savedRepos.number + 1},
+                    sort=${sort},
+                    language=${language}
+               )}"
+               th:classappend="${savedRepos.last} ? ' pager__btn--disabled'">
+                다음
+            </a>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

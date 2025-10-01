@@ -5,8 +5,11 @@
             <strong class="header__brand">RepoBoard</strong>
         </a>
 
-
-        <form th:action="@{/search/repositories}" method="Get" class="header__search" >
+        <form th:action="@{/search}" method="Get" class="header__search" >
+            <select name="type" class="header__search-type">
+                <option value="repositories" selected>Repositories</option>
+                <option value="users">Users</option>
+            </select>
             <input class="header__search-input"
                    name="q"
                    type="search"
