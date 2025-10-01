@@ -2,6 +2,7 @@ package io.github.repoboard.controller;
 
 import io.github.repoboard.dto.view.ProfileView;
 import io.github.repoboard.security.core.CustomUserPrincipal;
+import io.github.repoboard.service.ProfileDBService;
 import io.github.repoboard.service.ProfileService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.io.IOException;
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final ProfileDBService profileDBService;
 
     @GetMapping
     public String showProfile(@AuthenticationPrincipal CustomUserPrincipal principal,
@@ -81,7 +83,7 @@ public class ProfileController {
                                    @RequestParam(value = "profileVisibility", required = false) String visibility,
                                    RedirectAttributes ra){
         try{
-            profileService.updateProfileVisibility(principal.getUser().getId(), visibility);
+            profileDBService.updateProfileVisibility(principal.getUser().getId(), visibility);
         }catch (EntityNotFoundException e){
             ra.addFlashAttribute("error", e.getMessage());
         }catch (Exception e){
