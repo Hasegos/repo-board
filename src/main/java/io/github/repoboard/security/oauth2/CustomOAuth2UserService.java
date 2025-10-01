@@ -1,10 +1,13 @@
 package io.github.repoboard.security.oauth2;
 
+import io.github.repoboard.dto.github.GithubUserDTO;
 import io.github.repoboard.model.User;
 import io.github.repoboard.model.enums.UserProvider;
 import io.github.repoboard.model.enums.UserRoleType;
 import io.github.repoboard.repository.UserRepository;
 import io.github.repoboard.security.core.CustomUserPrincipal;
+import io.github.repoboard.service.GitHubApiService;
+import io.github.repoboard.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,6 +21,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -36,6 +40,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ProfileService profileService;
+    private final GitHubApiService gitHubApiService;
 
     @Qualifier("githubWebClient")
     private final WebClient githubWebClient;
@@ -148,6 +154,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user = userRepository.findByProviderId(socialId).orElseThrow(() -> e);
         }
         log.info("신규 OAuth2 사용자 생성 : {} (provider={})", email, regId);
+
+        if(provider == UserProvider.GITHUB){
+            String login = String.valueOf(attributes.get("login"));
+            if(profileService.findProfileByUserId(user.getId()).isEmpty()){
+                try{
+                    GithubUserDTO dto = gitHubApiService.getUser(login);
+                    profileService.registerProfile(user.getId(), dto);
+                }catch (IOException e){
+                    log.error("Github API 호출 실패");
+                    throw new OAuth2AuthenticationException("Github 프로필 동기화 중 오류 발생");
+                }
+            }
+        }
 
         return new CustomUserPrincipal(user,attributes);
     }
