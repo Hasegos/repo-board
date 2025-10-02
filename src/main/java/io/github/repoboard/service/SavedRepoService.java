@@ -3,6 +3,7 @@ package io.github.repoboard.service;
 import io.github.repoboard.common.exception.SavedRepoNotFoundException;
 import io.github.repoboard.dto.github.GithubRepoDTO;
 import io.github.repoboard.dto.request.SavedRepoDTO;
+import io.github.repoboard.dto.view.SavedRepoView;
 import io.github.repoboard.model.RepoOwner;
 import io.github.repoboard.model.SavedRepo;
 import io.github.repoboard.model.User;
@@ -15,12 +16,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class SavedRepoService {
 
     private final SavedRepoRepository savedRepoRepository;
     private final GitHubApiService gitHubApiService;
+    private final UserService userService;
 
     private Pageable applySort(Pageable pageable, String sort){
         Sort sortOption = switch (sort){
@@ -86,6 +93,26 @@ public class SavedRepoService {
 
         return savedRepoRepository.findAllByUserIdAndLanguageMainIgnoreCase(userId, language, finalPageable);
     }
+
+    public SavedRepoView loadSavedRepos(Long userId, String language, String sort, int pinnedPage, int unpinnedPage){
+        User user = userService.findByUserId(userId);
+
+
+        Page<SavedRepo> pinnedRepos =
+                findPinnedRepos(user.getId(), language, sort, PageRequest.of(pinnedPage,4));
+
+        Page<SavedRepo> unpinnedRepos =
+                findUnpinnedRepos(user.getId(), language, sort, PageRequest.of(unpinnedPage,8));
+
+        Set<String> languageOptions = user.getSavedRepos().stream()
+                .map(SavedRepo::getLanguageMain)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        return new SavedRepoView(user, pinnedRepos, unpinnedRepos, languageOptions);
+    }
+
+
 
     public SavedRepo savedRepoById(Long repoGithubId, User user){
         boolean existing = savedRepoRepository.existsByRepoGithubIdAndUserId(repoGithubId, user.getId());
