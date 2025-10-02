@@ -3,22 +3,12 @@ package io.github.repoboard.controller;
 import io.github.repoboard.dto.request.ChangePasswordDTO;
 import io.github.repoboard.model.User;
 import io.github.repoboard.security.core.CustomUserPrincipal;
-import io.github.repoboard.service.UserService;
-import jakarta.persistence.EntityNotFoundException;
+import io.github.repoboard.service.SettingService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -33,19 +23,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/users/settings")
 public class SettingController {
 
-    private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
-
-    @Autowired(required = false)
-    private OAuth2AuthorizedClientService clientService;
+    private final SettingService settingService;
 
     @GetMapping
     public String showSettings(@AuthenticationPrincipal CustomUserPrincipal principal,
-                               Model model)
-    {
+                               Model model){
 
-        User user = userService.findByUsername(principal.getUser().getUsername())
-                        .orElseThrow(() -> new EntityNotFoundException("해당 유저는 존재하지 않습니다."));
+        User user = settingService.getUserByPrincipal(principal);
 
         if (!model.containsAttribute("ChangePasswordDTO")) {
             model.addAttribute("ChangePasswordDTO", new ChangePasswordDTO());
@@ -62,25 +46,8 @@ public class SettingController {
                                      BindingResult br,
                                      HttpServletRequest request,
                                      HttpServletResponse response,
-                                     RedirectAttributes ra)
-    {
-        try{
-            userService.changeUserPassword(principal.getUser().getId(), change);
-        }catch (BadCredentialsException e) {
-            br.rejectValue("currentPassword", "bad", "현재 비밀번호가 올바르지 않습니다.");
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("동일")) {
-                br.rejectValue("newPassword", "same", e.getMessage());
-            }
-            else if (e.getMessage().contains("확인")) {
-                br.rejectValue("confirmPassword", "mismatch", e.getMessage());
-            }
-            else {
-                br.reject("error", e.getMessage());
-            }
-        } catch (AccessDeniedException e) {
-            br.reject("denied", "소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다.");
-        }
+                                     RedirectAttributes ra){
+        settingService.changeUserPassword(principal.getUser().getId(), change, br);
 
         if(br.hasErrors()) {
             ra.addFlashAttribute("ChangePasswordDTO", change);
@@ -88,31 +55,16 @@ public class SettingController {
             return "redirect:/users/settings";
         }
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        new SecurityContextLogoutHandler()
-                .logout(request, response, auth);
+        settingService.logoutAfterPasswordChange(request,response);
         return "redirect:/users/login";
     }
 
     @PostMapping("/delete")
     public String deleteUser(@AuthenticationPrincipal CustomUserPrincipal principal,
                              HttpServletRequest request,
-                             HttpServletResponse response)
-    {
-
+                             HttpServletResponse response){
         try{
-            userService.deleteUserAndProfile(principal.getUser().getId());
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-
-            if (auth instanceof OAuth2AuthenticationToken oat && clientService != null) {
-                clientService.removeAuthorizedClient(
-                        oat.getAuthorizedClientRegistrationId(), auth.getName());
-            }
-            new SecurityContextLogoutHandler()
-                    .logout(request, response, auth);
-
-            SecurityContextHolder.clearContext();
+            settingService.deleteUser(principal.getUser().getId(), request, response);
             return "redirect:/";
         }catch (Exception e){
             return "redirect:/users/settings?error=" + e.getMessage();
