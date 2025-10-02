@@ -243,11 +243,11 @@ public class ProfileService {
                 .orElseThrow(() -> new EntityNotFoundException("등록된 프로필이 없습니다. 먼저 프로필을 생성해주세요."));
 
         if (profile.getLastRefreshAt() != null &&
-                Duration.between(profile.getLastRefreshAt(), Instant.now()).toMinutes() < 10) {
-            throw new IllegalArgumentException("새로고침은 10초에 한 번만 가능합니다.");
+                Duration.between(profile.getLastRefreshAt(), Instant.now()).toMinutes() < 3) {
+            throw new IllegalArgumentException("새로고침은 3분에 한 번만 가능합니다.");
         }
 
-        GithubUserDTO userDTO = gitHubApiService.getUser(profile.getGithubLogin());
+        GithubUserDTO userDTO = gitHubApiService.refreshUser(profile.getGithubLogin());
         profileDBService.updateProfileDB(userId, userDTO);
         refreshProfileImage(profile, userDTO.getAvatarUrl());
 
