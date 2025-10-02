@@ -12,6 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
+/**
+ * 프로필 엔티티를 DB에 생성/수정/삭제하는 서비스.
+ *
+ * <p>비즈니스 로직보다는 영속성 관리에 집중하며,
+ * UserService, ProfileRepository와 협력한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class ProfileDBService {
@@ -19,6 +25,14 @@ public class ProfileDBService {
     private final ProfileRepository profileRepository;
     private final UserService userService;
 
+    /**
+     * 새 프로필을 DB에 생성한다.
+     *
+     * @param userId        사용자 ID
+     * @param githubUserDTO GitHub 사용자 정보 DTO
+     * @param imageUrl      저장된 프로필 이미지 URL
+     * @param s3Key         S3 오브젝트 키
+     */
     @Transactional
     public void createProfileDB(Long userId,
                                    GithubUserDTO githubUserDTO,
@@ -44,12 +58,21 @@ public class ProfileDBService {
         profileRepository.save(profile);
     }
 
+    /**
+     * 기존 프로필의 기본 정보를 업데이트한다.
+     *
+     * @param userId 사용자 ID
+     * @param dto    GitHub 사용자 정보 DTO
+     * @throws EntityNotFoundException 프로필이 존재하지 않을 경우
+     */
     @Transactional
     public void updateProfileDB(Long userId, GithubUserDTO dto){
 
         Profile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new EntityNotFoundException("프로필이 존재하지 않습니다."));
 
+        profile.setGithubLogin(dto.getLogin());
+        profile.setGithubName(dto.getName());
         profile.setGithubBio(dto.getBio());
         profile.setGithubBlog(dto.getBlog());
         profile.setGithubFollowers(dto.getFollowers());
@@ -60,6 +83,13 @@ public class ProfileDBService {
         profileRepository.save(profile);
     }
 
+    /**
+     * 프로필 이미지와 S3 키를 업데이트한다.
+     *
+     * @param profile  수정할 프로필 엔티티
+     * @param imageUrl 새 프로필 이미지 URL
+     * @param s3Key    새 S3 오브젝트 키
+     */
     @Transactional
     public void updateProfileImageDB(Profile profile, String imageUrl, String s3Key){
 
@@ -91,6 +121,11 @@ public class ProfileDBService {
         profile.setUpdatedAt(Instant.now());
     }
 
+    /**
+     * 프로필을 DB에서 삭제한다.
+     *
+     * @param profileId 삭제할 프로필 ID
+     */
     @Transactional
     public void deleteProfileDB(Long profileId){
         profileRepository.deleteById(profileId);
