@@ -6,13 +6,9 @@ import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.SavedRepo;
 import io.github.repoboard.model.User;
 import io.github.repoboard.security.core.CustomUserPrincipal;
-import io.github.repoboard.service.GitHubApiService;
-import io.github.repoboard.service.ProfileService;
-import io.github.repoboard.service.SavedRepoService;
+import io.github.repoboard.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,8 +16,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Controller
@@ -29,15 +23,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SearchController {
 
-    private final GitHubApiService gitHubApiService;
-    private final ProfileService profileService;
-    private final SavedRepoService savedRepoService;
+    private final SearchService searchService;
 
     @GetMapping
     public String redirectSearch(@RequestParam("type") String type,
                                  @RequestParam("q") String query){
-        String safeQuery = SanitizeUtil.sanitizeQuery(query);
-        String encode = URLEncoder.encode(safeQuery, StandardCharsets.UTF_8);
+        String encode = searchService.resolveRedirect(type, query);
         if("users".equals(type)){
             return "redirect:/search/users?q=" + encode;
         }
@@ -56,12 +47,10 @@ public class SearchController {
         if(principal != null){
             model.addAttribute("user", principal.getUser());
         }
-        String safeQuery = SanitizeUtil.sanitizeQuery(search);
-        Pageable pageable = PageRequest.of(page, 50);
-        Page<GithubRepoDTO> repoPage = gitHubApiService.fetchReposByQuery(safeQuery, pageable, sort);
+        Page<GithubRepoDTO> repoPage =  searchService.fetchRepositories(search, page, sort);
 
         model.addAttribute("repoPage", repoPage);
-        model.addAttribute("query", safeQuery);
+        model.addAttribute("query", SanitizeUtil.sanitizeQuery(search));
         model.addAttribute("sort", sort);
         return "search/search";
     }
@@ -71,9 +60,7 @@ public class SearchController {
                                        @RequestParam("sort") String sort,
                                        @RequestParam("q") String search,
                                        Model model){
-        String safeQuery = SanitizeUtil.sanitizeQuery(search);
-        Pageable pageable = PageRequest.of(page, 50);
-        Page<GithubRepoDTO> repoPage = gitHubApiService.fetchReposByQuery(safeQuery, pageable, sort);
+        Page<GithubRepoDTO> repoPage = searchService.loadMoreRepositories(search, page, sort);
         model.addAttribute("repoPage", repoPage);
         return "fragments/repo_card :: repo-cards";
     }
@@ -93,24 +80,22 @@ public class SearchController {
         if(principal != null){
             model.addAttribute("user", principal.getUser());
         }
-        String safeQuery = SanitizeUtil.sanitizeQuery(search);
-        Optional<Profile> profile = profileService.findProfileByGithubLogin(safeQuery);
+        Optional<Profile> profile = searchService.findProfileByGithubLogin(search);
 
         if(profile.isEmpty()){
             model.addAttribute("errorMessage", "해당 유저의 프로필이 존재하지않습니다.");
-            model.addAttribute("search", safeQuery);
+            model.addAttribute("search", SanitizeUtil.sanitizeQuery(search));
             return "search/search-user";
         }
 
         User user = profile.get().getUser();
-        Pageable pageable = PageRequest.of(page,size);
-        Page<SavedRepo> savedRepo = savedRepoService.findAllSavedRepos(user.getId(), language, sort, pageable);
+        Page<SavedRepo> savedRepo = searchService.fetchSavedRepos(user.getId(),language,sort, page, size);
 
         model.addAttribute("savedRepos", savedRepo);
         model.addAttribute("profile", profile.get());
         model.addAttribute("sort", sort);
         model.addAttribute("language", language);
-        model.addAttribute("search", safeQuery);
+        model.addAttribute("search", SanitizeUtil.sanitizeQuery(search));
 
         return "search/search-user";
     }
