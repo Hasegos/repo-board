@@ -1,5 +1,6 @@
 package io.github.repoboard.model;
 
+import io.github.repoboard.model.enums.ProfileVisibility;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -65,6 +66,15 @@ public class Profile {
 
     @Column(name = "s3Key")
     private String s3Key;
+
+    /** 오픈프로필 공개 여부 */
+    @Column(name = "profile_visibility")
+    @Enumerated(EnumType.STRING)
+    private ProfileVisibility profileVisibility = ProfileVisibility.PRIVATE;
+
+    /** 연속 클릭 방지용 (시간) */
+    @Column(name = "last_refresh_at")
+    private Instant lastRefreshAt;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
@@ -91,6 +92,28 @@ public class GitHubApiService {
     }
 
     /**
+     * GitHub 사용자 조회 (캐시 사용)<br><br>
+     *
+     * - 캐시에 값이 있으면 API 호출 안 함<br>
+     * - 없으면 API 호출 후 캐시에 저장
+     */
+    @Cacheable(value = "ghUser", key = "#username", sync = true)
+    public GithubUserDTO getUser(String username){
+        return fetchFromApi(username);
+    }
+
+    /**
+     * GitHub 사용자 새로고침 (항상 API 호출 + 캐시 갱신) <br><br>
+     *
+     * - 캐시에 있든 없든 API 다시 호출 <br>
+     * - 캐시에 최신값 덮어쓰기
+     */
+    @CachePut(value = "ghUser", key = "#username")
+    public GithubUserDTO refreshUser(String username){
+        return fetchFromApi(username);
+    }
+
+    /**
      * GitHub 사용자 프로필 정보 조회
      * <p>
      * 인증 토큰 없이 호출되므로, 비공개 프로필 항목은 조회되지 않습니다.
@@ -100,8 +123,7 @@ public class GitHubApiService {
      * @return {@link GithubUserDTO} 객체
      * @throws RuntimeException 사용자 정보 조회 실패 시
      */
-    @Cacheable(value = "ghUser", key = "#username", sync = true)
-    public GithubUserDTO getUser(String username){
+    private GithubUserDTO fetchFromApi(String username){
         try{
             return githubWebClient.get()
                     .uri("/users/{username}", username)

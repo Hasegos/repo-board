@@ -11,7 +11,6 @@ import java.util.Optional;
 @Repository
 public interface SavedRepoRepository extends JpaRepository<SavedRepo, Long> {
     Optional<SavedRepo> findByRepoGithubIdAndUserId(Long repoGithubId, Long userId);
-    void deleteByRepoGithubIdAndUserId(Long repoGithubId, Long userId);
     boolean existsByRepoGithubIdAndUserId(Long repoGithubId, Long userId);
 
     Page<SavedRepo> findAllByUserId(Long userId, Pageable pageable);
