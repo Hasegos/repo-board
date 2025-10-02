@@ -6,7 +6,6 @@ import io.github.repoboard.service.ProfileDBService;
 import io.github.repoboard.service.ProfileService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,7 +20,6 @@ import java.io.IOException;
 @Controller
 @RequestMapping("/users/profiles")
 @RequiredArgsConstructor
-@Slf4j
 public class ProfileController {
 
     private final ProfileService profileService;
