@@ -41,18 +41,25 @@
 
         <!-- 공개 레포지토리 (block: repos) -->
         <section class="repos">
-            <h2 class="repos__title">공개 레포지토리
-                <form th:action="@{/users/profiles/visibility}" method="post" class="profile-visibility">
-                    <label class="profile-visibility__switch">
-                        <input type="checkbox"
-                               name="profileVisibility"
-                               value="PUBLIC"
-                               th:checked="${view.profile.profileVisibility.name() == 'PUBLIC'}"
-                               onchange="this.form.submit()">
-                        <span class="profile-visibility__slider"></span>
-                    </label>
-                    <span class="profile-visibility__label"
-                          th:text="${view.profile.profileVisibility.name() == 'PUBLIC'} ? '공개' : '비공개'">비공개</span>
+            <h2 class="repos__title">
+                <div class="repos__title-left">
+                    공개 레포지토리
+                    <form th:action="@{/users/profiles/visibility}" method="post" class="profile-visibility">
+                        <label class="profile-visibility__switch">
+                            <input type="checkbox"
+                                   name="profileVisibility"
+                                   value="PUBLIC"
+                                   th:checked="${view.profile.profileVisibility.name() == 'PUBLIC'}"
+                                   onchange="this.form.submit()">
+                            <span class="profile-visibility__slider"></span>
+                        </label>
+                        <span class="profile-visibility__label"
+                              th:text="${view.profile.profileVisibility.name() == 'PUBLIC'} ? '공개' : '비공개'">비공개</span>
+                    </form>
+                </div>
+
+                <form th:action="@{/users/profiles/refresh}" method="post" class="profile-refresh">
+                    <button type="submit" class="profile-refresh__btn">🔄 새로고침</button>
                 </form>
             </h2>
 
