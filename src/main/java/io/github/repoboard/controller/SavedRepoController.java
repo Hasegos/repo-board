@@ -7,6 +7,7 @@ import io.github.repoboard.service.GitHubApiService;
 import io.github.repoboard.service.SavedRepoService;
 import io.github.repoboard.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.var;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -36,16 +37,8 @@ public class SavedRepoController {
                                 @RequestParam(required = false, defaultValue = "popular") String sort,
                                 @RequestParam(defaultValue = "0") int pinnedPage,
                                 @RequestParam(defaultValue = "0") int unpinnedPage,
-                                Model model){
-        User user = userService.findByUserId(principal.getUser().getId());
 
-        Page<SavedRepo> pinnedRepos = savedRepoService.findPinnedRepos(user.getId(), language, sort, PageRequest.of(pinnedPage,4));
-        Page<SavedRepo> unpinnedRepos = savedRepoService.findUnpinnedRepos(user.getId(), language, sort, PageRequest.of(unpinnedPage,8));
 
-        Set<String> languageOptions = user.getSavedRepos().stream()
-                .map(SavedRepo::getLanguageMain)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(TreeSet::new));
 
         model.addAttribute("user",principal.getUser());
         model.addAttribute("pinnedRepos", pinnedRepos);
