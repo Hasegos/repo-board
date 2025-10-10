@@ -1,6 +1,7 @@
 package io.github.repoboard.service;
 
 import io.github.repoboard.dto.github.GithubUserDTO;
+import io.github.repoboard.model.DeleteUser;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.User;
 import io.github.repoboard.model.enums.ProfileVisibility;
@@ -129,5 +130,31 @@ public class ProfileDBService {
     @Transactional
     public void deleteProfileDB(Long profileId){
         profileRepository.deleteById(profileId);
+    }
+
+    /**
+     *
+     * @param user
+     * @param d
+     */
+    public void createProfileFromBackup(User user, DeleteUser d) {
+        Profile p = new Profile();
+        p.setUser(user);
+        p.setGithubLogin(d.getGithubLogin());
+        p.setGithubName(d.getGithubName());
+        p.setGithubBio(d.getGithubBio());
+        p.setGithubBlog(d.getGithubBlog());
+        p.setGithubFollowers(d.getGithubFollowers());
+        p.setGithubFollowing(d.getGithubFollowing());
+        p.setGithubAvatarUrl(d.getGithubAvatarUrl());
+        p.setGithubHtmlUrl(d.getGithubHtmlUrl());
+        p.setGithubPublicRepos(d.getGithubPublicRepos());
+        p.setS3Key(d.getS3Key());
+        p.setProfileVisibility(d.getProfileVisibility());
+        p.setLastRefreshAt(d.getLastRefreshAt());
+        p.setCreatedAt(d.getProfileCreatedAt());
+        p.setUpdatedAt(Instant.now());
+
+        profileRepository.save(p);
     }
 }
