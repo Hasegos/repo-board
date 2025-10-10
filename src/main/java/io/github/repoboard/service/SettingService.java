@@ -27,6 +27,7 @@ public class SettingService {
 
     private final UserService userService;
     private final OAuth2AuthorizedClientService clientService;
+    private final DeleteUserService deleteUserService;
 
     /**
      * 비밀번호 변경 처리.
@@ -79,7 +80,7 @@ public class SettingService {
     public void deleteUser(Long userId,
                            HttpServletRequest request,
                            HttpServletResponse response){
-        userService.deleteUserAndProfile(userId);
+        deleteUserService.backupAndDelete(userId);
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
