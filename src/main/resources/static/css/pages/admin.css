@@ -1,0 +1,43 @@
+@import url("/css/shared/header.css");
+@import url("/css/shared/footer.css");
+
+/* 탭 영역 */
+.admin__tabs {
+    margin-bottom: 10px;
+}
+
+.admin__tab-button {
+    margin-right: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+/* 탭 콘텐츠 */
+.admin__tab-content {
+    display: none;
+}
+
+.admin__tab-content--active {
+    display: block;
+}
+
+/* 테이블 */
+.admin__table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.admin__table th,
+.admin__table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+/* 공통 버튼 */
+.admin__form-button,
+.admin__tab-button {
+    padding: 5px 10px;
+    cursor: pointer;
+}
