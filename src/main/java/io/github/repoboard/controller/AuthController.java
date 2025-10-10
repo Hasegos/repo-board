@@ -34,22 +34,27 @@ public class AuthController {
 
     @PostMapping("/signup")
     public String postRegister(@ModelAttribute("userDTO") @Valid UserDTO dto,
-                               BindingResult br){
-
-        if(userService.findByUsername(dto.getUsername()).isPresent()){
-            br.rejectValue("username", "duplicate", "이미 존재하는 회원입니다.");
-            return "auth/signup";
-        }
-        if (!br.hasFieldErrors("password") && !br.hasFieldErrors("passwordConfirm")) {
-            if (!java.util.Objects.equals(dto.getPassword(), dto.getPasswordConfirm())) {
-                br.rejectValue("passwordConfirm", "password.mismatch", "비밀번호가 일치하지 않습니다.");
+                               BindingResult br,
+                               Model model){
+        try {
+            if (userService.findByUsername(dto.getUsername()).isPresent()) {
+                br.rejectValue("username", "duplicate", "이미 존재하는 회원입니다.");
+                return "auth/signup";
             }
-        }
-        if(br.hasErrors()){
+            if (!br.hasFieldErrors("password") && !br.hasFieldErrors("passwordConfirm")) {
+                if (!java.util.Objects.equals(dto.getPassword(), dto.getPasswordConfirm())) {
+                    br.rejectValue("passwordConfirm", "password.mismatch", "비밀번호가 일치하지 않습니다.");
+                }
+            }
+            if (br.hasErrors()) {
+                return "auth/signup";
+            }
+            userService.register(dto);
+            return "auth/login";
+        }catch (IllegalStateException e){
+            model.addAttribute("signupError",e.getMessage());
             return "auth/signup";
         }
-        userService.register(dto);
-        return "auth/login";
     }
 
     @GetMapping("/login")
