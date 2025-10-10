@@ -2,23 +2,26 @@ package io.github.repoboard.service;
 
 import io.github.repoboard.dto.request.ChangePasswordDTO;
 import io.github.repoboard.dto.auth.UserDTO;
-import io.github.repoboard.model.Profile;
+import io.github.repoboard.model.DeleteUser;
 import io.github.repoboard.model.User;
 import io.github.repoboard.model.enums.UserProvider;
 import io.github.repoboard.model.enums.UserRoleType;
+import io.github.repoboard.model.enums.UserStatus;
+import io.github.repoboard.repository.DeleteUserRepository;
 import io.github.repoboard.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.aop.framework.AopContext;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -28,7 +31,6 @@ import java.util.Optional;
  * <ul>
  *   <li>{@link #register(UserDTO)}: 회원가입(로컬/소셜)</li>
  *   <li>{@link #changeUserPassword(Long, ChangePasswordDTO)} (Long, ChangePasswordDTO)}: 비밀번호 변경(로컬 계정)</li>
- *   <li>{@link #deleteUserAndProfile(Long)}: 회원 및 프로필 삭제(연계된 S3 이미지 삭제 포함)</li>
  * </ul>
  *
  * <p>트랜잭션</p>
@@ -43,7 +45,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final S3Service s3Service;
+    private final DeleteUserRepository deleteUserRepository;
 
     /**
      * 사용자명으로 사용자 엔티티를 조회한다.
@@ -63,12 +65,22 @@ public class UserService {
     }
 
     /**
+     * 모든 사용자 목록을 가입일 내림차순으로 조회한다.
+     *
+     * @return 전체 사용자 리스트
+     */
+    @Transactional(readOnly = true)
+    public List<User> findAllUsersOrderByCreatedAtDesc(){
+        return userRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    /**
      * 회원 가입을 수행한다.
      *
      * <p>기본값</p>
      * <ul>
      *   <li>provider: {@link UserProvider#LOCAL}</li>
-     *   <li>role: {@link UserRoleType#USER}</li>
+     *   <li>role: {@link UserRoleType#ROLE_USER}</li>
      * </ul>
      *
      * <p>소셜 로그인</p>
@@ -82,6 +94,8 @@ public class UserService {
     @Transactional
     public User register(UserDTO userDTO){
 
+        validateReRegistration(userDTO.getUsername());
+
         if(userRepository.existsByUsername(userDTO.getUsername())){
             throw new EntityExistsException("이미 사용중인 아이디입니다.");
         }
@@ -90,7 +104,7 @@ public class UserService {
         user.setUsername(userDTO.getUsername());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         user.setProvider(UserProvider.LOCAL);
-        user.setRole(UserRoleType.USER);
+        user.setRole(UserRoleType.ROLE_USER);
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
 
@@ -143,52 +157,34 @@ public class UserService {
     }
 
     /**
-     * 회원 탈퇴(트랜잭션 외부) 메서드.
      *
-     * <p>동작 순서</p>
-     * <ol>
-     *   <li>{@link #deleteUserInTx(Long)} 를 <b>프록시</b>를 통해 호출하여
-     *       DB에서 사용자/프로필을 삭제(트랜잭션 커밋)</li>
-     *   <li>반환된 S3 오브젝트 키가 있으면 <b>커밋 이후</b> S3에서 파일 삭제</li>
-     * </ol>
-     *
-     * <p>트랜잭션 전제</p>
-     * <ul>
-     *   <li>본 메서드는 {@code Propagation.NEVER}로 선언되어 있어,
-     *       항상 트랜잭션 <b>밖</b>에서 실행되어 DB 커밋 → S3 삭제 순서를 보장한다.</li>
-     *   <li>{@code AopContext.currentProxy()} 사용을 위해
-     *       {@code expose-proxy=true} 설정이 필요하다.
-     * </ul>
-     *
-     * @param userId 탈퇴할 사용자 식별자
+     * @param d
+     * @return
      */
-    @Transactional(propagation = Propagation.NEVER)
-    public void deleteUserAndProfile(Long userId){
-
-        UserService self = (UserService) AopContext.currentProxy();
-        String s3Key = self.deleteUserInTx(userId);
-
-        if(s3Key != null && !s3Key.isEmpty()){
-            s3Service.deleteFile(s3Key);
-        }
+    public User createdUserFromBackup(DeleteUser d){
+        User user = new User();
+        user.setUsername(d.getUsername());
+        user.setPassword(d.getPassword());
+        user.setRole(d.getRole());
+        user.setProvider(d.getProvider());
+        user.setProviderId(d.getProviderId());
+        user.setStatus(UserStatus.ACTIVE);
+        user.setCreatedAt(d.getCreatedAt());
+        user.setUpdatedAt(Instant.now());
+        return userRepository.save(user);
     }
 
     /**
-     * (트랜잭션) 사용자 및 프로필을 삭제하고, 프로필에 연결된 S3 오브젝트 키를 반환한다.
      *
-     * @param userId 삭제 대상 사용자 식별자
-     * @return 프로필 이미지의 S3 오브젝트 키(없으면 null)
+     * @param username
      */
-    @Transactional
-    public String deleteUserInTx(Long userId){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 사용자는 존재하지 않습니다."));
-
-        Profile profile = user.getProfile();
-        String s3Key = profile != null ? profile.getS3Key() : null;
-
-        userRepository.delete(user);
-
-        return s3Key;
+    private void validateReRegistration(String username){
+        deleteUserRepository.findByUsername(username)
+                .ifPresent(backup -> {
+                    Instant sevenDayAgo = Instant.now().minus(Duration.ofDays(7));
+                    if (backup.getDeleteAt().isAfter(sevenDayAgo)) {
+                        throw new IllegalStateException("최근 탈퇴한 계정으로 7일 내 재가입이 불가합니다.");
+                    }
+                });
     }
 }
