@@ -5,6 +5,7 @@ import io.github.repoboard.dto.github.GithubUserDTO;
 import io.github.repoboard.dto.view.ProfileView;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.User;
+import io.github.repoboard.model.enums.ProfileVisibility;
 import io.github.repoboard.repository.ProfileRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +69,7 @@ public class ProfileService {
      * @return 해당 로그인명의 {@link Profile} Optional
      */
     public Optional<Profile> findProfileByGithubLogin(String githubLogin){
-        return profileRepository.findByGithubLogin(githubLogin);
+        return profileRepository.findByGithubLoginAndProfileVisibility(githubLogin, ProfileVisibility.PUBLIC);
     }
 
     /**
@@ -150,12 +151,13 @@ public class ProfileService {
 
         try{
             profileDBService.createProfileDB(userId, dto, imageUrl, s3Key);
+            log.info("[PROFILE] 사용자 {} 프로필 등록 완료", userId);
         }catch (Exception e){
             if(s3Key != null && !s3Key.isEmpty()) {
                 try{
                     s3Service.deleteFile(s3Key);
                 }catch (Exception ex){
-                    log.error("롤백 중 S3 파일 삭제 실패 : key = " + s3Key, ex);
+                    log.error("롤백 중 S3 파일 삭제 실패 : key = {}" , s3Key, ex);
                 }
             }
             throw e;
@@ -185,11 +187,12 @@ public class ProfileService {
 
         try{
             profileDBService.updateProfileImageDB(profile, newImageUrl, newS3Key);
+            log.info("[PROFILE] 사용자 {} 프로필 이미지 갱신 완료", profile.getUser().getId());
         }catch (Exception e){
             try{
                 s3Service.deleteFile(newS3Key);
             } catch (Exception ex){
-                log.error("롤백 중 S3 파일 삭제 실패 : key = " + newS3Key, ex);
+                log.error("롤백 중 S3 파일 삭제 실패 : key = {}", newS3Key, ex);
             }
             throw e;
         }
@@ -198,7 +201,7 @@ public class ProfileService {
             try{
                 s3Service.deleteFile(oldKey);
             } catch (Exception e){
-                log.error("롤백 중 S3 파일 삭제 실패 : key = " + oldKey, e);
+                log.error("롤백 중 S3 파일 삭제 실패 : key = {}" , oldKey, e);
             }
         }
     }
@@ -244,6 +247,7 @@ public class ProfileService {
 
         if (profile.getLastRefreshAt() != null &&
                 Duration.between(profile.getLastRefreshAt(), Instant.now()).toMinutes() < 3) {
+            log.warn("[PROFILE] 사용자 {} 가 쿨다운(3분) 미준수로 새로고침 시도", userId);
             throw new IllegalArgumentException("새로고침은 3분에 한 번만 가능합니다.");
         }
 
@@ -252,6 +256,7 @@ public class ProfileService {
         refreshProfileImage(profile, userDTO.getAvatarUrl());
 
         profile.setLastRefreshAt(Instant.now());
+        log.info("[PROFILE] 사용자 {} 프로필 새로고침 완료", userId);
     }
 
     /**
@@ -283,19 +288,21 @@ public class ProfileService {
        Optional<Profile> profileOptional = findProfileByUserId(userId);
 
        if(profileOptional.isEmpty()){
-           log.info("해당 프로필 정보가 없습니다. profile : {}", profileOptional);
+           log.info("[PROFILE] 사용자 {} 프로필 삭제 요청 → 존재하지 않음", userId);
            return;
        }
 
        Profile profile = profileOptional.get();
        String s3Key = profile.getS3Key();
        profileDBService.deleteProfileDB(profile.getId());
+       log.info("[PROFILE] 사용자 {} 프로필 DB 삭제 완료", userId);
 
        if(s3Key != null && !s3Key.isEmpty()){
            try {
                s3Service.deleteFile(s3Key);
+               log.info("[PROFILE] 사용자 {} 프로필 이미지(S3) 삭제 완료", userId);
            }catch (Exception ex){
-               log.error("롤백 중 S3 파일 삭제 실패 : key = " + s3Key, ex);
+               log.error("롤백 중 S3 파일 삭제 실패 : key = {}" , s3Key, ex);
            }
        }
     }
