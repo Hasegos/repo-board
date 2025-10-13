@@ -23,12 +23,10 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleMenu();
     });
 
-    // 바깥 클릭 시 닫기
     document.addEventListener('click', (e) => {
         if (!root.contains(e.target)) closeMenu();
     });
 
-    // ESC 닫기 + 메뉴 첫 항목 포커스 이동
     document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeMenu();
     if (e.key === 'ArrowDown' && btn === document.activeElement && menu.hidden === true) {
@@ -38,7 +36,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     });
 
-    // 검색어 필터링
     const form = document.querySelector('.header__search');
     form.addEventListener('submit', function (e) {
         const input = form.querySelector('[name="q"]');

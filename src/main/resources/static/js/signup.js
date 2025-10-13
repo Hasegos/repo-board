@@ -4,7 +4,6 @@ form.addEventListener('submit', function(e) {
     const emailPat = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     const passPat  = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/;
 
-    // 이메일 검증
     const email = this.username.value.trim();
     const emailErrEl = document.getElementById('usernameError');
     if (!emailPat.test(email)) {
@@ -14,7 +13,6 @@ form.addEventListener('submit', function(e) {
       emailErrEl.textContent = '';
     }
 
-    // 비밀번호 검증
     const pw = this.password.value;
     const pwErrEl = document.getElementById('passwordError');
     if (!passPat.test(pw)) {
@@ -24,7 +22,6 @@ form.addEventListener('submit', function(e) {
       pwErrEl.textContent = '';
     }
 
-    // 비밀번호 확인
     const cpw = document.getElementById('passwordConfirm').value;
     const cpwErrEl = document.getElementById('confirmError');
     if (cpw !== pw) {

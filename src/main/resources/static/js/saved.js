@@ -8,13 +8,11 @@ async function toggleReadme(button) {
     const isOpen = card.classList.contains('open');
 
     if (!isOpen) {
-        // 펼치기
         card.classList.add('open');
         card.classList.remove('collapsed');
         arrow.textContent = '▲';
         readmeContent.classList.remove('collapsed');
 
-        // 브라우저 렌더링 한 프레임 기다리기
         await new Promise(resolve =>
             requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
@@ -31,7 +29,6 @@ async function toggleReadme(button) {
             }
         }
     } else {
-        // 접기
         card.classList.remove('open');
         card.classList.add('collapsed');
         readmeContent.classList.add('collapsed');
