@@ -14,6 +14,12 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * 로그인 실패 시 사용자에게 적절한 에러 메시지를 제공하는 커스텀 핸들러.
+ *
+ * <p>Spring Security의 {@link AuthenticationFailureHandler}를 구현하여,
+ * 폼 로그인 및 소셜 로그인 실패 원인에 따라 사용자 친화적인 오류 메시지를 세션에 저장한다.</p>
+ */
 @Component
 public class CustomAuthFailureHandler implements AuthenticationFailureHandler {
 
@@ -22,6 +28,18 @@ public class CustomAuthFailureHandler implements AuthenticationFailureHandler {
         "DELETED", "최근 탈퇴한 계정은 7일 이후에 재가입할 수 있습니다."
     );
 
+    /**
+     * 인증 실패 시 호출되는 메서드.
+     *
+     * <p>예외 유형에 따라 오류 메시지를 분기 처리하고, 해당 메시지를 세션에 저장한 뒤
+     * 로그인 페이지로 리다이렉트한다.</p>
+     *
+     * @param request 클라이언트 요청
+     * @param response 서버 응답
+     * @param exception 발생한 인증 예외
+     * @throws IOException 리다이렉트 처리 중 I/O 예외 발생 가능
+     * @throws ServletException 서블릿 예외 발생 가능
+     */
     @Override
     public void onAuthenticationFailure(HttpServletRequest request,
                                         HttpServletResponse response,

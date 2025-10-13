@@ -6,7 +6,6 @@
   if (tabs.length === 0) return;
 
   const setActiveByHash = () => {
-    // 현재 해시가 없으면 첫 탭을 기본으로
     const current = location.hash || tabs[0].getAttribute('href');
     tabs.forEach(a => {
       const active = a.getAttribute('href') === current;
@@ -15,11 +14,10 @@
     });
   };
 
-  // 클릭 시 부드럽게 스크롤 + 해시 갱신 + active 즉시 반영
   tabs.forEach(a => {
     a.addEventListener('click', (e) => {
       const target = document.querySelector(a.getAttribute('href'));
-      if (!target) return;  // 브라우저 기본 동작으로 둬도 됨
+      if (!target) return;
       e.preventDefault();
       history.pushState(null, '', a.getAttribute('href'));
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -27,14 +25,10 @@
     });
   });
 
-  // 해시가 주소창에서 바뀌는 경우(back/forward 등)
   window.addEventListener('hashchange', setActiveByHash);
-
-  // 초기 상태 세팅
   setActiveByHash();
 })();
 
-/* 비밀번호 변경 메서드 */
 (function () {
   const form = document.getElementById('changePwForm');
   if (!form) return;
@@ -50,7 +44,6 @@
 
   const clear = () => { curErr.textContent = ''; newErr.textContent = ''; cfmErr.textContent = ''; };
 
-  // 실시간 피드백(선택)
   npw.addEventListener('input', () => {
     if (!npw.value) { newErr.textContent = ''; return; }
     if (!passPat.test(npw.value)) newErr.textContent = '영문·숫자·특수문자 포함 8자 이상이어야 합니다.';
@@ -77,7 +70,6 @@
 
     if (!ok) { e.preventDefault(); return; }
 
-    // 안전 확인(원하면 유지)
     if (!confirm('새 비밀번호로 변경합니다. 계속할까요?')) e.preventDefault();
   });
 })();

@@ -22,7 +22,6 @@
                 <a class="settings__tab" href="#danger">위험 구역</a>
             </nav>
             <section class="settings__content">
-                <!-- 계정 카드 (LOCAL 전용) -->
                 <article id="account" class="card" th:if="${authType == 'LOCAL'}">
                     <h2 class="card__title">계정</h2>
                     <div class="card__body" th:object="${user}">
@@ -52,7 +51,6 @@
                     </div>
                 </article>
 
-                <!-- 보안 카드 (LOCAL 전용) -->
                 <article id="security" class="card" th:if="${authType == 'LOCAL'}">
                     <h2 class="card__title">보안</h2>
                     <div class="card__body">
@@ -104,7 +102,6 @@
                     </div>
                 </article>
 
-                <!-- 안내 카드 (소셜 로그인 전용) -->
                 <article class="card" th:if="${authType != 'LOCAL'}">
                     <h2 class="card__title">안내</h2>
                     <div class="card__body">
@@ -113,7 +110,6 @@
                     </div>
                 </article>
 
-                <!-- 위험 구역 -->
                 <article id="danger" class="card card--danger">
                     <h2 class="card__title">위험 구역</h2>
                     <form th:action="@{/users/settings/delete}" method="post"

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+/**
+ * GitHub 레포지토리 소유자 정보를 표현하는 DTO.
+ */
 @Getter
 @Setter
 @AllArgsConstructor

@@ -33,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
-    // 탭 버튼 클릭 이벤트 등록
     tabs.forEach(btn => {
         btn.addEventListener("click", () => {
             const tab = btn.dataset.tab;
@@ -42,16 +41,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // URL 해시로 기본 탭 열기
     const initialTab = window.location.hash.replace("#", "") || "list";
     openTab(initialTab);
 
-    // 로그 탭 초기 로딩
     if (initialTab === "log") {
         loadLogs();
     }
 
-    // 더보기 버튼 클릭 시 로그 로드
     if (loadMoreBtn) {
         loadMoreBtn.addEventListener("click", loadLogs);
     }

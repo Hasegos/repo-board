@@ -30,13 +30,11 @@
             <span th:if="${repo.updatedAt != null}" th:text="'업데이트: ' + ${#temporals.format(repo.updatedAt, 'yyyy-MM-dd')}">업데이트 날짜</span>
         </div>
 
-        <!-- README -->
         <div class="repo-card__readme">
             <h3 class="readme-title">📘 README</h3>
             <div class="readme-content loading collapsed">로딩 중...</div>
         </div>
 
-        <!-- Note -->
         <div class="repo-card__memo">
             <form th:action="@{/users/saved/repos/note/{repoGithubId}(repoGithubId=${repo.repoGithubId})}" method="post">
                 <textarea name="note" placeholder="메모를 입력하세요..." th:text="${repo.note}"></textarea>

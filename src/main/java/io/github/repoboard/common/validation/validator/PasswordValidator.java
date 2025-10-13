@@ -6,6 +6,11 @@ import jakarta.validation.ConstraintValidatorContext;
 
 import java.util.regex.Pattern;
 
+/**
+ * {@link ValidPassword} 어노테이션의 실제 검증 로직.
+ *
+ * <p>영문, 숫자, 특수문자 포함 8자 이상 여부를 검증한다.</p>
+ */
 public class PasswordValidator implements ConstraintValidator<ValidPassword, String> {
 
     private static final Pattern PASSWORD_PATTERN =

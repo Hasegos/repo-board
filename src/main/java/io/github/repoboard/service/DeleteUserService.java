@@ -1,6 +1,5 @@
 package io.github.repoboard.service;
 
-import io.github.repoboard.common.event.UserDeletedEvent;
 import io.github.repoboard.model.DeleteUser;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.User;
@@ -9,17 +8,25 @@ import io.github.repoboard.repository.DeleteUserRepository;
 import io.github.repoboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
+/**
+ * 사용자 삭제 관련 기능을 처리하는 서비스 클래스.
+ *
+ * <p>주요 기능:</p>
+ * <ul>
+ *     <li>사용자 삭제 시 {@link DeleteUser} 테이블로 백업</li>
+ *     <li>복구 요청 시 사용자 및 프로필 데이터 복원</li>
+ *     <li>7일 이상 지난 백업과 S3 이미지 정리</li>
+ * </ul>
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -30,8 +37,13 @@ public class DeleteUserService{
     private final DeleteUserRepository deleteUserRepository;
     private final ProfileDBService profileDBService;
     private final S3Service s3Service;
-    private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * 사용자를 {@link DeleteUser} 테이블로 백업한 후 완전히 삭제한다.
+     * <p>백업된 데이터는 7일 이내 복구 가능하며, S3 이미지는 즉시 삭제되지 않음.</p>
+     *
+     * @param userId 삭제할 사용자 ID
+     */
     @Transactional
     public void backupAndDelete(Long userId) {
         User user = userService.findByUserId(userId);
@@ -65,27 +77,20 @@ public class DeleteUserService{
                 .build();
 
         deleteUserRepository.save(backup);
-        String s3key = profile != null ? profile.getS3Key() : null;
-
         userRepository.delete(user);
+
         log.warn("[ADMIN] {}가 사용자 삭제함 → username: {}, userId: {}",
                 backup.getDeletedByAdmin(), user.getUsername(), user.getId());
-
-        if (s3key != null && !s3key.isEmpty()) {
-            eventPublisher.publishEvent(new UserDeletedEvent(this, s3key));
-        }
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onUserDeleted(UserDeletedEvent event) {
-        try {
-            s3Service.deleteFile(event.getS3Key());
-            log.info("✅ S3 삭제 성공 → {}", event.getS3Key());
-        } catch (Exception e) {
-            log.error("❌ S3 삭제 실패 → {}", event.getS3Key(), e);
-        }
-    }
-
+    /**
+     * {@link DeleteUser} 백업 데이터를 기반으로 사용자 및 프로필을 복구한다.
+     * <p>복구는 삭제 후 7일 이내에만 가능하다.</p>
+     *
+     * @param backup 복구할 사용자 백업 정보
+     * @return 복구된 사용자 엔티티
+     * @throws IllegalStateException 삭제된 지 7일이 지난 경우
+     */
     @Transactional
     public User restoreUser(DeleteUser backup) {
         if (backup.getDeleteAt().isBefore(Instant.now().minus(Duration.ofDays(7)))) {
@@ -96,22 +101,37 @@ public class DeleteUserService{
         profileDBService.createProfileFromBackup(user, backup);
 
         deleteUserRepository.delete(backup);
-
         log.info("🟢 사용자 복구 완료 → username: {}, userId: {}", user.getUsername(), user.getId());
 
         return user;
     }
 
+    /**
+     * 매일 새벽 3시에 실행되어 7일 이상 지난 {@link DeleteUser} 백업 데이터와
+     * 관련 S3 이미지를 정리한다.
+     *
+     * <p>삭제 조건: {@code deleteAt < 현재 시각 - 7일 }</p>
+     */
     @Scheduled(cron = "0 0 3 * * *")
     public void purgeOldBackups() {
         Instant threshold = Instant.now().minus(Duration.ofDays(7));
-        int countBefore = deleteUserRepository.findAll().size();
 
-        deleteUserRepository.deleteAllByDeleteAtBefore(threshold);
+        List<DeleteUser> expired = deleteUserRepository.findAllByDeleteAtBefore(threshold);
+        int countBefore = expired.size();
 
-        int countAfter = deleteUserRepository.findAll().size();
-        int removed = countBefore - countAfter;
+        for(DeleteUser user : expired){
+            String s3Key = user.getS3Key();
+            if(s3Key != null && !s3Key.isBlank()){
+                try {
+                    s3Service.deleteFile(s3Key);
+                    log.info("🗑️ 7일 경과된 S3 이미지 삭제 완료 → {}", s3Key);
+                }catch (Exception e){
+                    log.error("❌ S3 이미지 삭제 실패 → {}", s3Key, e);
+                }
+            }
+        }
+        deleteUserRepository.deleteAll(expired);
 
-        log.info("✅ 7일 이상 지난 삭제 백업 정리 완료 - {}건 삭제됨", removed);
+        log.info("✅ 7일 이상 지난 삭제 백업 정리 완료 - {}건 삭제됨", countBefore);
     }
 }

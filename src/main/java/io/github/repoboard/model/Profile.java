@@ -11,6 +11,16 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
+/**
+ * 사용자의 GitHub 프로필 정보를 저장하는 엔티티.
+ *
+ * <p>사용자(User)와 1:1 매핑되며, GitHub에서 가져온 정보와 오픈 프로필 공개 여부 등을 포함한다.</p>
+ *
+ * <h3>연관관계</h3>
+ * <ul>
+ *   <li>{@link User} : 사용자 정보 (1:1, PK 공유)</li>
+ * </ul>
+ */
 @Entity
 @Getter
 @Setter
@@ -19,16 +29,18 @@ import java.time.Instant;
 @Table(name = "profiles")
 public class Profile {
 
+    /** 사용자 ID (User의 PK와 공유) */
     @Id
     @Column(name = "user_id")
     private Long id;
 
+    /** 사용자 연관 엔티티 (1:1) */
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    /** github 로그인 명 */
+    /** GitHub 로그인 ID */
     @Column(name = "github_login")
     private String githubLogin;
 
@@ -36,7 +48,7 @@ public class Profile {
     @Column(name = "github_name", nullable = false)
     private String githubName;
 
-    /** github 자기소개 */
+    /** github 자기소개 (bio) */
     @Column(name = "github_bio")
     private String githubBio;
 
@@ -64,10 +76,11 @@ public class Profile {
     @Column(name = "github_public_repos")
     private Integer githubPublicRepos;
 
+    /** 저장된 S3 객체 키 (아바타 등) */
     @Column(name = "s3Key")
     private String s3Key;
 
-    /** 오픈프로필 공개 여부 */
+    /** 프로필 공개 여부 (PUBLIC / PRIVATE) */
     @Column(name = "profile_visibility")
     @Enumerated(EnumType.STRING)
     private ProfileVisibility profileVisibility = ProfileVisibility.PRIVATE;
@@ -76,10 +89,12 @@ public class Profile {
     @Column(name = "last_refresh_at")
     private Instant lastRefreshAt;
 
+    /** 생성 시각 */
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /** 마지막 수정 시각 */
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;

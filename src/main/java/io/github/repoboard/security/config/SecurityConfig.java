@@ -95,8 +95,7 @@ public class SecurityConfig {
                         })
                         .defaultSuccessUrl("/", true)
                         .failureHandler(customAuthFailureHandler)
-                )
-        ;
+                ) ;
         return http.build();
     }
 }

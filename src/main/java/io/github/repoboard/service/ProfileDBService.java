@@ -133,9 +133,10 @@ public class ProfileDBService {
     }
 
     /**
+     * 삭제된 사용자 백업 데이터를 기반으로 프로필을 복원한다.
      *
-     * @param user
-     * @param d
+     * @param user 복구된 사용자 엔티티
+     * @param d 삭제된 사용자 백업 정보
      */
     public void createProfileFromBackup(User user, DeleteUser d) {
         Profile p = new Profile();

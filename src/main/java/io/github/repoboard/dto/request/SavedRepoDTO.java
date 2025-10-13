@@ -4,6 +4,9 @@ import lombok.*;
 
 import java.time.Instant;
 
+/**
+ * 저장된 GitHub 레포지토리 정보를 전송하는 DTO.
+ */
 @Getter
 @Setter
 @AllArgsConstructor

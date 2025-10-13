@@ -12,12 +12,10 @@
     <header th:replace="~{fragments/header :: header}"></header>
     <main>
         <div class="container mx-auto px-4 py-8">
-            <!-- 언어 필터 -->
             <div class="language-filter">
                 <div class="language-filter__container">
                     <h2 class="language-filter__title">프로그래밍 언어</h2>
                     <div class="language-filter__buttons">
-                        <!-- java -->
                         <button onclick="changeLanguage('java')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'java'} ? 'language-btn--active' : ''">
@@ -25,7 +23,6 @@
                             <span class="language-btn__text--desktop">Java</span>
                         </button>
 
-                        <!-- python -->
                         <button onclick="changeLanguage('python')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'python'} ? 'language-btn--active' : ''">
@@ -33,7 +30,6 @@
                             <span class="language-btn__text--desktop">Python</span>
                         </button>
 
-                        <!-- C# -->
                         <button onclick="changeLanguage('csharp')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'csharp'} ? 'language-btn--active' : ''">
@@ -41,7 +37,6 @@
                             <span class="language-btn__text--desktop">C#</span>
                         </button>
 
-                        <!-- C++ -->
                         <button onclick="changeLanguage('cpp')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'cpp'} ? 'language-btn--active' : ''">
@@ -49,7 +44,6 @@
                             <span class="language-btn__text--desktop">C++</span>
                         </button>
 
-                        <!-- javascript -->
                         <button onclick="changeLanguage('javascript')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'javascript'} ? 'language-btn--active' : ''">
@@ -57,7 +51,6 @@
                             <span class="language-btn__text--desktop">JavaScript</span>
                         </button>
 
-                        <!-- PHP -->
                         <button onclick="changeLanguage('php')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'php'} ? 'language-btn--active' : ''">
@@ -65,7 +58,6 @@
                             <span class="language-btn__text--desktop">PHP</span>
                         </button>
 
-                        <!-- go -->
                         <button onclick="changeLanguage('go')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'go'} ? 'language-btn--active' : ''">
@@ -73,7 +65,6 @@
                             <span class="language-btn__text--desktop">Go</span>
                         </button>
 
-                        <!-- Ruby -->
                         <button onclick="changeLanguage('ruby')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'ruby'} ? 'language-btn--active' : ''">
@@ -81,7 +72,6 @@
                             <span class="language-btn__text--desktop">Ruby</span>
                         </button>
 
-                        <!-- Kotlin -->
                         <button onclick="changeLanguage('kotlin')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'kotlin'} ? 'language-btn--active' : ''">
@@ -89,7 +79,6 @@
                             <span class="language-btn__text--desktop">Kotlin</span>
                         </button>
 
-                        <!-- C -->
                         <button onclick="changeLanguage('c')"
                                 class="language-btn"
                                 th:classappend="${currentLanguage == 'c'} ? 'language-btn--active' : ''">
@@ -101,7 +90,6 @@
                 </div>
             </div>
 
-            <!-- 검색 결과 헤더 -->
             <div class="search-header">
                 <div>
                     <h2 class="search-header__title">
@@ -126,13 +114,10 @@
                 </div>
             </div>
 
-            <!-- 리포지토리 그리드 -->
             <div id="repo-grid" class="repo-grid">
-                <!-- 초기 리포지토리 목록을 올바른 프래그먼트에서 가져오도록 수정 -->
                 <th:block th:replace="~{fragments/repo_card :: repo-cards}"></th:block>
             </div>
 
-            <!-- 로딩 스피너 -->
             <div id="loading-spinner" class="loading-spinner">
                 <div class="loading-spinner__content">
                     <div class="loading-spinner__icon"></div>
@@ -140,10 +125,8 @@
                 </div>
             </div>
 
-            <!-- 무한 스크롤 -->
             <div id="scroll-trigger"></div>
 
-            <!-- 끝 메시지 -->
             <div id="end-message" class="end-message end-message--hidden">
                 <i class="end-message__icon fas fa-check-circle"></i>
                 <p>모든 리포지토리를 불러왔습니다!</p>
