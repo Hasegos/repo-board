@@ -12,16 +12,12 @@
     <main class="layout__container">
         <h1 class="page-title">"[(${search})]" 검색 결과</h1>
 
-        <!-- 유저 없음 -->
         <div th:if="${errorMessage != null}" class="alert alert--error">
             <p th:text="${errorMessage}">해당 유저의 프로필이 존재하지 않습니다.</p>
         </div>
 
-        <!-- 유저 있음 -->
         <div th:if="${errorMessage == null}" class="user-search-grid">
-            <!-- 유저 카드 -->
             <div  class="user-card" >
-                <!-- 프로필 영역 -->
                 <section class="user-card__profile">
                     <img th:src="${profile.githubAvatarUrl}" alt="프로필" class="user-card__avatar"/>
                     <div class="user-card__info">
@@ -40,13 +36,11 @@
                     </div>
                 </section>
 
-                <!-- 저장한 레포 미리보기 -->
                 <section class="user-card__repos">
                     <h3 class="user-card__repos-title">최근 저장한 레포</h3>
                     <div class="repo-preview-grid">
                         <div th:each="repo : ${savedRepos.content}" class="repo-preview-card">
 
-                            <!-- 레포 이름 + owner -->
                             <a th:href="${repo.htmlUrl}" target="_blank" class="repo-preview-card__name">
                                 <span>
                                     <img th:src="${repo.owner.ownerAvatarUrl}" alt="owner avatar" class="repo-preview-card__owner-avatar"/>
@@ -57,12 +51,10 @@
                                 </span>
                             </a>
 
-                            <!-- 설명 -->
                             <p class="repo-preview-card__desc" th:text="${repo.description} ?: '설명이 없습니다.'">
                                 설명이 없습니다.
                             </p>
 
-                            <!-- 메타 정보 -->
                             <div class="repo-preview-card__meta">
                                 <span class="repo-preview-card__language" th:text="${repo.languageMain}">Java</span>
                                 <span class="repo-preview-card__stars" th:text="'★ ' + ${repo.stars}">★ 0</span>

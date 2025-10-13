@@ -19,9 +19,7 @@
 
         <div class="header__nav">
             <a class="header__btn header__btn--ghost" th:href="@{/}">탐색</a>
-            <!-- 로그인 상태 -->
             <div class="header__login" th:if="${user != null}">
-                <!-- 프로필 버튼 -->
                 <div class="header__user" data-menu-root>
                     <button class="header__user-btn"
                             type="button"
@@ -35,7 +33,6 @@
                         <span class="header__chevron" aria-hidden="true">▾</span>
                     </button>
 
-                    <!-- 드롭다운 메뉴 -->
                     <div class="header__menu" role="menu" hidden data-menu>
                         <a role="menuitem" class="header__menu-item"
                            th:href="@{/users/profiles}"
@@ -68,7 +65,6 @@
                 </div>
             </div>
 
-            <!-- 비로그인 상태 -->
             <div class="header__unLogin" th:if="${user == null}">
                 <a class="header__btn header__btn--primary" th:href="@{/users/login}">로그인</a>
                 <a class="header__btn header__btn--ghost" th:href="@{/users/signup}">회원가입</a>

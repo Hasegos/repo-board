@@ -15,7 +15,6 @@
 
             <div th:if="${signupError}" class="alert alert--error" th:text="${signupError}"></div>
 
-            <!-- OAuth (로그인 CSS의 .oauth / .oauth__provider / .button 사용) -->
             <div class="oauth">
                 <a class="button oauth__provider" th:href="@{/oauth2/authorization/github}">
                     <img th:src="@{/images/github.svg}" alt="GitHub 회원가입">
@@ -34,7 +33,6 @@
                   th:action="@{/users/signup}"
                   th:object="${userDTO}"
                   method="post">
-                <!-- 이메일 -->
                 <div class="field">
                     <label class="field__label" for="email">이메일</label>
                     <input id="email"
@@ -51,7 +49,6 @@
                     <div id="usernameError" class="error-text"></div>
                 </div>
 
-                <!-- 비밀번호 -->
                 <div class="field">
                     <label class="field__label" for="password">비밀번호</label>
                     <input id="password"
@@ -69,7 +66,6 @@
                     <div id="passwordError" class="error-text"></div>
                 </div>
 
-                <!-- 비밀번호 확인 (== 비밀번호) -->
                 <div class="field">
                     <label class="field__label" for="passwordConfirm">비밀번호 확인</label>
                     <input id="passwordConfirm"

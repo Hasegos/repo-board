@@ -13,10 +13,8 @@
             <h1 id="login-title" class="auth__title">로그인</h1>
             <p class="auth__subtitle">GitHub 연동은 자동으로 오픈프로필을 생성/동기화합니다.</p>
 
-            <!-- 메시지 -->
             <div class="alert alert--error" th:if="${loginError}" role="alert" th:text="${loginError}">이메일 또는 비밀번호가 올바르지 않습니다.</div>
 
-            <!-- OAuth -->
             <div class="oauth">
                 <a class="button oauth__provider" th:href="@{/oauth2/authorization/github}">
                     <img th:src="@{/images/github.svg}" alt="GitHub 로그인">
@@ -31,7 +29,6 @@
 
             <div class="divider">또는</div>
 
-            <!-- 로그인 폼 -->
             <form class="auth__form" th:action="@{/login}" method="post">
                 <div class="field">
                     <label class="field__label" for="email">이메일</label>

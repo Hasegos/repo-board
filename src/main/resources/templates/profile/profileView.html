@@ -1,6 +1,5 @@
 <th:block th:fragment="profileView">
     <div class="profile-page__container">
-        <!-- 프로필 헤더 (block: profile) -->
         <section class="profile">
             <img class="profile__avatar"
                  th:src="${view.profile.githubAvatarUrl != null ? view.profile.githubAvatarUrl : '/images/github.svg'}"
@@ -39,7 +38,6 @@
             </div>
         </section>
 
-        <!-- 공개 레포지토리 (block: repos) -->
         <section class="repos">
             <h2 class="repos__title">
                 <div class="repos__title-left">
