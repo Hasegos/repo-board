@@ -6,6 +6,11 @@ import org.jsoup.safety.Safelist;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * 사용자 입력 문자열을 정제(sanitize)하는 유틸리티.
+ *
+ * <p>HTML, Markdown, JavaScript, XSS 관련 위험 요소를 제거한다.</p>
+ */
 public class SanitizeUtil {
 
     /**
@@ -17,29 +22,18 @@ public class SanitizeUtil {
     public static String sanitizeQuery(String raw) {
         if (raw == null || raw.isBlank()) return "";
 
-        // 1) HTML 태그 제거
         String s = Jsoup.clean(raw, Safelist.none());
-
-        // 2) Markdown 이미지/링크 제거: ![alt](url) / [text](url)
         s = s.replaceAll("!\\[[^\\]]*\\]\\([^)]*\\)", "");
         s = s.replaceAll("\\[[^\\]]*\\]\\([^)]*\\)", "");
-
-        // 3) attribute-like injection 제거 (onerror, onclick 등)
         s = s.replaceAll("(?i)\\s+on\\w+\\s*=\\s*\"[^\"]*\"", "");
         s = s.replaceAll("(?i)\\s+on\\w+\\s*=\\s*'[^']*'", "");
         s = s.replaceAll("(?i)\\s+on\\w+\\s*=\\s*[^\\s>]+", "");
-
-        // 4) javascript:, data: scheme 제거 (case-insensitive)
         s = s.replaceAll("(?i)javascript:\\s*[^\\s]*", "");
         s = s.replaceAll("(?i)data:[^\\s]*", "");
-
-        // 5) 남은 위험 문자 제거 (Tomcat 400 방지)
         s = s.replaceAll("[<>\"'{}\\[\\]]", "");
-
-        // 6) 공백 정리, 길이 제한 (예: 200자)
         s = s.replaceAll("\\s+", " ").trim();
-        int maxLen = 200;
-        if (s.length() > maxLen) s = s.substring(0, maxLen);
+
+        if (s.length() > 200) s = s.substring(0, 200);
 
         return s;
     }

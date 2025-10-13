@@ -6,6 +6,9 @@ import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
 
+/**
+ * 이메일 형식의 사용자명 유효성 검증용 어노테이션.
+ */
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Constraint(validatedBy = UsernameValidator.class)
 @Retention(RetentionPolicy.RUNTIME)

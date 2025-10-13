@@ -18,6 +18,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Optional;
 
+/**
+ * 검색 기능을 담당하는 컨트롤러입니다.
+ *
+ * <p>레포지토리 및 오픈 프로필 유저 검색을 지원하며,
+ * 페이지 진입 시 자동 리다이렉트 또는 Fragment 응답을 제공합니다.</p>
+ */
 @Controller
 @RequestMapping("/search")
 @RequiredArgsConstructor
@@ -25,6 +31,13 @@ public class SearchController {
 
     private final SearchService searchService;
 
+    /**
+     * 검색 유형에 따라 적절한 검색 결과 페이지로 리다이렉트합니다.
+     *
+     * @param type 검색 유형 (예: "users", "repositories")
+     * @param query 검색어
+     * @return 리다이렉트 URL
+     */
     @GetMapping
     public String redirectSearch(@RequestParam("type") String type,
                                  @RequestParam("q") String query){
@@ -35,6 +48,16 @@ public class SearchController {
         return "redirect:/search/repositories?q=" + encode;
     }
 
+    /**
+     * 저장소 검색 결과 페이지를 렌더링합니다.
+     *
+     * @param principal 로그인 사용자 정보
+     * @param search 검색어
+     * @param page 페이지 번호 (기본값: 0)
+     * @param sort 정렬 기준 (예: popular, recent)
+     * @param model 뷰 모델
+     * @return 저장소 검색 결과 페이지
+     */
     @GetMapping("/repositories")
     public String showSearch(@AuthenticationPrincipal CustomUserPrincipal principal,
                              @RequestParam("q") String search,
@@ -55,6 +78,16 @@ public class SearchController {
         return "search/search";
     }
 
+    /**
+     * 저장소 검색 결과의 다음 페이지를 Fragment로 반환합니다.
+     * (무한 스크롤/페이징에 사용)
+     *
+     * @param page 요청할 페이지 번호
+     * @param sort 정렬 기준
+     * @param search 검색어
+     * @param model 뷰 모델
+     * @return 저장소 카드 fragment (HTML 일부)
+     */
     @GetMapping("/repositories/api/repos")
     public String loadMoreRepositories(@RequestParam(defaultValue = "1") int page,
                                        @RequestParam("sort") String sort,
@@ -65,6 +98,18 @@ public class SearchController {
         return "fragments/repo_card :: repo-cards";
     }
 
+    /**
+     * 특정 깃허브 로그인 이름으로 오픈 프로필 유저 검색 결과를 렌더링합니다.
+     *
+     * @param principal 로그인 사용자 정보
+     * @param language 언어 필터
+     * @param sort 정렬 기준 (기본값: recent)
+     * @param page 페이지 번호
+     * @param size 페이지당 개수
+     * @param search 검색어 (GitHub 로그인 ID)
+     * @param model 뷰 모델
+     * @return 유저 오픈 프로필 검색 결과 페이지
+     */
     @GetMapping("/users")
     public String showSearchUsers(@AuthenticationPrincipal CustomUserPrincipal principal,
                                   @RequestParam(required = false) String language,

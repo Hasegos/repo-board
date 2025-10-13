@@ -17,6 +17,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 
+/**
+ * 사용자 프로필 관련 기능을 처리하는 컨트롤러입니다.
+ *
+ * <p>
+ * GitHub 프로필 연동, 새로고침, 공개 여부 설정 등<br>
+ * 사용자 프로필 데이터의 표시와 수정 기능을 제공합니다.
+ * </p>
+ */
 @Controller
 @RequestMapping("/users/profiles")
 @RequiredArgsConstructor
@@ -25,6 +33,14 @@ public class ProfileController {
     private final ProfileService profileService;
     private final ProfileDBService profileDBService;
 
+    /**
+     * 사용자 프로필 관련 기능을 처리하는 컨트롤러입니다.
+     *
+     * <p>
+     * GitHub 프로필 연동, 새로고침, 공개 여부 설정 등<br>
+     * 사용자 프로필 데이터의 표시와 수정 기능을 제공합니다.
+     * </p>
+     */
     @GetMapping
     public String showProfile(@AuthenticationPrincipal CustomUserPrincipal principal,
                               @RequestParam(defaultValue = "0") int page,
@@ -43,6 +59,14 @@ public class ProfileController {
         return "profile/profile";
     }
 
+    /**
+     * 사용자의 GitHub 프로필 URL을 등록하여 초기 설정을 수행합니다.
+     *
+     * @param principal 로그인 사용자 정보
+     * @param url GitHub 프로필 URL
+     * @param ra 리다이렉트 시 전달할 플래시 속성
+     * @return 프로필 페이지로 리다이렉트
+     */
     @PostMapping("/setup")
     public String setupProfile(@AuthenticationPrincipal CustomUserPrincipal principal,
                                @RequestParam("url") String url,
@@ -60,6 +84,17 @@ public class ProfileController {
         }
     }
 
+    /**
+     * 사용자의 GitHub 프로필을 새로고침합니다.
+     *
+     * <p>
+     * API를 통해 최신 프로필 정보와 이미지를 갱신합니다.
+     * </p>
+     *
+     * @param principal 로그인 사용자 정보
+     * @param ra 리다이렉트 시 전달할 플래시 속성
+     * @return 프로필 페이지로 리다이렉트
+     */
     @PostMapping("/refresh")
     public String refreshProfile(@AuthenticationPrincipal CustomUserPrincipal principal,
                                  RedirectAttributes ra){
@@ -76,6 +111,14 @@ public class ProfileController {
         return "redirect:/users/profiles";
     }
 
+    /**
+     * 프로필 공개 여부(PUBLIC/PRIVATE)를 변경합니다.
+     *
+     * @param principal 로그인 사용자 정보
+     * @param visibility 새로 설정할 공개 상태 값
+     * @param ra 리다이렉트 시 전달할 플래시 속성
+     * @return 프로필 페이지로 리다이렉트
+     */
     @PostMapping("/visibility")
     public String updateVisibility(@AuthenticationPrincipal CustomUserPrincipal principal,
                                    @RequestParam(value = "profileVisibility", required = false) String visibility,

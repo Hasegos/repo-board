@@ -7,9 +7,15 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
 
+/**
+ * 프로필 페이지 뷰 모델 DTO.
+ *
+ * <p>사용자, 프로필, GitHub 레포 목록, 화면 상태 정보를 포함한다.</p>
+ */
 @Getter
 @AllArgsConstructor
 public class ProfileView {
+
     private final User user;
     private final Profile profile;
     private final Page<GithubRepoDTO> repos;

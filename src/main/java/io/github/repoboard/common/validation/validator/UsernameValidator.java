@@ -6,6 +6,11 @@ import jakarta.validation.ConstraintValidatorContext;
 
 import java.util.regex.Pattern;
 
+/**
+ * {@link ValidUsername} 어노테이션의 실제 검증 로직.
+ *
+ * <p>입력된 문자열이 이메일 형식에 맞는지 검증한다.</p>
+ */
 public class UsernameValidator implements ConstraintValidator<ValidUsername, String> {
 
     private static final Pattern EMAIL_PATTERN =

@@ -10,6 +10,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+/**
+ * 홈 화면에서 GitHub 레포지토리를 조회하는 서비스.
+ *
+ * <p>언어, 정렬, 페이지, 새 전략 여부에 따라 GitHub API를 호출하며,
+ * 세션을 통해 쿼리 전략을 관리한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class HomeService {

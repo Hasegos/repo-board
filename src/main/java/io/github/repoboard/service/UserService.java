@@ -157,9 +157,10 @@ public class UserService {
     }
 
     /**
+     * 삭제된 사용자 백업 엔티티로부터 새로운 사용자 엔티티를 복원한다.
      *
-     * @param d
-     * @return
+     * @param d {@link DeleteUser} 백업 엔티티
+     * @return 복구된 사용자 엔티티
      */
     public User createdUserFromBackup(DeleteUser d){
         User user = new User();
@@ -175,8 +176,10 @@ public class UserService {
     }
 
     /**
+     * 최근 7일 이내 삭제된 사용자일 경우 재가입을 차단한다.
      *
-     * @param username
+     * @param username 중복 확인할 사용자명
+     * @throws IllegalStateException 삭제 후 7일이 지나지 않은 경우
      */
     private void validateReRegistration(String username){
         deleteUserRepository.findByUsername(username)

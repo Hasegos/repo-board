@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 사용자 등록(회원가입) 요청 DTO.
+ */
 @Getter
 @Setter
 public class UserDTO {
