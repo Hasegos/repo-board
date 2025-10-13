@@ -2,16 +2,21 @@ package io.github.repoboard.security.config;
 
 import io.github.repoboard.security.oauth2.CustomOAuth2UserService;
 import io.github.repoboard.security.userdetails.CustomUserDetailService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.HeaderWriterFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 /**
  * Spring Security 필터 체인, 인가/인증 정책, OAuth2 클라이언트 설정 등을 구성합니다.
@@ -60,8 +65,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain (HttpSecurity http) throws Exception{
         http
-                .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .csrf(csrf -> csrf.disable())
+                .headers(header ->
+                        header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+                        .contentSecurityPolicy(csp ->
+                                csp.policyDirectives(
+                                    "default-src 'self'; " +
+                                    "img-src 'self' https: data:; " +
+                                    "style-src 'self' https://fonts.googleapis.com; " +
+                                    "font-src 'self' https://fonts.gstatic.com; " +
+                                    "script-src 'self' https://accounts.google.com https://apis.google.com https://github.com; " +
+                                    "connect-src 'self' https://accounts.google.com https://apis.google.com https://github.com; " +
+                                    "form-action 'self' https://accounts.google.com https://github.com; " +
+                                    "frame-src 'self' https://accounts.google.com https://github.com; " +
+                                    "object-src 'none'; " +
+                                    "base-uri 'self';"
+                                )
+                        )
+                        .referrerPolicy(ref -> ref.policy(
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                        .contentTypeOptions(Customizer.withDefaults())
+                )
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/h2-console/**", "/api/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/script/**").permitAll()
                         .requestMatchers("/error/**").permitAll()
@@ -95,7 +120,22 @@ public class SecurityConfig {
                         })
                         .defaultSuccessUrl("/", true)
                         .failureHandler(customAuthFailureHandler)
-                ) ;
+                );
+        http.addFilterAfter(
+                ( request,  response, filterChain) -> {
+
+                    HttpServletRequest req = (HttpServletRequest) request;
+                    HttpServletResponse res = (HttpServletResponse) response;
+
+                    String uri = req.getRequestURI();
+                    if(uri.startsWith("/oauth2") || uri.startsWith("/logout/oauth2")){
+                        res.setHeader("Content-Security-Policy", "");
+                    }
+                    filterChain.doFilter(request,response);
+                },
+                HeaderWriterFilter.class
+        );
+
         return http.build();
     }
 }
