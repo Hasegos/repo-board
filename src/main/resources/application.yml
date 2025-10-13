@@ -71,4 +71,4 @@ github:
 logging:
   level:
     root: INFO
-    io.github.repoboard.security.config.WebClientConfig: DEBUG
+    io.github.repoboard: DEBUG

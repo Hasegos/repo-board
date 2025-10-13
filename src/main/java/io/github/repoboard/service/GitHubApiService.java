@@ -267,7 +267,7 @@ public class GitHubApiService {
         }
         Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
         if (cached != null) {
-            System.out.println("📦 캐시 히트: " + cacheKey);
+            log.debug("📦 캐시 히트: {}", cacheKey);
             return cached;
         }
         return executeGithubSearch(cache, cacheKey, finalQuery, pageable,githubSort);
@@ -292,7 +292,7 @@ public class GitHubApiService {
         Cache cache = cacheManager.getCache("ghQuerySearch");
         Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
         if (cached != null) {
-            System.out.println("📦 캐시 히트: " + cacheKey);
+            log.debug("📦 캐시 히트: {}", cacheKey);
             return cached;
         }
 
@@ -346,37 +346,36 @@ public class GitHubApiService {
                                     return response.bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {
                                 });
                             } else {
-                                System.out.println("⚠️ 예상하지 못한 Content-Type, 텍스트로 읽기 시도");
+                                log.warn("⚠️ 예상하지 못한 Content-Type: {}", contentType);
                                 return response.bodyToMono(String.class)
-                                        .doOnNext(body -> System.out.println("📝 응답 내용: " + body.substring(0, Math.min(200, body.length()))))
+                                        .doOnNext(body -> log.debug("📝 응답 내용: {}" , body.substring(0, Math.min(200, body.length()))))
                                         .then(Mono.empty());
                             }
                         } else {
                             return response.bodyToMono(String.class)
-                                    .doOnNext(body -> System.out.println("❌ [GitHub API 에러 응답]: " + body))
+                                    .doOnNext(body -> log.error("❌ [GitHub API 에러 응답]: {} ", body))
                                     .then(Mono.empty());
                         }
                     })
                     .timeout(TIMEOUT)
                     .blockOptional()
                     .map(res ->{
-                            System.out.println("🔢 totalCount: " + res.getTotalCount());
+                            log.debug("🔢 totalCount: {}", res.getTotalCount());
                             return new PageImpl<>(res.getItems(), pageable, res.getTotalCount());
                         }
                     )
                     .orElseGet(() -> {
-                        System.out.println("⚠️ GitHub 응답이 null 또는 에러 발생");
+                        log.warn("⚠️ GitHub 응답이 null 또는 에러 발생");
                         return new PageImpl<>(List.of(), pageable, 0);
                     });
             if (cache != null) {
                 cache.put(cacheKey, result);
-                System.out.println("캐시 저장 : " + cacheKey);
+                log.debug("캐시 저장 : {} " , cacheKey);
             }
             return result;
         }
         catch (Exception e){
-            System.err.println("검색 중 오류: " + e.getMessage());
-            e.printStackTrace();
+            log.error("검색 중 오류", e);
             return new PageImpl<>(List.of(), pageable, 0);
         }
     }

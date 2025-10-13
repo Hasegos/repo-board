@@ -66,9 +66,14 @@ public class SecurityConfig {
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/script/**").permitAll()
                         .requestMatchers("/error/**").permitAll()
                         .requestMatchers("/", "/users/login", "/users/signup","/oauth2/**","/login/**").permitAll()
-                        .requestMatchers("/profile", "/repos","/api/repos","/search/**").permitAll()
+                        .requestMatchers("/api/repos","/search/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                        .accessDeniedHandler((req, res , e)
+                                -> res.sendRedirect("/"))
                 )
                 .formLogin(form -> form
                         .loginPage("/users/login")
@@ -90,7 +95,8 @@ public class SecurityConfig {
                         })
                         .defaultSuccessUrl("/", true)
                         .failureHandler(customAuthFailureHandler)
-                );
+                )
+        ;
         return http.build();
     }
 }

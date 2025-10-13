@@ -49,11 +49,10 @@
                            th:href="@{/users/settings}"
                            >설정</a>
 
-                        <!-- 관리자 전용 예시 (thymeleaf-extras-springsecurity 사용 시) -->
-                        <!-- <a role="menuitem"
-                           th:if="${user != null and user.role.name() == 'ADMIN'}"
-                           th:href="@{/admin}">
-                           class="header__menu-item">관리자</a> -->
+                        <a role="menuitem" class="header__menu-item"
+                           th:if="${user != null and user.role.name() == 'ROLE_ADMIN'}"
+                           th:href="@{/admin}"
+                          >관리자</a>
 
                         <div class="header__menu-sep" role="separator"></div>
 
