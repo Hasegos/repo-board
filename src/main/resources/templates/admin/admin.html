@@ -14,12 +14,18 @@
 
         <div class="admin__tabs">
             <button class="admin__tab-button" data-tab="list">사용자 목록</button>
-            <button class="admin__tab-button" data-tab="detail">상세 정보</button>
+            <button class="admin__tab-button" data-tab="deleted">삭제된 사용자 목록</button>
             <button class="admin__tab-button" data-tab="log">활동 로그</button>
         </div>
 
         <section id="list" class="admin__tab-content admin__tab-content--active">
-            <table class="admin__table">
+            <h2 class="admin__subtitle">사용자 목록</h2>
+
+            <div th:if="${#lists.isEmpty(users)}" class="admin__empty-message">
+                등록된 사용자가 없습니다.
+            </div>
+
+            <table class="admin__table" th:if="${!#lists.isEmpty(users)}">
                 <thead class="admin__table-head">
                 <tr class="admin__table-row">
                     <th class="admin__table-header">ID</th>
@@ -38,34 +44,50 @@
                         <td th:text="${user.role}">USER</td>
                         <td th:text="${user.status}">ACTIVE</td>
                         <td>
-                            <form th:if="${user != null and user.role.name() != 'ROLE_ADMIN'}"
-                                  th:action="@{/admin/toggle/{userId}(userId=${user.id})}" method="post">
-                                <button type="submit"
-                                        th:text="${user.status == 'ACTIVE'} ? '정지' : '활성'">토글</button>
-                            </form>
-                            <form th:if="${user != null and user.role.name() != 'ROLE_ADMIN'}"
-                                  th:action="@{/admin/delete/{userId}(userId=${user.id})}" method="post">
-                                <button type="submit">삭제</button>
-                            </form>
-                            <a href="#" th:attr="data-userId=${user.id}" class="admin__detail-link">보기</a>
+                            <div th:if="${user.role.name() != 'ROLE_ADMIN'}">
+                                <form th:action="@{/admin/toggle/{userId}(userId=${user.id})}" method="post">
+                                    <button type="submit" th:text="${user.status == 'ACTIVE'} ? '정지' : '활성'">토글</button>
+                                </form>
+                                <form th:action="@{/admin/delete/{userId}(userId=${user.id})}" method="post">
+                                    <button type="submit">삭제</button>
+                                </form>
+                            </div>
+                            <span th:if="${user.role.name() == 'ROLE_ADMIN'}" >관리 불가</span>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </section>
 
-        <section id="detail" class="admin__tab-content">
-            <h2 class="admin__subtitle">사용자 상세 정보</h2>
-            <div th:if="${selectedUser != null}" class="admin__detail">
-                <p><strong>ID:</strong> <span th:text="${selectedUser.id}"></span></p>
-                <p><strong>이름:</strong> <span th:text="${selectedUser.username}"></span></p>
-                <p><strong>가입일:</strong> <span th:text="${#temporals.format(selectedUser.createdAt, 'yyyy-MM-dd HH:mm')}"></span></p>
-                <p><strong>권한:</strong> <span th:text="${selectedUser.role}"></span></p>
-                <p><strong>상태:</strong> <span th:text="${selectedUser.status}"></span></p>
+        <section id="deleted" class="admin__tab-content">
+            <h2 class="admin__subtitle">삭제된 사용자</h2>
+
+            <div th:if="${#lists.isEmpty(deletedUsers)}" class="admin__empty-message">
+                삭제된 사용자가 없습니다.
             </div>
-            <div th:if="${selectedUser == null}">
-                상세 정보를 보려면 사용자 목록에서 "보기"를 클릭하세요.
-            </div>
+
+            <table class="admin__table" th:if="${!#lists.isEmpty(deletedUsers)}">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>이메일</th>
+                    <th>삭제일</th>
+                    <th>복구</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="deleted : ${deletedUsers}">
+                        <td th:text="${deleted.id}"></td>
+                        <td th:text="${deleted.username}"></td>
+                        <td th:text="${#temporals.format(deleted.deleteAt, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td>
+                            <form th:action="@{/admin/restore/{username}(username=${deleted.username})}" method="post">
+                                <button type="submit">복구</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </section>
 
         <section id="log" class="admin__tab-content">
