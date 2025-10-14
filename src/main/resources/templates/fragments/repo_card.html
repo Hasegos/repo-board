@@ -13,7 +13,7 @@
                     </a>
                 </p>
             </div>
-            <form action="/users/saved/repos" method="post">
+            <form th:action="@{/users/saved/repos}" method="post">
                 <input type="hidden" name="id" th:value="${repo.id}">
                 <button type="submit" class="save-btn">저장</button>
             </form>

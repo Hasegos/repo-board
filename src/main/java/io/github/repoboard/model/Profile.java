@@ -41,11 +41,11 @@ public class Profile {
     private User user;
 
     /** GitHub 로그인 ID */
-    @Column(name = "github_login")
+    @Column(name = "github_login", nullable = false)
     private String githubLogin;
 
     /** github 닉네임 */
-    @Column(name = "github_name", nullable = false)
+    @Column(name = "github_name")
     private String githubName;
 
     /** github 자기소개 (bio) */
