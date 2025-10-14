@@ -3,8 +3,8 @@ server:
     session:
       timeout: 30m
       cookie:
-        secure: true
-        same-site: strict
+        secure: false
+        same-site: lax
 spring:
   application:
     name: RepoBoard
