@@ -112,32 +112,37 @@ public class SecurityConfig {
                     HttpServletResponse res = (HttpServletResponse) response;
 
                     filterChain.doFilter(request,response);
-
                     int status = res.getStatus();
+                    String uri = req.getRequestURI();
 
-                    if (status == HttpServletResponse.SC_FOUND     // 302
-                            || status == HttpServletResponse.SC_SEE_OTHER  // 303
-                            || status == HttpServletResponse.SC_TEMPORARY_REDIRECT // 307
-                            || status == 308) { // 308
+                    if (uri.startsWith("/login")
+                            || uri.startsWith("/oauth2")
+                            || uri.startsWith("/login/oauth2")
+                            || uri.startsWith("/error") // OAuth 오류 페이지 대응
+                            || uri.equals("/")) {       // 로그인 성공 후 루트 페이지
+                        res.setHeader("Content-Security-Policy", "");
+                        return;
+                    }
+
+                    if(status == 302 || status == 303 || status == 307 || status == 308){
                         res.setHeader("Content-Security-Policy", "");
                         return;
                     }
 
                     final String csp = String.join(" ",
-                            "default-src 'self' http://localhost:8080 https://localhost:8080;",
+                            "default-src 'self' http://localhost:8080;",
                             "base-uri 'self';",
                             "object-src 'none';",
-                            "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com;",
+                            "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;",
                             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
                             "font-src 'self' https://fonts.gstatic.com;",
                             "img-src 'self' data: https:;",
-                            "connect-src 'self' http://localhost:8080 https://localhost:8080 https://api.github.com https://apis.google.com https://accounts.google.com;",
-                            "form-action 'self' http://localhost:8080 https://localhost:8080 https://accounts.google.com https://github.com;",
+                            "connect-src 'self' http://localhost:8080 https://api.github.com https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;",
+                            "form-action 'self' http://localhost:8080 https://accounts.google.com https://github.com;",
                             "frame-src 'self' https://accounts.google.com https://github.com;",
                             "frame-ancestors 'self';",
                             "upgrade-insecure-requests;"
                     );
-
                     res.setHeader("Content-Security-Policy", csp);
                 },
                 HeaderWriterFilter.class
