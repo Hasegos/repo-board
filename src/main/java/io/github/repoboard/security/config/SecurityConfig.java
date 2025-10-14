@@ -65,77 +65,83 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain (HttpSecurity http) throws Exception{
         http
-                .headers(header ->
-                        header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-                        .contentSecurityPolicy(csp ->
-                                csp.policyDirectives(
-                                    "default-src 'self'; " +
-                                    "img-src 'self' https: data:; " +
-                                    "style-src 'self' https://fonts.googleapis.com; " +
-                                    "font-src 'self' https://fonts.gstatic.com; " +
-                                    "script-src 'self' https://accounts.google.com https://apis.google.com https://github.com; " +
-                                    "connect-src 'self' https://accounts.google.com https://apis.google.com https://github.com; " +
-                                    "form-action 'self' https://accounts.google.com https://github.com; " +
-                                    "frame-src 'self' https://accounts.google.com https://github.com; " +
-                                    "object-src 'none'; " +
-                                    "base-uri 'self';"
-                                )
-                        )
-                        .referrerPolicy(ref -> ref.policy(
-                                ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
-                        .contentTypeOptions(Customizer.withDefaults())
-                )
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/h2-console/**", "/api/**"))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/script/**").permitAll()
-                        .requestMatchers("/error/**").permitAll()
-                        .requestMatchers("/", "/users/login", "/users/signup","/oauth2/**","/login/**").permitAll()
-                        .requestMatchers("/api/repos","/search/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
-                .exceptionHandling(ex -> ex
-                        .accessDeniedHandler((req, res , e)
-                                -> res.sendRedirect("/"))
-                )
-                .formLogin(form -> form
-                        .loginPage("/users/login")
-                        .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/" , true)
-                        .failureHandler(customAuthFailureHandler)
-                        .usernameParameter("username")
-                        .passwordParameter("password")
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/")
-                        .deleteCookies("JSESSIONID")
-                )
-                .oauth2Login(oAuth2 -> oAuth2
-                        .loginPage("/users/login")
-                        .userInfoEndpoint(userInfo ->{
-                                userInfo.userService(customOAuth2UserService);
-                        })
-                        .defaultSuccessUrl("/", true)
-                        .failureHandler(customAuthFailureHandler)
-                );
+            .headers(header ->
+                header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+                .referrerPolicy(ref -> ref.policy(
+                        ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                .contentTypeOptions(Customizer.withDefaults())
+            )
+            .csrf(csrf -> csrf
+                    .ignoringRequestMatchers( "/api/**"))
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/css/**", "/js/**", "/images/**", "/script/**").permitAll()
+                    .requestMatchers("/error/**").permitAll()
+                    .requestMatchers("/", "/users/login", "/users/signup","/oauth2/**","/login/**").permitAll()
+                    .requestMatchers("/api/repos","/search/**").permitAll()
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
+                    .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                    .accessDeniedHandler((req, res , e)
+                            -> res.sendRedirect("/"))
+            )
+            .formLogin(form -> form
+                    .loginPage("/users/login")
+                    .loginProcessingUrl("/login")
+                    .defaultSuccessUrl("/" , true)
+                    .failureHandler(customAuthFailureHandler)
+                    .usernameParameter("username")
+                    .passwordParameter("password")
+                    .permitAll()
+            )
+            .logout(logout -> logout
+                    .logoutSuccessUrl("/")
+                    .deleteCookies("JSESSIONID")
+            )
+            .oauth2Login(oAuth2 -> oAuth2
+                    .loginPage("/users/login")
+                    .userInfoEndpoint(userInfo ->{
+                            userInfo.userService(customOAuth2UserService);
+                    })
+                    .defaultSuccessUrl("/", true)
+                    .failureHandler(customAuthFailureHandler)
+            );
         http.addFilterAfter(
                 ( request,  response, filterChain) -> {
-
                     HttpServletRequest req = (HttpServletRequest) request;
                     HttpServletResponse res = (HttpServletResponse) response;
 
-                    String uri = req.getRequestURI();
-                    if(uri.startsWith("/oauth2") || uri.startsWith("/logout/oauth2")){
-                        res.setHeader("Content-Security-Policy", "");
-                    }
                     filterChain.doFilter(request,response);
+
+                    int status = res.getStatus();
+
+                    if (status == HttpServletResponse.SC_FOUND     // 302
+                            || status == HttpServletResponse.SC_SEE_OTHER  // 303
+                            || status == HttpServletResponse.SC_TEMPORARY_REDIRECT // 307
+                            || status == 308) { // 308
+                        res.setHeader("Content-Security-Policy", "");
+                        return;
+                    }
+
+                    final String csp = String.join(" ",
+                            "default-src 'self' http://localhost:8080 https://localhost:8080;",
+                            "base-uri 'self';",
+                            "object-src 'none';",
+                            "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com;",
+                            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
+                            "font-src 'self' https://fonts.gstatic.com;",
+                            "img-src 'self' data: https:;",
+                            "connect-src 'self' http://localhost:8080 https://localhost:8080 https://api.github.com https://apis.google.com https://accounts.google.com;",
+                            "form-action 'self' http://localhost:8080 https://localhost:8080 https://accounts.google.com https://github.com;",
+                            "frame-src 'self' https://accounts.google.com https://github.com;",
+                            "frame-ancestors 'self';",
+                            "upgrade-insecure-requests;"
+                    );
+
+                    res.setHeader("Content-Security-Policy", csp);
                 },
                 HeaderWriterFilter.class
         );
-
         return http.build();
     }
 }
