@@ -13,8 +13,11 @@ import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -89,6 +92,8 @@ public class S3Service {
         if(imageUrl == null || imageUrl.trim().isEmpty()){
             throw new IllegalArgumentException("이미지 URL이 존재하지 않습니다.");
         }
+
+        validateAllowedHost(imageUrl);
 
         URL url = new URL(imageUrl);
         URLConnection connection = url.openConnection();
@@ -190,5 +195,76 @@ public class S3Service {
             extension =".jpg";
         }
         return prefix + "/" + UUID.randomUUID() + extension;
+    }
+
+    /**
+     * 이미지 URL이 안전한 외부 호스트(GitHub)에서 온 것인지 검증한다.
+     *
+     * <p>SSRF(Server Side Request Forgery) 공격을 방지하기 위해 다음을 검사한다:</p>
+     * <ul>
+     *   <li>URL 형식이 올바른지</li>
+     *   <li>HTTPS 프로토콜만 허용</li>
+     *   <li>허용된 호스트(avatars.githubusercontent.com, raw.githubusercontent.com)만 접근 가능</li>
+     *   <li>내부망(IP 127.x.x.x, 169.254.x.x 등) 또는 로컬 네트워크로의 접근 차단</li>
+     * </ul>
+     *
+     * @param imageUrl 검증할 이미지 URL
+     * @throws IllegalArgumentException URL이 비정상이거나, 내부망 접근 또는 비허용 호스트일 경우
+     */
+    private void validateAllowedHost(String imageUrl){
+        if(imageUrl == null || imageUrl.trim().isEmpty()){
+            throw new IllegalArgumentException("URL이 비어있습니다.");
+        }
+
+        URI uri;
+        try{
+            uri = URI.create(imageUrl);
+        } catch (Exception e){
+            throw new IllegalArgumentException("잘못된 이미지 URL 형식입니다.");
+        }
+
+        String scheme = uri.getScheme();
+        if(scheme == null || !scheme.equalsIgnoreCase("https")){
+            throw new IllegalArgumentException("허용되지 않은 프로토콜입니다.");
+        }
+
+        String host =  uri.getHost();
+        if (host == null){
+            throw new IllegalArgumentException("host 정보가없습니다.");
+        }
+
+        Set<String> allowedHosts = Set.of(
+                "avatars.githubusercontent.com",
+                "raw.githubusercontent.com"
+        );
+
+        if(!allowedHosts.contains(host)){
+            throw new IllegalArgumentException("허용되지 않은 허스트 접근입니다.");
+        }
+
+        try{
+            InetAddress address = InetAddress.getByName(host);
+            if(isPrivateOrLocalAddress(address)){
+                throw new IllegalArgumentException("내부 네트워크 전역 차단됨");
+            }
+        }catch (Exception e){
+            throw new IllegalArgumentException("호스트 해석 실패");
+        }
+
+    }
+
+    /**
+     * 사설망, 루프백, 링크로컬 등 내부 IP 주소 여부를 검사한다.
+     *
+     * @param address 검사할 IP 주소
+     * @return 내부 또는 로컬 주소이면 true
+     */
+    private boolean isPrivateOrLocalAddress(InetAddress address){
+        return address.isAnyLocalAddress()
+                || address.isLoopbackAddress()
+                || address.isLinkLocalAddress()
+                || address.isSiteLocalAddress()
+                || address.getHostAddress().startsWith("169.254.")
+                || address.getHostAddress().startsWith("127.");
     }
 }
