@@ -1,5 +1,6 @@
 package io.github.repoboard.service;
 
+import io.github.repoboard.common.event.S3DeleteEvent;
 import io.github.repoboard.dto.github.GithubRepoDTO;
 import io.github.repoboard.dto.github.GithubUserDTO;
 import io.github.repoboard.dto.view.ProfileView;
@@ -10,6 +11,7 @@ import io.github.repoboard.repository.ProfileRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -48,6 +50,7 @@ public class ProfileService {
     private final ProfileDBService profileDBService;
     private final GitHubApiService gitHubApiService;
     private final S3Service s3Service;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 특정 사용자에 대해 프로필이 이미 존재하는지 확인한다.
@@ -68,6 +71,7 @@ public class ProfileService {
      * @param githubLogin GitHub 로그인명
      * @return 해당 로그인명의 {@link Profile} Optional
      */
+    @Transactional(readOnly = true)
     public Optional<Profile> findProfileByGithubLogin(String githubLogin){
         return profileRepository.findByGithubLoginAndProfileVisibility(githubLogin, ProfileVisibility.PUBLIC);
     }
@@ -198,11 +202,7 @@ public class ProfileService {
         }
 
         if(oldKey != null && !oldKey.isEmpty()) {
-            try{
-                s3Service.deleteFile(oldKey);
-            } catch (Exception e){
-                log.error("롤백 중 S3 파일 삭제 실패 : key = {}" , oldKey, e);
-            }
+            eventPublisher.publishEvent(new S3DeleteEvent(oldKey, "profile-image-replaced"));
         }
     }
 
@@ -298,12 +298,7 @@ public class ProfileService {
        log.info("[PROFILE] 사용자 {} 프로필 DB 삭제 완료", userId);
 
        if(s3Key != null && !s3Key.isEmpty()){
-           try {
-               s3Service.deleteFile(s3Key);
-               log.info("[PROFILE] 사용자 {} 프로필 이미지(S3) 삭제 완료", userId);
-           }catch (Exception ex){
-               log.error("롤백 중 S3 파일 삭제 실패 : key = {}" , s3Key, ex);
-           }
+           eventPublisher.publishEvent(new S3DeleteEvent(s3Key, "profile-deleted"));
        }
     }
 }
