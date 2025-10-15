@@ -28,13 +28,13 @@ import java.time.Instant;
     name = "saved_repo",
     uniqueConstraints = {
         @UniqueConstraint(
-            name = "ux_saved_repo_user_owner_name",
-            columnNames = {"user_id", "owner_login", "name"}
+            name = "ux_saved_repo_user_repo",
+            columnNames = {"user_id", "repo_github_id"}
         )
     },
     indexes = {
         @Index(name = "idx_saved_repo_user", columnList = "user_id"),
-        @Index(name = "idx_saved_repo_owner_name", columnList = "owner_login,name")
+        @Index(name = "idx_saved_repo_repo_id", columnList = "repo_github_id")
     }
 )
 @Getter
