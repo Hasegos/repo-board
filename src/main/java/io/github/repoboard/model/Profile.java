@@ -1,5 +1,6 @@
 package io.github.repoboard.model;
 
+import io.github.repoboard.common.domain.BaseTimeEntity;
 import io.github.repoboard.model.enums.ProfileVisibility;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,7 +28,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "profiles")
-public class Profile {
+public class Profile extends BaseTimeEntity {
 
     /** 사용자 ID (User의 PK와 공유) */
     @Id
@@ -88,14 +89,4 @@ public class Profile {
     /** 연속 클릭 방지용 (시간) */
     @Column(name = "last_refresh_at")
     private Instant lastRefreshAt;
-
-    /** 생성 시각 */
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    /** 마지막 수정 시각 */
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
 }
