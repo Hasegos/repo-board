@@ -32,7 +32,13 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users")
+@Table(
+        name = "users",
+        indexes = {
+                @Index(name = "idx_users_status",
+                columnList = "status")
+        }
+)
 public class User extends BaseTimeEntity {
 
     /** 사용자 ID (PK) */
