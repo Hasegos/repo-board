@@ -27,7 +27,13 @@ import java.time.Instant;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "profiles")
+@Table(
+        name = "profiles",
+        indexes = {
+                @Index(name = "idx_profiles_login_visibility",
+                        columnList = "github_login, profile_visibility")
+        }
+)
 public class Profile extends BaseTimeEntity {
 
     /** 사용자 ID (User의 PK와 공유) */
