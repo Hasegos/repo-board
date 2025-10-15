@@ -5,6 +5,7 @@ server:
       cookie:
         secure: false
         same-site: lax
+
 spring:
   application:
     name: RepoBoard
@@ -73,3 +74,8 @@ logging:
   level:
     root: INFO
     io.github.repoboard: DEBUG
+
+app:
+  delete-user:
+    retention-days: 7
+    purge-count: "0 0 3 * * *" # 새벽 3시기준
