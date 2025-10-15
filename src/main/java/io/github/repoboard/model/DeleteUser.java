@@ -33,8 +33,8 @@ import java.time.Instant;
 @Table(
         name = "deleted_users",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_deleted_users_username_deleted_at",
-                    columnNames = {"username", "delete_at"})
+                @UniqueConstraint(name = "uk_deleted_users_username",
+                    columnNames = "username")
         },
         indexes = {
                 @Index(name = "idx_deleted_users_delete_at",
