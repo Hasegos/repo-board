@@ -1,5 +1,6 @@
 package io.github.repoboard.service;
 
+import io.github.repoboard.common.event.S3DeleteEvent;
 import io.github.repoboard.model.DeleteUser;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.User;
@@ -9,6 +10,7 @@ import io.github.repoboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 사용자 삭제 관련 기능을 처리하는 서비스 클래스.
@@ -37,7 +40,7 @@ public class DeleteUserService{
     private final UserRepository userRepository;
     private final DeleteUserRepository deleteUserRepository;
     private final ProfileDBService profileDBService;
-    private final S3Service s3Service;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.delete-user.retention-days}")
     private int retentionDays;
@@ -109,58 +112,36 @@ public class DeleteUserService{
     }
 
     /**
-     * 매일 새벽 3시에 실행되어 7일 이상 지난 {@link DeleteUser} 백업 데이터와
-     * 관련 S3 이미지를 정리한다.
+     * 만료된 삭제 백업을 DB에서 제거하고, 커밋 이후에 S3 객체 삭제가 실행되도록 이벤트를 발행한다.
      *
-     * <p>삭제 조건: {@code deleteAt < 현재 시각 - 7일 }</p>
+     * <p><b>트랜잭션 경계</b>: 본 메서드는 반드시 프록시를 통해 호출되어야 하므로
+     * 외부(예: 스케줄러)에서 호출해야 한다.<br>
+     * 내부 self-invocation 시 트랜잭션이 적용되지 않는다.</p>
+     *
+     * @return 커밋 후 삭제될 S3 객체 개수(이벤트 발행 건수)
      */
-    @Scheduled(cron = "${app.delete-user.purge-count}")
-    public void purgeOldBackups() {
+    @Transactional
+    public int purgeExpiredBackups() {
         Instant threshold = Instant.now().minus(Duration.ofDays(retentionDays));
         List<DeleteUser> expired = deleteUserRepository.findAllByDeleteAtBefore(threshold);
 
         if(expired.isEmpty()){
             log.info("✅ 삭제할 백업 없음 (기준: {})", threshold);
-            return;
+            return 0;
         }
-        int s3Deleted = deleteS3Files(expired);
-        deleteExpiredUsers(expired);
-        log.warn("🧹 {}건 삭제 완료 (S3 {}건 포함, 기준: {})",
-                expired.size(), s3Deleted, threshold);
-    }
 
-    /**
-     * 만료된 삭제 사용자들의 S3 파일을 삭제한다.
-     * <p>
-     * 삭제 중 일부 실패해도 전체 작업은 계속 진행된다.
-     *
-     * @param expired 삭제 대상 사용자 목록
-     * @return 성공적으로 삭제된 S3 파일 수
-     */
-    private int deleteS3Files(List<DeleteUser> expired) {
-        int s3Deleted = 0;
-        for (DeleteUser user : expired) {
-            String s3Key = user.getS3Key();
-            if (s3Key != null && !s3Key.isBlank()) {
-                try {
-                    s3Service.deleteFile(s3Key);
-                    s3Deleted++;
-                    log.info("🗑️ 7일 경과된 S3 이미지 삭제 완료 → {}", s3Key);
-                } catch (Exception e) {
-                    log.error("❌ S3 이미지 삭제 실패 → {}", s3Key, e);
-                }
-            }
-        }
-        return s3Deleted;
-    }
+        List<String> keys = expired.stream()
+                .map(DeleteUser :: getS3Key)
+                .filter(k -> k != null && !k.isBlank())
+                .toList();
 
-    /**
-     * 만료된 사용자 백업 데이터를 DB에서 완전히 삭제한다.
-     *
-     * @param expired 삭제 대상 사용자 목록
-     */
-    @Transactional
-    public void deleteExpiredUsers(List<DeleteUser> expired) {
         deleteUserRepository.deleteAll(expired);
+        for(String key : keys){
+            eventPublisher.publishEvent(new S3DeleteEvent(key,"deleted-user-purge"));
+        }
+
+        log.warn("🧹 {}건 DB 삭제 완료 (S3 {}건 커밋 후 삭제 예정, 기준: {})",
+                expired.size(), keys.size(), threshold);
+        return keys.size();
     }
 }
