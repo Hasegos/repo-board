@@ -1,5 +1,6 @@
 package io.github.repoboard.model;
 
+import io.github.repoboard.common.domain.BaseTimeEntity;
 import io.github.repoboard.model.enums.UserProvider;
 import io.github.repoboard.model.enums.UserRoleType;
 import io.github.repoboard.model.enums.UserStatus;
@@ -32,7 +33,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
-public class User {
+public class User extends BaseTimeEntity {
 
     /** 사용자 ID (PK) */
     @Id
@@ -65,16 +66,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
-
-    /** 가입 시각 */
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    /** 마지막 수정 시각 */
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
 
     /** 사용자 프로필 (1:1) */
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,
