@@ -37,7 +37,6 @@ public class SavedRepoDBService {
         savedRepo.setLanguageMain(dto.getLanguage());
         savedRepo.setStars(dto.getStars());
         savedRepo.setForks(dto.getForks());
-        savedRepo.setUpdatedAt(dto.getUpdatedAt());
 
         RepoOwner owner = new RepoOwner();
         owner.setOwnerLogin(dto.getOwnerLogin());

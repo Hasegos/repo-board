@@ -54,7 +54,6 @@ public class ProfileDBService {
         profile.setGithubPublicRepos(githubUserDTO.getPublicRepos());
         profile.setS3Key(s3Key);
         profile.setProfileVisibility(ProfileVisibility.PRIVATE);
-        profile.setCreatedAt(Instant.now());
 
         profileRepository.save(profile);
     }
@@ -79,7 +78,6 @@ public class ProfileDBService {
         profile.setGithubFollowers(dto.getFollowers());
         profile.setGithubFollowing(dto.getFollowing());
         profile.setGithubPublicRepos(dto.getPublicRepos());
-        profile.setUpdatedAt(Instant.now());
 
         profileRepository.save(profile);
     }
@@ -96,8 +94,6 @@ public class ProfileDBService {
 
         profile.setGithubAvatarUrl(imageUrl);
         profile.setS3Key(s3Key);
-        profile.setUpdatedAt(Instant.now());
-
         profileRepository.save(profile);
     }
 
@@ -119,7 +115,6 @@ public class ProfileDBService {
                         : ProfileVisibility.PRIVATE;
 
         profile.setProfileVisibility(newVisibility);
-        profile.setUpdatedAt(Instant.now());
     }
 
     /**
@@ -153,8 +148,6 @@ public class ProfileDBService {
         p.setS3Key(d.getS3Key());
         p.setProfileVisibility(d.getProfileVisibility());
         p.setLastRefreshAt(d.getLastRefreshAt());
-        p.setCreatedAt(d.getProfileCreatedAt());
-        p.setUpdatedAt(Instant.now());
 
         profileRepository.save(p);
     }

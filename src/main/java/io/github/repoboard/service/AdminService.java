@@ -72,12 +72,11 @@ public class AdminService {
         UserStatus after = (before == UserStatus.ACTIVE) ? UserStatus.SUSPENDED : UserStatus.ACTIVE;
 
         user.setStatus(after);
-        user.setUpdatedAt(Instant.now());
         userRepository.save(user);
 
         String admin = SecurityContextHolder.getContext().getAuthentication().getName();
         log.warn("[ADMIN ACTION] {} 가 사용자 상태 토글 - id: {}, username: {}, {} -> {}, statusAt: {}",
-                admin, user.getId(), user.getUsername(), before, after, Instant.now());
+                admin, user.getId(), user.getUsername(), before, after, user.getUpdatedAt());
     }
 
     /**

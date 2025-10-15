@@ -105,8 +105,6 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         user.setProvider(UserProvider.LOCAL);
         user.setRole(UserRoleType.ROLE_USER);
-        user.setCreatedAt(Instant.now());
-        user.setUpdatedAt(Instant.now());
 
         /* 소셜 로그인 */
         if(userDTO.getProviderId() != null && !userDTO.getProviderId().isEmpty()){
@@ -151,8 +149,6 @@ public class UserService {
         } else {
             throw new AccessDeniedException("소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다.");
         }
-
-        user.setUpdatedAt(Instant.now());
         user.setPassword(passwordEncoder.encode(change.getNewPassword()));
     }
 
@@ -170,8 +166,6 @@ public class UserService {
         user.setProvider(d.getProvider());
         user.setProviderId(d.getProviderId());
         user.setStatus(UserStatus.ACTIVE);
-        user.setCreatedAt(d.getCreatedAt());
-        user.setUpdatedAt(Instant.now());
         return userRepository.save(user);
     }
 
