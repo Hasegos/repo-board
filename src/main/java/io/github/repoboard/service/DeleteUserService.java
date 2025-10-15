@@ -8,6 +8,7 @@ import io.github.repoboard.repository.DeleteUserRepository;
 import io.github.repoboard.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,9 @@ public class DeleteUserService{
     private final DeleteUserRepository deleteUserRepository;
     private final ProfileDBService profileDBService;
     private final S3Service s3Service;
+
+    @Value("${app.delete-user.retention-days}")
+    private int retentionDays;
 
     /**
      * 사용자를 {@link DeleteUser} 테이블로 백업한 후 완전히 삭제한다.
@@ -91,7 +95,7 @@ public class DeleteUserService{
      */
     @Transactional
     public User restoreUser(DeleteUser backup) {
-        if (backup.getDeleteAt().isBefore(Instant.now().minus(Duration.ofDays(7)))) {
+        if (backup.getDeleteAt().isBefore(Instant.now().minus(Duration.ofDays(retentionDays)))) {
             throw new IllegalStateException("7일이 지나 복구할 수 없습니다.");
         }
 
@@ -110,26 +114,53 @@ public class DeleteUserService{
      *
      * <p>삭제 조건: {@code deleteAt < 현재 시각 - 7일 }</p>
      */
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "${app.delete-user.purge-count}")
     public void purgeOldBackups() {
-        Instant threshold = Instant.now().minus(Duration.ofDays(7));
-
+        Instant threshold = Instant.now().minus(Duration.ofDays(retentionDays));
         List<DeleteUser> expired = deleteUserRepository.findAllByDeleteAtBefore(threshold);
-        int countBefore = expired.size();
 
-        for(DeleteUser user : expired){
+        if(expired.isEmpty()){
+            log.info("✅ 삭제할 백업 없음 (기준: {})", threshold);
+            return;
+        }
+        int s3Deleted = deleteS3Files(expired);
+        deleteExpiredUsers(expired);
+        log.warn("🧹 {}건 삭제 완료 (S3 {}건 포함, 기준: {})",
+                expired.size(), s3Deleted, threshold);
+    }
+
+    /**
+     * 만료된 삭제 사용자들의 S3 파일을 삭제한다.
+     * <p>
+     * 삭제 중 일부 실패해도 전체 작업은 계속 진행된다.
+     *
+     * @param expired 삭제 대상 사용자 목록
+     * @return 성공적으로 삭제된 S3 파일 수
+     */
+    private int deleteS3Files(List<DeleteUser> expired) {
+        int s3Deleted = 0;
+        for (DeleteUser user : expired) {
             String s3Key = user.getS3Key();
-            if(s3Key != null && !s3Key.isBlank()){
+            if (s3Key != null && !s3Key.isBlank()) {
                 try {
                     s3Service.deleteFile(s3Key);
+                    s3Deleted++;
                     log.info("🗑️ 7일 경과된 S3 이미지 삭제 완료 → {}", s3Key);
-                }catch (Exception e){
+                } catch (Exception e) {
                     log.error("❌ S3 이미지 삭제 실패 → {}", s3Key, e);
                 }
             }
         }
-        deleteUserRepository.deleteAll(expired);
+        return s3Deleted;
+    }
 
-        log.info("✅ 7일 이상 지난 삭제 백업 정리 완료 - {}건 삭제됨", countBefore);
+    /**
+     * 만료된 사용자 백업 데이터를 DB에서 완전히 삭제한다.
+     *
+     * @param expired 삭제 대상 사용자 목록
+     */
+    @Transactional
+    public void deleteExpiredUsers(List<DeleteUser> expired) {
+        deleteUserRepository.deleteAll(expired);
     }
 }
