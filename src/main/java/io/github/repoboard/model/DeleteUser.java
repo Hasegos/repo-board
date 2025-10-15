@@ -1,5 +1,6 @@
 package io.github.repoboard.model;
 
+import io.github.repoboard.common.domain.BaseTimeEntity;
 import io.github.repoboard.model.enums.ProfileVisibility;
 import io.github.repoboard.model.enums.UserProvider;
 import io.github.repoboard.model.enums.UserRoleType;
@@ -30,7 +31,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @Table(name = "deleted_users")
-public class DeleteUser {
+public class DeleteUser extends BaseTimeEntity {
 
     /** 삭제 사용자 백업 ID (PK) */
     @Id
@@ -63,14 +64,6 @@ public class DeleteUser {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
-
-    /** 가입 시각 */
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    /** 마지막 수정 시각 */
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
 
     /** 삭제 시각 */
     @Column(name = "delete_at", nullable = false)
