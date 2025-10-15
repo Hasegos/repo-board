@@ -30,7 +30,17 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "deleted_users")
+@Table(
+        name = "deleted_users",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_deleted_users_username_deleted_at",
+                    columnNames = {"username", "delete_at"})
+        },
+        indexes = {
+                @Index(name = "idx_deleted_users_delete_at",
+                columnList = "delete_at")
+        }
+)
 public class DeleteUser extends BaseTimeEntity {
 
     /** 삭제 사용자 백업 ID (PK) */
@@ -39,7 +49,7 @@ public class DeleteUser extends BaseTimeEntity {
     private Long id;
 
     /** 사용자명 (고유값, 로그인 ID) */
-    @Column(name = "username", nullable = false, unique = true)
+    @Column(name = "username", nullable = false)
     private String username;
 
     /** 암호화된 비밀번호 */
@@ -57,7 +67,7 @@ public class DeleteUser extends BaseTimeEntity {
     private UserProvider provider;
 
     /** OAuth 제공자 식별자 */
-    @Column(name = "provider_id", unique = true)
+    @Column(name = "provider_id")
     private String providerId;
 
     /** 사용자 상태 (예: DELETED, SUSPENDED) */
