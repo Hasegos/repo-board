@@ -56,8 +56,6 @@ public class DeleteUserService{
                 .provider(user.getProvider())
                 .providerId(user.getProviderId())
                 .status(UserStatus.DELETED)
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
                 .deleteAt(Instant.now())
                 .deletedByAdmin(SecurityContextHolder.getContext().getAuthentication().getName())
                 .githubLogin(profile != null ? profile.getGithubLogin() : null)

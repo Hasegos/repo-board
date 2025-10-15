@@ -1,5 +1,6 @@
 package io.github.repoboard.model;
 
+import io.github.repoboard.common.domain.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -40,7 +41,7 @@ import java.time.Instant;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SavedRepo {
+public class SavedRepo extends BaseTimeEntity {
 
     /** 고유 식별자 (PK) */
     @Id
@@ -91,13 +92,4 @@ public class SavedRepo {
     /** 고정 여부(핀 여부) */
     @Column(name = "is_pinned")
     private boolean isPinned = false;
-
-    /** 저장 시각 (자동 생성) */
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    /** 마지막 수정 시각 */
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
 }

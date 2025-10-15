@@ -164,7 +164,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         user.setRole(UserRoleType.ROLE_USER);
         user.setProviderId(socialId);
         user.setProvider(provider);
-        user.setCreatedAt(Instant.now());
 
         try{
             userRepository.save(user);
