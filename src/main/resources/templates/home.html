@@ -114,6 +114,10 @@
                 </div>
             </div>
 
+            <div class="home__page-alert-wrap" th:if="${error}">
+                <div class="home__page-alert home__page-alert--error" th:text="${error}">에러 메시지</div>
+            </div>
+
             <div id="repo-grid" class="repo-grid">
                 <th:block th:replace="~{fragments/repo_card :: repo-cards}"></th:block>
             </div>
@@ -127,7 +131,9 @@
 
             <div id="scroll-trigger"></div>
 
-            <div id="end-message" class="end-message end-message--hidden">
+            <div id="end-message"
+                 th:if="${error == null}"
+                 class="end-message end-message--hidden">
                 <i class="end-message__icon fas fa-check-circle"></i>
                 <p>모든 리포지토리를 불러왔습니다!</p>
             </div>
