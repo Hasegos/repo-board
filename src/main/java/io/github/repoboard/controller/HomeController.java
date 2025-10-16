@@ -56,6 +56,12 @@ public class HomeController {
         }
         Page<GithubRepoDTO> repoPage = homeService.getRepos(language, sort, refresh, page, session);
 
+        Object errorFlag = session.getAttribute("ghApiError");
+        if(errorFlag != null && Boolean.TRUE.equals(errorFlag)){
+            model.addAttribute("error","⚠ GitHub에서 데이터를 가져오는 데 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            session.removeAttribute("ghApiError");
+        }
+
         model.addAttribute("repoPage", repoPage);
         model.addAttribute("currentLanguage", language);
         model.addAttribute("sort", sort);
@@ -85,8 +91,14 @@ public class HomeController {
                                        HttpSession session,
                                        Model model){
         Page<GithubRepoDTO> repoPage = homeService.getMoreRepos(language, sort, page, session);
-        model.addAttribute("repoPage", repoPage);
 
+        Object errorFlag = session.getAttribute("ghApiError");
+        if(errorFlag != null && Boolean.TRUE.equals(errorFlag)){
+            model.addAttribute("error","⚠ GitHub에서 데이터를 가져오는 데 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            session.removeAttribute("ghApiError");
+        }
+
+        model.addAttribute("repoPage", repoPage);
         return "fragments/repo_card :: repo-cards";
     }
 }
