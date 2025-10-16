@@ -2,11 +2,13 @@ package io.github.repoboard.controller;
 
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.AdminService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -42,11 +44,6 @@ public class AdminController {
         model.addAttribute("user",principal.getUser());
         model.addAttribute("users",adminService.getAllUsers());
         model.addAttribute("deletedUsers", adminService.getDeletedUsers());
-
-        if (userId != null) {
-            model.addAttribute("selectedUser", adminService.getUserById(userId));
-        }
-
         return "admin/admin";
     }
 
@@ -70,8 +67,15 @@ public class AdminController {
      * @return 관리자 페이지로 리다이렉트
      */
     @PostMapping("/delete/{userId}")
-    public String deleteUser(@PathVariable Long userId){
-        adminService.deleteUser(userId);
+    public String deleteUser(@PathVariable Long userId,
+                             RedirectAttributes ra){
+        try{
+            adminService.deleteUser(userId);
+        }catch (EntityNotFoundException e){
+            ra.addFlashAttribute("error",e.getMessage());
+        }catch (Exception e){
+            ra.addFlashAttribute("error", "⚠ 사용자 삭제 중 예외가 발생했습니다: " + e.getMessage());
+        }
         return "redirect:/admin";
     }
 
@@ -82,8 +86,17 @@ public class AdminController {
      * @return 관리자 페이지로 리다이렉트
      */
     @PostMapping("/restore/{username}")
-    public String  restoreUser(@PathVariable String username){
-        adminService.restoreDeletedUser(username);
+    public String  restoreUser(@PathVariable String username,
+                               RedirectAttributes ra){
+        try{
+            adminService.restoreDeletedUser(username);
+        }catch (IllegalArgumentException e){
+            ra.addFlashAttribute("error","❌ " +  e.getMessage());
+        }catch (IllegalStateException e){
+            ra.addFlashAttribute("error","❌ 복구 불가: " + e.getMessage());
+        }catch (Exception e){
+            ra.addFlashAttribute("error","⚠ 알 수 없는 오류: "  + e.getMessage());
+        }
         return "redirect:/admin";
     }
 
@@ -94,8 +107,15 @@ public class AdminController {
      * @return 관리자 페이지로 리다이렉트
      */
     @PostMapping("/toggle/{userId}")
-    public String toggleUserStatus(@PathVariable Long userId){
-        adminService.toggleUserStatus(userId);
+    public String toggleUserStatus(@PathVariable Long userId,
+                                   RedirectAttributes ra){
+        try{
+            adminService.toggleUserStatus(userId);
+        }catch (EntityNotFoundException e){
+            ra.addFlashAttribute("error","❌ " + e.getMessage());
+        }catch (Exception e){
+            ra.addFlashAttribute("error","⚠ 알 수 없는 오류: " + e.getMessage());
+        }
         return "redirect:/admin";
     }
 }
