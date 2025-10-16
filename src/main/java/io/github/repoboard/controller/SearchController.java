@@ -7,6 +7,7 @@ import io.github.repoboard.model.SavedRepo;
 import io.github.repoboard.model.User;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.SearchService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -63,6 +64,7 @@ public class SearchController {
                              @RequestParam("q") String search,
                              @RequestParam(defaultValue = "0") int page,
                              @RequestParam(value = "sort" , required = false , defaultValue = "popular") String sort,
+                             HttpSession session,
                              Model model){
         if(search == null || search.isBlank()){
             return "redirect:/";
@@ -70,7 +72,7 @@ public class SearchController {
         if(principal != null){
             model.addAttribute("user", principal.getUser());
         }
-        Page<GithubRepoDTO> repoPage =  searchService.fetchRepositories(search, page, sort);
+        Page<GithubRepoDTO> repoPage =  searchService.fetchRepositories(search, page, sort,session);
 
         model.addAttribute("repoPage", repoPage);
         model.addAttribute("query", SanitizeUtil.sanitizeQuery(search));
@@ -92,8 +94,9 @@ public class SearchController {
     public String loadMoreRepositories(@RequestParam(defaultValue = "1") int page,
                                        @RequestParam("sort") String sort,
                                        @RequestParam("q") String search,
+                                       HttpSession session,
                                        Model model){
-        Page<GithubRepoDTO> repoPage = searchService.loadMoreRepositories(search, page, sort);
+        Page<GithubRepoDTO> repoPage = searchService.loadMoreRepositories(search, page, sort, session);
         model.addAttribute("repoPage", repoPage);
         return "fragments/repo_card :: repo-cards";
     }
