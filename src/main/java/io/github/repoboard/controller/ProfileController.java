@@ -74,12 +74,11 @@ public class ProfileController {
         try {
             profileService.setupProfile(principal.getUser().getId(), url);
             return "redirect:/users/profiles";
-        }catch (IOException e){
-            ra.addFlashAttribute("error", "Github API 호출 중 오류가 발생했습니다.");
-            return "redirect:/users/profiles";
-        }
-        catch (Exception e){
+        }catch (IllegalArgumentException | IOException e){
             ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/users/profiles";
+        } catch (Exception e){
+            ra.addFlashAttribute("error","알 수 없는 오류가 발생했습니다.");
             return "redirect:/users/profiles";
         }
     }
@@ -125,7 +124,7 @@ public class ProfileController {
                                    RedirectAttributes ra){
         try{
             profileDBService.updateProfileVisibility(principal.getUser().getId(), visibility);
-        }catch (EntityNotFoundException e){
+        }catch (EntityNotFoundException | IllegalArgumentException e){
             ra.addFlashAttribute("error", e.getMessage());
         }catch (Exception e){
             ra.addFlashAttribute("error", "프로필 업데이트 실패했습니다.");
