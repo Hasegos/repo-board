@@ -3,6 +3,7 @@ package io.github.repoboard.controller;
 import io.github.repoboard.dto.auth.UserDTO;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.UserService;
+import jakarta.persistence.EntityExistsException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -76,9 +77,15 @@ public class AuthController {
                 return "auth/signup";
             }
             userService.register(dto);
-            return "auth/login";
-        }catch (IllegalStateException e){
-            model.addAttribute("signupError",e.getMessage());
+            return "redirect:/auth/login";
+        }catch (EntityExistsException e){
+            br.rejectValue("username", "duplicate", e.getMessage());
+            return "auth/signup";
+        } catch (IllegalStateException e){
+            model.addAttribute("error",e.getMessage());
+            return "auth/signup";
+        }catch (Exception e){
+            model.addAttribute("error", "⚠ 알 수 없는 오류가 발생했습니다: " + e.getMessage());
             return "auth/signup";
         }
     }
