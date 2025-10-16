@@ -40,7 +40,7 @@ public class HomeService {
                                         HttpSession session){
         QueryStrategyDTO strategy = resolveStrategy(refresh,session);
         Pageable pageable = PageRequest.of(page,50);
-        return gitHubApiService.fetchRepos(language,pageable, strategy, sort);
+        return gitHubApiService.fetchRepos(language,pageable, strategy, sort,session);
     }
 
     /**
@@ -59,7 +59,7 @@ public class HomeService {
                                             HttpSession session){
         QueryStrategyDTO strategy = (QueryStrategyDTO) session.getAttribute("refreshStrategy");
         Pageable pageable = PageRequest.of(page, 50);
-        return gitHubApiService.fetchRepos(language,pageable, strategy,sort);
+        return gitHubApiService.fetchRepos(language,pageable, strategy,sort,session);
     }
 
     /**
