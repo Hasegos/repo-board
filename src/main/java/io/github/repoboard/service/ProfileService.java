@@ -51,6 +51,7 @@ public class ProfileService {
     private final GitHubApiService gitHubApiService;
     private final S3Service s3Service;
     private final ApplicationEventPublisher eventPublisher;
+    private final EvictService evictService;
 
     /**
      * 특정 사용자에 대해 프로필이 이미 존재하는지 확인한다.
@@ -253,8 +254,9 @@ public class ProfileService {
 
         GithubUserDTO userDTO = gitHubApiService.refreshUser(profile.getGithubLogin());
         profileDBService.updateProfileDB(userId, userDTO);
-        refreshProfileImage(profile, userDTO.getAvatarUrl());
+        evictService.evictReposByUsername(profile.getGithubLogin());
 
+        refreshProfileImage(profile, userDTO.getAvatarUrl());
         profile.setLastRefreshAt(Instant.now());
         log.info("[PROFILE] 사용자 {} 프로필 새로고침 완료", userId);
     }
