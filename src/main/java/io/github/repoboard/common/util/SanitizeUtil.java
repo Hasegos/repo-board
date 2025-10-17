@@ -3,9 +3,6 @@ package io.github.repoboard.common.util;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-
 /**
  * 사용자 입력 문자열을 정제(sanitize)하는 유틸리티.
  *
