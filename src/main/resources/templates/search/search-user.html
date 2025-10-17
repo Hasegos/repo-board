@@ -64,39 +64,38 @@
                     </div>
                 </section>
             </div>
-        </div>
+            <!-- 페이지네이션 -->
+            <div class="pager" th:if="${savedRepos.totalPages > 1}">
+                <!-- 이전 -->
+                <a class="pager__btn"
+                   th:href="${savedRepos.first} ? '#' : @{/search/users(
+                         q=${search},
+                         page=${savedRepos.number - 1},
+                         sort=${sort},
+                         language=${language}
+                   )}"
+                   th:classappend="${savedRepos.first} ? ' pager__btn--disabled'">
+                    이전
+                </a>
 
-        <!-- 페이지네이션 -->
-        <div class="pager" th:if="${savedRepos.totalPages > 1}">
-            <!-- 이전 -->
-            <a class="pager__btn"
-               th:href="${savedRepos.first} ? '#' : @{/search/users(
-                     q=${search},
-                     page=${savedRepos.number - 1},
-                     sort=${sort},
-                     language=${language}
-               )}"
-               th:classappend="${savedRepos.first} ? ' pager__btn--disabled'">
-                이전
-            </a>
+                <!-- 현재 / 전체 -->
+                <div class="pager__info"
+                     th:text="${savedRepos.number + 1} + ' / ' + ${savedRepos.totalPages}">
+                    1 / 1
+                </div>
 
-            <!-- 현재 / 전체 -->
-            <div class="pager__info"
-                 th:text="${savedRepos.number + 1} + ' / ' + ${savedRepos.totalPages}">
-                1 / 1
+                <!-- 다음 -->
+                <a class="pager__btn"
+                   th:href="${savedRepos.last} ? '#' : @{/search/users(
+                        q=${search},
+                        page=${savedRepos.number + 1},
+                        sort=${sort},
+                        language=${language}
+                   )}"
+                   th:classappend="${savedRepos.last} ? ' pager__btn--disabled'">
+                    다음
+                </a>
             </div>
-
-            <!-- 다음 -->
-            <a class="pager__btn"
-               th:href="${savedRepos.last} ? '#' : @{/search/users(
-                    q=${search},
-                    page=${savedRepos.number + 1},
-                    sort=${sort},
-                    language=${language}
-               )}"
-               th:classappend="${savedRepos.last} ? ' pager__btn--disabled'">
-                다음
-            </a>
         </div>
     </main>
     <footer th:replace="~{fragments/footer :: footer}"></footer>
