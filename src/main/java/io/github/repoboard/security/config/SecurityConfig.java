@@ -89,7 +89,7 @@ public class SecurityConfig {
                     .requestMatchers("/error/**").permitAll()
                     .requestMatchers("/", "/users/login", "/users/signup","/oauth2/**","/login/**").permitAll()
                     .requestMatchers("/api/repos","/search/**").permitAll()
-                    .requestMatchers("/admin/**").hasRole("ADMIN")
+                    .requestMatchers("/admin/**", "/actuator/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
