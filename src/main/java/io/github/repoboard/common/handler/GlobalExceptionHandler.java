@@ -1,13 +1,11 @@
 package io.github.repoboard.common.handler;
 
 import io.github.repoboard.common.exception.GithubRateLimitException;
-import io.github.repoboard.common.exception.SavedRepoNotFoundException;
 import io.github.repoboard.common.exception.UnexpectedContentTypeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Instant;
 import java.util.Map;
@@ -54,19 +52,5 @@ public class GlobalExceptionHandler {
                         "error", "Github API로부터 예상치 못한 Content-Type 응답",
                         "contentType", ex.getContentType()
                 ));
-    }
-
-    /**
-     * 저장된 Repo를 찾지 못했을 때 처리
-     *
-     * @param ex 예외 메세지
-     * @param ra RedirectAttributes
-     * @return redirect + 에러 메세지 추가
-     */
-    @ExceptionHandler(SavedRepoNotFoundException.class)
-    public String handleSavedRepoNotFoundException(SavedRepoNotFoundException ex,
-                                                   RedirectAttributes ra){
-        ra.addFlashAttribute("errorMessage", ex.getMessage());
-        return "redirect:/users/saved/repos";
     }
 }
