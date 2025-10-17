@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 사용자 삭제 관련 기능을 처리하는 서비스 클래스.
@@ -103,7 +101,12 @@ public class DeleteUserService{
         }
 
         User user = userService.createdUserFromBackup(backup);
-        profileDBService.createProfileFromBackup(user, backup);
+
+        if(backup.getGithubLogin() != null && !backup.getGithubLogin().isBlank()){
+            profileDBService.createProfileFromBackup(user, backup);
+        }else{
+            log.warn("[RESTORE] githubLogin 없음 → 프로필 생략. username: {}", user.getUsername());
+        }
 
         deleteUserRepository.delete(backup);
         log.info("🟢 사용자 복구 완료 → username: {}, userId: {}", user.getUsername(), user.getId());
