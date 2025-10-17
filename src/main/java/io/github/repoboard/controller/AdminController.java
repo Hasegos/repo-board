@@ -1,5 +1,6 @@
 package io.github.repoboard.controller;
 
+import io.github.repoboard.dto.view.UserView;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.AdminService;
 import jakarta.persistence.EntityNotFoundException;
@@ -41,7 +42,7 @@ public class AdminController {
                             @RequestParam(value = "userId", required = false) Long userId,
                             Model model){
 
-        model.addAttribute("user",principal.getUser());
+        model.addAttribute("user", UserView.from(principal.getUser()));
         model.addAttribute("users",adminService.getAllUsers());
         model.addAttribute("deletedUsers", adminService.getDeletedUsers());
         return "admin/admin";
