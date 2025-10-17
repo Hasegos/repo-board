@@ -79,3 +79,16 @@ app:
   delete-user:
     retention-days: 7
     purge-count: "0 0 3 * * *" # 새벽 3시기준
+  security:
+    csp: |-
+      default-src 'self' http://localhost:8080;
+      img-src 'self' https: data:;
+      style-src 'self' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      script-src 'self' http://localhost:8080 https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;
+      connect-src 'self' http://localhost:8080 https://api.github.com https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;
+      object-src 'none';
+      base-uri 'self';
+      frame-ancestors 'self';
+      form-action 'self' http://localhost:8080 https://github.com https://accounts.google.com;
+    cspReportOnly: false
