@@ -18,7 +18,7 @@
 
             <div th:unless="${error}">
                 <form action="/users/saved/repos" method="Get" class="saved-repos__filters">
-                    <select name="language" onchange="this.form.submit()">
+                    <select name="language" id="filter-language">
                         <option value="">언어 필터</option>
                         <option th:each="lang : ${languageOptions}"
                                 th:value="${lang}"
@@ -26,7 +26,7 @@
                                 th:selected="${selectedLanguage == lang}"></option>
                     </select>
 
-                    <select name="sort" onchange="this.form.submit()">
+                    <select name="sort" id="filter-sort">
                         <option value="popular" th:selected="${sort == 'popular'}">인기순</option>
                         <option value="recent" th:selected="${sort == 'recent'}">최신순</option>
                     </select>

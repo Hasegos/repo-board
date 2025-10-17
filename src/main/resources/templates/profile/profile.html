@@ -30,6 +30,9 @@
                  th:text="${error}">오류 메시지</div>
         </div>
     </main>
+    <th:block th:if="${!view.onboarding}">
+        <script th:src="@{/js/profileView.js}"></script>
+    </th:block>
     <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

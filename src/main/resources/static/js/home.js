@@ -1,4 +1,3 @@
-let observer;
 let isRefresh = false;
 document.addEventListener('DOMContentLoaded', function () {
     let isLoading = false;
@@ -8,12 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let rateLimitEndTime = 0;
     let isEnd = false;
     const repoCache = new Map();
-    const errorDiv = document.getElementById('save-error');
-    const message = errorDiv?.dataset?.message;
-
-    if(message){
-        alert(message);
-    }
 
     const MAX_CACHE_SIZE = 20;
     const MAX_RETRY_COUNT = 3;
@@ -75,10 +68,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function changeLanguage(language) {
-        if (currentLanguage === language) return;
-        window.location.href = `/?language=${language}`;
-    }
+    document.querySelector('.language-filter__buttons')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.language-btn');
+        if (!btn) return;
+
+        const selectedLang = btn.dataset.language;
+        if (!selectedLang || selectedLang === currentLanguage) return;
+
+        window.location.href = `/?language=${selectedLang}`;
+    });
 
     function updateSpinnerMessage(isRateLimit = false) {
         const spinner = document.getElementById('loading-spinner');
@@ -262,7 +260,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     applyStylesToCards(document.querySelectorAll('.repo-card'));
-    window.changeLanguage = changeLanguage;
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {

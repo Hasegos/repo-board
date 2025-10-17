@@ -45,10 +45,10 @@
                     <form th:action="@{/users/profiles/visibility}" method="post" class="profile-visibility">
                         <label class="profile-visibility__switch">
                             <input type="checkbox"
+                                   id="profile-visibility-checkbox"
                                    name="profileVisibility"
                                    value="PUBLIC"
-                                   th:checked="${view.profile.profileVisibility.name() == 'PUBLIC'}"
-                                   onchange="this.form.submit()">
+                                   th:checked="${view.profile.profileVisibility.name() == 'PUBLIC'}">
                             <span class="profile-visibility__slider"></span>
                         </label>
                         <span class="profile-visibility__label"

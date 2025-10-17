@@ -117,8 +117,7 @@
 
                 <article id="danger" class="card card--danger">
                     <h2 class="card__title">위험 구역</h2>
-                    <form th:action="@{/users/settings/delete}" method="post"
-                          onsubmit="return confirm('계정 탈퇴시 모든 내용이 삭제됩니다.')">
+                    <form id="deleteAccountForm" th:action="@{/users/settings/delete}" method="post">
                         <div class="card__body">
                             <p class="danger-zone__text">계정을 삭제하면 복구할 수 없습니다.</p>
                             <button class="button button--danger" type="submit">계정 삭제</button>
