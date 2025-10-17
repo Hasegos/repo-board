@@ -1,6 +1,7 @@
 package io.github.repoboard.controller;
 
 import io.github.repoboard.dto.view.SavedRepoView;
+import io.github.repoboard.dto.view.UserView;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.GitHubApiService;
 import io.github.repoboard.service.SavedRepoDBService;
@@ -50,7 +51,7 @@ public class SavedRepoController {
                                 @RequestParam(defaultValue = "0") int unpinnedPage,
                                 RedirectAttributes ra,
                                 Model model){
-        model.addAttribute("user", principal.getUser());
+        model.addAttribute("user", UserView.from(principal.getUser()));
         try {
             SavedRepoView view = savedRepoService.loadSavedRepos(principal.getUser().getId(),
                     language, sort, pinnedPage, unpinnedPage);

@@ -1,6 +1,7 @@
 package io.github.repoboard.controller;
 
 import io.github.repoboard.dto.request.ChangePasswordDTO;
+import io.github.repoboard.dto.view.UserView;
 import io.github.repoboard.model.User;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.SettingService;
@@ -53,8 +54,9 @@ public class SettingController {
                 model.addAttribute("ChangePasswordDTO", new ChangePasswordDTO());
             }
 
-            model.addAttribute("authType", user.getProvider().name());
-            model.addAttribute("user", principal.getUser());
+            String authType = (user.getProvider() != null) ? user.getProvider().name() : "LOCAL";
+            model.addAttribute("authType", authType);
+            model.addAttribute("user", UserView.from(principal.getUser()));
 
         }catch (EntityNotFoundException e){
             model.addAttribute("error", e.getMessage());

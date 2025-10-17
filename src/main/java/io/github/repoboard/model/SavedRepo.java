@@ -67,7 +67,7 @@ public class SavedRepo extends BaseTimeEntity {
     private String description;
 
     /** 주 언어 */
-    @Column(name = "language_main", nullable = false)
+    @Column(name = "language_main")
     private String languageMain;
 
     /** 스타 개수 */

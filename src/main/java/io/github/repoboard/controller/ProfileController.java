@@ -1,6 +1,7 @@
 package io.github.repoboard.controller;
 
 import io.github.repoboard.dto.view.ProfileView;
+import io.github.repoboard.dto.view.UserView;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.ProfileDBService;
 import io.github.repoboard.service.ProfileService;
@@ -47,7 +48,7 @@ public class ProfileController {
                               @RequestParam(defaultValue = "6") int size,
                               @RequestParam(defaultValue = "all") String type,
                               Model model){
-        model.addAttribute("user", principal.getUser());
+        model.addAttribute("user", UserView.from(principal.getUser()));
         try{
             ProfileView profileView = profileService.loadProfilePage(principal.getUser().getId(), page, size, type);
             model.addAttribute("view", profileView);

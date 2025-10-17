@@ -17,8 +17,20 @@ import java.util.Set;
 @Getter
 public class SavedRepoView {
 
-    private final User user;
+    private final UserView user;
     private final Page<SavedRepo> pinnedRepos;
     private final Page<SavedRepo> unpinnedRepos;
     private final Set<String> languageOptions;
+
+    public static SavedRepoView of(User user,
+                                   Page<SavedRepo> pinnedRepos,
+                                   Page<SavedRepo> unpinnedRepos,
+                                  Set<String> languageOptions){
+        return new SavedRepoView(
+                UserView.from(user),
+                pinnedRepos != null ? pinnedRepos : Page.empty(),
+                unpinnedRepos != null ? unpinnedRepos : Page.empty(),
+                languageOptions
+        );
+    }
 }

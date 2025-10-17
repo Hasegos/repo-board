@@ -135,7 +135,7 @@ public class SavedRepoService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(TreeSet::new));
 
-        return new SavedRepoView(user, pinnedRepos, unpinnedRepos, languageOptions);
+        return SavedRepoView.of(user, pinnedRepos, unpinnedRepos, languageOptions);
     }
 
     /**

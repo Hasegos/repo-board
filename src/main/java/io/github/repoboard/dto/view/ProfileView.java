@@ -16,9 +16,22 @@ import org.springframework.data.domain.Page;
 @AllArgsConstructor
 public class ProfileView {
 
-    private final User user;
-    private final Profile profile;
+    private final UserView user;
+    private final ProfileFullView profile;
     private final Page<GithubRepoDTO> repos;
     private final String currentType;
     private final boolean onboarding;
+
+    public static ProfileView of(User user, Profile profile,
+                                 Page<GithubRepoDTO> repos,
+                                 String currentType,
+                                 boolean onboarding){
+        return new ProfileView(
+                UserView.from(user),
+                profile != null ? ProfileFullView.from(profile) : null,
+                repos,
+                currentType,
+                onboarding
+        );
+    }
 }

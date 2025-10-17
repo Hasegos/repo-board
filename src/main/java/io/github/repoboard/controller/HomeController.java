@@ -1,6 +1,7 @@
 package io.github.repoboard.controller;
 
 import io.github.repoboard.dto.github.GithubRepoDTO;
+import io.github.repoboard.dto.view.UserView;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.HomeService;
 import jakarta.servlet.http.HttpSession;
@@ -52,7 +53,7 @@ public class HomeController {
                            @RequestParam(defaultValue = "0") int page,
                            Model model) {
         if(principal != null){
-            model.addAttribute("user", principal.getUser());
+            model.addAttribute("user", UserView.from(principal.getUser()));
         }
         Page<GithubRepoDTO> repoPage = homeService.getRepos(language, sort, refresh, page, session);
 

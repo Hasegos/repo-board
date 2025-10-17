@@ -221,14 +221,14 @@ public class ProfileService {
 
         Optional<Profile> profileOpt = findProfileByUserId(user.getId());
         if(profileOpt.isEmpty()){
-            return new ProfileView(user, null, Page.empty(), type, true);
+            return ProfileView.of(user, null, Page.empty(), type, true);
         }
 
         Profile profile = profileOpt.get();
         Pageable pageable = PageRequest.of(page,size);
         Page<GithubRepoDTO> reposPage = loadProfileView(profile.getGithubLogin(), pageable, type);
 
-        return new ProfileView(user, profile, reposPage, type, false);
+        return ProfileView.of(user, profile, reposPage, type, false);
     }
 
     /**

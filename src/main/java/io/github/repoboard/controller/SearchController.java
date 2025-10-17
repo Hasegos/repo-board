@@ -2,6 +2,8 @@ package io.github.repoboard.controller;
 
 import io.github.repoboard.common.util.SanitizeUtil;
 import io.github.repoboard.dto.github.GithubRepoDTO;
+import io.github.repoboard.dto.view.ProfileFullView;
+import io.github.repoboard.dto.view.UserView;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.SavedRepo;
 import io.github.repoboard.model.User;
@@ -84,7 +86,7 @@ public class SearchController {
             return "redirect:/";
         }
         if(principal != null){
-            model.addAttribute("user", principal.getUser());
+            model.addAttribute("user", UserView.from(principal.getUser()));
         }
         Page<GithubRepoDTO> repoPage =  searchService.fetchRepositories(search, page, sort,session);
 
@@ -156,7 +158,7 @@ public class SearchController {
             return "redirect:/";
         }
         if(principal != null){
-            model.addAttribute("user", principal.getUser());
+            model.addAttribute("user", UserView.from(principal.getUser()));
         }
         Optional<Profile> profile = searchService.findProfileByGithubLogin(search);
 
@@ -170,7 +172,7 @@ public class SearchController {
         Page<SavedRepo> savedRepo = searchService.fetchSavedRepos(user.getId(),language,sort, page, size);
 
         model.addAttribute("savedRepos", savedRepo);
-        model.addAttribute("profile", profile.get());
+        model.addAttribute("profile", ProfileFullView.from(profile.get()));
         model.addAttribute("sort", sort);
         model.addAttribute("language", language);
         model.addAttribute("search", SanitizeUtil.sanitizeQuery(search));
