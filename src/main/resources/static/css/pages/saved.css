@@ -220,14 +220,24 @@
     height: 100px;
 }
 
-.error-box {
-  background: #ffeaea;
-  color: #b20000;
-  border: 1px solid #ffcccc;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 4px;
-  font-weight: 500;
+.saved__page-alert-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.saved__page-alert {
+  display: inline-flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d0d7de;
+}
+
+.saved__page-alert--error {
+  background: #ffebe9;
+  border-color: #ff818266;
+  color: #9a1119;
 }
 
 /* -------- Pagination (block: pager) -------- */
