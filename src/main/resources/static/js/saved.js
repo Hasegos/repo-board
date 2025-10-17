@@ -30,7 +30,7 @@ async function toggleReadme(button) {
                 readmeContent.dataset.loaded = 'true';
                 readmeContent.classList.remove('loading');
             } catch (e) {
-                readmeContent.textContent = '❌ ${e.message}.';
+                readmeContent.textContent = `❌ ${e.message}.`;
             }
         }
     } else {
