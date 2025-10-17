@@ -118,24 +118,25 @@
                 <div class="home__page-alert home__page-alert--error" th:text="${error}">에러 메시지</div>
             </div>
 
-            <div id="repo-grid" class="repo-grid">
-                <th:block th:replace="~{fragments/repo_card :: repo-cards}"></th:block>
-            </div>
-
-            <div id="loading-spinner" class="loading-spinner">
-                <div class="loading-spinner__content">
-                    <div class="loading-spinner__icon"></div>
-                    <span class="loading-spinner__text">더 많은 리포지토리를 불러오는 중...</span>
+            <div th:if="${error == null}">
+                <div id="repo-grid" class="repo-grid">
+                    <th:block th:replace="~{fragments/repo_card :: repo-cards}"></th:block>
                 </div>
-            </div>
 
-            <div id="scroll-trigger"></div>
+                <div id="loading-spinner" class="loading-spinner">
+                    <div class="loading-spinner__content">
+                        <div class="loading-spinner__icon"></div>
+                        <span class="loading-spinner__text">더 많은 리포지토리를 불러오는 중...</span>
+                    </div>
+                </div>
 
-            <div id="end-message"
-                 th:if="${error == null}"
-                 class="end-message end-message--hidden">
-                <i class="end-message__icon fas fa-check-circle"></i>
-                <p>모든 리포지토리를 불러왔습니다!</p>
+                <div id="scroll-trigger"></div>
+
+                <div id="end-message"
+                     class="end-message end-message--hidden">
+                    <i class="end-message__icon fas fa-check-circle"></i>
+                    <p>모든 리포지토리를 불러왔습니다!</p>
+                </div>
             </div>
         </div>
     </main>
