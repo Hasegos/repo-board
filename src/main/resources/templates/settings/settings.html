@@ -15,7 +15,12 @@
             : '설정 (폼 로그인 사용자)'">
             설정
         </h1>
-        <div class="settings__layout">
+
+        <div class="settings__page-alert-wrap" th:if="${error}">
+            <div class="settings__page-alert settings__page-alert--error" th:text="${error}">에러 메시지</div>
+        </div>
+
+        <div class="settings__layout" th:if="${error == null}">
             <nav class="settings__sidebar" aria-label="설정 메뉴">
                 <a class="settings__tab settings__tab--active" href="#account" th:if="${authType == 'LOCAL'}">계정</a>
                 <a class="settings__tab" href="#security" th:if="${authType == 'LOCAL'}">보안</a>

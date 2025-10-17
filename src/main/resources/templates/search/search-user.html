@@ -12,11 +12,11 @@
     <main class="layout__container">
         <h1 class="page-title">"[(${search})]" 검색 결과</h1>
 
-        <div th:if="${errorMessage != null}" class="alert alert--error">
-            <p th:text="${errorMessage}">해당 유저의 프로필이 존재하지 않습니다.</p>
+        <div th:if="${error != null}" class="alert alert--error">
+            <p th:text="${error}">해당 유저의 프로필이 존재하지 않습니다.</p>
         </div>
 
-        <div th:if="${errorMessage == null}" class="user-search-grid">
+        <div th:if="${error == null}" class="user-search-grid">
             <div  class="user-card" >
                 <section class="user-card__profile">
                     <img th:src="${profile.githubAvatarUrl}" alt="프로필" class="user-card__avatar"/>

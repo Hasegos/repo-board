@@ -2,7 +2,7 @@ package io.github.repoboard.service;
 
 import io.github.repoboard.dto.github.GithubRepoDTO;
 import io.github.repoboard.dto.request.SavedRepoDTO;
-import io.github.repoboard.dto.view.SavedRepoView;import io.github.repoboard.model.RepoOwner;
+import io.github.repoboard.dto.view.SavedRepoView;
 import io.github.repoboard.model.SavedRepo;
 import io.github.repoboard.model.User;
 import io.github.repoboard.repository.SavedRepoRepository;

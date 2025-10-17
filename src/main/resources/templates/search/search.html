@@ -12,44 +12,51 @@
 <header th:replace="~{fragments/header :: header}"></header>
 <main>
     <div class="container mx-auto px-4 py-8">
-        <div class="search-header">
-            <div>
-                <h2 class="search-header__title">
-                    <span>"[[${query}]]" 검색 결과</span>
-                </h2>
-                <p class="search-header__count" id="total-count">
-                    총 <span th:text="${repoPage?.totalElements ?: 0}">0</span>개의 리포지토리
-                </p>
-            </div>
-            <div class="search-header__sort">
-                <span class="search-header__sort-label">정렬:</span>
-                <select id="sort-select" class="search-header__sort-select">
-                    <option value="popular" th:selected="${sort == 'popular'}">인기순</option>
-                    <option value="recent" th:selected="${sort == 'recent'}">최신순</option>
-                </select>
-            </div>
-            <div id="search-metadata"
-                 th:attr="data-current-page=${repoPage.number},
-                          data-current-sort=${sort}">
-            </div>
+
+        <div class="home__page-alert-wrap" th:if="${error}">
+            <div class="home__page-alert home__page-alert--error" th:text="${error}">에러 메시지</div>
         </div>
 
-        <div id="repo-grid" class="repo-grid">
-            <th:block th:replace="~{fragments/repo_card :: repo-cards}"></th:block>
-        </div>
-
-        <div id="loading-spinner" class="loading-spinner">
-            <div class="loading-spinner__content">
-                <div class="loading-spinner__icon"></div>
-                <span class="loading-spinner__text">더 많은 리포지토리를 불러오는 중...</span>
+        <div th:if="${error == null}">
+            <div class="search-header">
+                <div>
+                    <h2 class="search-header__title">
+                        <span>"[[${query}]]" 검색 결과</span>
+                    </h2>
+                    <p class="search-header__count" id="total-count">
+                        총 <span th:text="${repoPage?.totalElements ?: 0}">0</span>개의 리포지토리
+                    </p>
+                </div>
+                <div class="search-header__sort">
+                    <span class="search-header__sort-label">정렬:</span>
+                    <select id="sort-select" class="search-header__sort-select">
+                        <option value="popular" th:selected="${sort == 'popular'}">인기순</option>
+                        <option value="recent" th:selected="${sort == 'recent'}">최신순</option>
+                    </select>
+                </div>
+                <div id="search-metadata"
+                     th:attr="data-current-page=${repoPage.number},
+                              data-current-sort=${sort}">
+                </div>
             </div>
-        </div>
 
-        <div id="scroll-trigger"></div>
+            <div id="repo-grid" class="repo-grid">
+                <th:block th:replace="~{fragments/repo_card :: repo-cards}"></th:block>
+            </div>
 
-        <div id="end-message" class="end-message end-message--hidden">
-            <i class="end-message__icon fas fa-check-circle"></i>
-            <p>모든 리포지토리를 불러왔습니다!</p>
+            <div id="loading-spinner" class="loading-spinner">
+                <div class="loading-spinner__content">
+                    <div class="loading-spinner__icon"></div>
+                    <span class="loading-spinner__text">더 많은 리포지토리를 불러오는 중...</span>
+                </div>
+            </div>
+
+            <div id="scroll-trigger"></div>
+
+            <div id="end-message" class="end-message end-message--hidden">
+                <i class="end-message__icon fas fa-check-circle"></i>
+                <p>모든 리포지토리를 불러왔습니다!</p>
+            </div>
         </div>
     </div>
 </main>

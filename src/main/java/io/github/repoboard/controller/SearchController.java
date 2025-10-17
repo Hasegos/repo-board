@@ -7,6 +7,7 @@ import io.github.repoboard.model.SavedRepo;
 import io.github.repoboard.model.User;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.SearchService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,12 +41,26 @@ public class SearchController {
      */
     @GetMapping
     public String redirectSearch(@RequestParam("type") String type,
-                                 @RequestParam("q") String query){
-        String encode = searchService.resolveRedirect(type, query);
-        if("users".equals(type)){
-            return "redirect:/search/users?q=" + encode;
+                                 @RequestParam("q") String query,
+                                 Model model){
+        try{
+            String encode = searchService.resolveRedirect(query);
+
+            if("users".equalsIgnoreCase(type)){
+                return "redirect:/search/users?q=" + encode;
+            }
+            else if("repositories".equalsIgnoreCase(type)){
+                return "redirect:/search/repositories?q=" + encode;
+            } else {
+                model.addAttribute("query",query);
+                model.addAttribute("error", "유효하지않은 검색 타입입니다.");
+                return "search/search";
+            }
+        }catch (Exception e){
+            model.addAttribute("query",query);
+            model.addAttribute("error", "검색 요청 처리 중 오류가 발생했습니다.");
+            return "search/search";
         }
-        return "redirect:/search/repositories?q=" + encode;
     }
 
     /**
@@ -63,6 +78,7 @@ public class SearchController {
                              @RequestParam("q") String search,
                              @RequestParam(defaultValue = "0") int page,
                              @RequestParam(value = "sort" , required = false , defaultValue = "popular") String sort,
+                             HttpSession session,
                              Model model){
         if(search == null || search.isBlank()){
             return "redirect:/";
@@ -70,11 +86,18 @@ public class SearchController {
         if(principal != null){
             model.addAttribute("user", principal.getUser());
         }
-        Page<GithubRepoDTO> repoPage =  searchService.fetchRepositories(search, page, sort);
+        Page<GithubRepoDTO> repoPage =  searchService.fetchRepositories(search, page, sort,session);
 
         model.addAttribute("repoPage", repoPage);
         model.addAttribute("query", SanitizeUtil.sanitizeQuery(search));
         model.addAttribute("sort", sort);
+
+        Boolean hasError = (Boolean) session.getAttribute("ghApiError");
+        if(Boolean.TRUE.equals(hasError)){
+            model.addAttribute("error", "⚠ GitHub에서 데이터를 가져오는 데 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            session.removeAttribute("ghApiError");
+        }
+
         return "search/search";
     }
 
@@ -92,9 +115,19 @@ public class SearchController {
     public String loadMoreRepositories(@RequestParam(defaultValue = "1") int page,
                                        @RequestParam("sort") String sort,
                                        @RequestParam("q") String search,
+                                       HttpSession session,
                                        Model model){
-        Page<GithubRepoDTO> repoPage = searchService.loadMoreRepositories(search, page, sort);
-        model.addAttribute("repoPage", repoPage);
+        Page<GithubRepoDTO> repoPage = searchService.loadMoreRepositories(search, page, sort, session);
+
+        Boolean hasError = (Boolean) session.getAttribute("ghApiError");
+        if (Boolean.TRUE.equals(hasError)) {
+            model.addAttribute("error", "GitHub에서 데이터를 가져오는 데 실패했습니다.");
+            model.addAttribute("repoPage",Page.empty());
+            session.removeAttribute("ghApiError");
+        }else {
+            model.addAttribute("repoPage", repoPage);
+        }
+
         return "fragments/repo_card :: repo-cards";
     }
 
@@ -128,7 +161,7 @@ public class SearchController {
         Optional<Profile> profile = searchService.findProfileByGithubLogin(search);
 
         if(profile.isEmpty()){
-            model.addAttribute("errorMessage", "해당 유저의 프로필이 존재하지않습니다.");
+            model.addAttribute("error", "해당 유저의 프로필이 존재하지않습니다.");
             model.addAttribute("search", SanitizeUtil.sanitizeQuery(search));
             return "search/search-user";
         }

@@ -4,6 +4,7 @@ import io.github.repoboard.dto.request.ChangePasswordDTO;
 import io.github.repoboard.model.User;
 import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.SettingService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -45,15 +46,22 @@ public class SettingController {
     @GetMapping
     public String showSettings(@AuthenticationPrincipal CustomUserPrincipal principal,
                                Model model){
+        try {
+            User user = settingService.getUserByPrincipal(principal);
 
-        User user = settingService.getUserByPrincipal(principal);
+            if (!model.containsAttribute("ChangePasswordDTO")) {
+                model.addAttribute("ChangePasswordDTO", new ChangePasswordDTO());
+            }
 
-        if (!model.containsAttribute("ChangePasswordDTO")) {
-            model.addAttribute("ChangePasswordDTO", new ChangePasswordDTO());
+            model.addAttribute("authType", user.getProvider().name());
+            model.addAttribute("user", principal.getUser());
+
+        }catch (EntityNotFoundException e){
+            model.addAttribute("error", e.getMessage());
+        } catch (Exception e){
+            model.addAttribute("error", "알 수 없는 오류가 발생했습니다.");
         }
 
-        model.addAttribute("authType", user.getProvider().name());
-        model.addAttribute("user", principal.getUser());
         return "settings/settings";
     }
 
@@ -78,16 +86,21 @@ public class SettingController {
                                      HttpServletRequest request,
                                      HttpServletResponse response,
                                      RedirectAttributes ra){
-        settingService.changeUserPassword(principal.getUser().getId(), change, br);
+        try {
+            settingService.changeUserPassword(principal.getUser().getId(), change, br);
 
-        if(br.hasErrors()) {
-            ra.addFlashAttribute("ChangePasswordDTO", change);
-            ra.addFlashAttribute("org.springframework.validation.BindingResult.ChangePasswordDTO", br);
-            return "redirect:/users/settings";
+            if(br.hasErrors()) {
+                ra.addFlashAttribute("ChangePasswordDTO", change);
+                ra.addFlashAttribute("org.springframework.validation.BindingResult.ChangePasswordDTO", br);
+                return "redirect:/users/settings";
+            }
+
+            settingService.logoutAfterPasswordChange(request,response);
+            return "redirect:/users/login";
+        } catch (Exception e){
+           ra.addFlashAttribute("error", "⚠ 비밀번호 변경 중 알 수 없는 오류가 발생했습니다.");
+           return "redirect:/users/settings";
         }
-
-        settingService.logoutAfterPasswordChange(request,response);
-        return "redirect:/users/login";
     }
 
     /**
@@ -104,12 +117,18 @@ public class SettingController {
     @PostMapping("/delete")
     public String deleteUser(@AuthenticationPrincipal CustomUserPrincipal principal,
                              HttpServletRequest request,
+                             RedirectAttributes ra,
                              HttpServletResponse response){
         try{
             settingService.deleteUser(principal.getUser().getId(), request, response);
             return "redirect:/";
-        }catch (Exception e){
-            return "redirect:/users/settings?error=" + e.getMessage();
+        }catch (EntityNotFoundException e){
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/users/settings";
+        }
+        catch (Exception e){
+            ra.addFlashAttribute("error", "계정 삭제 중 오류가 발생했습니다.");
+            return "redirect:/users/settings";
         }
     }
 }

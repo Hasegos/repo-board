@@ -21,11 +21,16 @@ async function toggleReadme(button) {
             try {
                 const res = await fetch(`/users/saved/repos/${repoId}/readme`);
                 const html = await res.text();
+
+                if(!res.ok){
+                    throw new Error(html);
+                }
+
                 readmeContent.innerHTML = html;
                 readmeContent.dataset.loaded = 'true';
                 readmeContent.classList.remove('loading');
             } catch (e) {
-                readmeContent.textContent = '❌ README를 불러올 수 없습니다.';
+                readmeContent.textContent = '❌ ${e.message}.';
             }
         }
     } else {

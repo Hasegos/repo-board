@@ -11,8 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-
 /**
  * 프로필 엔티티를 DB에 생성/수정/삭제하는 서비스.
  *
@@ -109,12 +107,27 @@ public class ProfileDBService {
         Profile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new EntityNotFoundException("등록된 프로필이 없습니다. 먼저 프로필을 생성해주세요."));
 
-        ProfileVisibility newVisibility =
-                (visibility != null && visibility.equals("PUBLIC"))
-                        ? ProfileVisibility.PUBLIC
-                        : ProfileVisibility.PRIVATE;
-
+        ProfileVisibility newVisibility = parseVisibility(visibility);
         profile.setProfileVisibility(newVisibility);
+    }
+
+    /**
+     * 문자열 값을 {@link ProfileVisibility} Enum으로 변환한다.
+     * <p>허용값: PUBLIC, PRIVATE</p>
+     *
+     * @param visibility 프로필 공개 상태 문자열
+     * @return 변환된 {@link ProfileVisibility} 값
+     * @throws IllegalArgumentException 잘못된 값일 경우
+     */
+    private ProfileVisibility parseVisibility(String visibility){
+        if(visibility == null){
+            return ProfileVisibility.PRIVATE;
+        }
+        if(visibility.equals("PUBLIC")){
+            return ProfileVisibility.PUBLIC;
+        }else{
+            throw new IllegalArgumentException("올바르지 않은 공개 설정 값입니다.");
+        }
     }
 
     /**

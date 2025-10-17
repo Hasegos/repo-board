@@ -13,7 +13,7 @@
             <h1 id="signup-title" class="auth__title">회원가입</h1>
             <p class="auth__subtitle">GitHub 연동은 자동으로 오픈프로필을 생성/동기화합니다.</p>
 
-            <div th:if="${signupError}" class="alert alert--error" th:text="${signupError}"></div>
+            <div th:if="${error}" class="alert alert--error" th:text="${error}"></div>
 
             <div class="oauth">
                 <a class="button oauth__provider" th:href="@{/oauth2/authorization/github}">

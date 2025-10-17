@@ -4,6 +4,7 @@ import io.github.repoboard.common.util.SanitizeUtil;
 import io.github.repoboard.dto.github.GithubRepoDTO;
 import io.github.repoboard.model.Profile;
 import io.github.repoboard.model.SavedRepo;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,11 +35,10 @@ public class SearchService {
      * <p>입력값은 {@link SanitizeUtil#sanitizeQuery(String)}로 정제 후
      * URL 안전하게 인코딩된다.</p>
      *
-     * @param type  검색 타입 (예: "users" 또는 "repositories")
      * @param query 사용자 입력 검색어
      * @return URL 인코딩된 안전한 검색어
      */
-    public String resolveRedirect(String type,String query){
+    public String resolveRedirect(String query){
         String safeQuery = SanitizeUtil.sanitizeQuery(query);
         return URLEncoder.encode(safeQuery, StandardCharsets.UTF_8);
     }
@@ -54,27 +54,28 @@ public class SearchService {
      * @param sort   정렬 기준 (예: "popular", "recent", "stars")
      * @return 검색된 저장소 목록 (페이지네이션 결과)
      */
-    public Page<GithubRepoDTO> fetchRepositories(String search, int page, String sort){
+    public Page<GithubRepoDTO> fetchRepositories(String search, int page, String sort, HttpSession session){
         String safeQuery = SanitizeUtil.sanitizeQuery(search);
         Pageable pageable = PageRequest.of(page, 50);
-        return gitHubApiService.fetchReposByQuery(safeQuery, pageable, sort);
+        return gitHubApiService.fetchReposByQuery(safeQuery, pageable, sort,session);
     }
 
     /**
      * GitHub 저장소 검색 결과의 추가 페이지를 조회한다.
      *
      * <p>무한 스크롤 API 요청에서 사용되며,
-     * 내부 로직은 {@link #fetchRepositories(String, int, String)}와 동일하다.</p>
+     * 내부 로직은 {@link #fetchRepositories(String, int, String,HttpSession)}와 동일하다.</p>
      *
      * @param search 검색어
      * @param page   페이지 번호 (0부터 시작)
      * @param sort   정렬 기준
      * @return 검색된 저장소 목록 (추가 페이지 결과)
      */
-    public Page<GithubRepoDTO> loadMoreRepositories(String search, int page, String sort){
+    public Page<GithubRepoDTO> loadMoreRepositories(String search, int page, String sort,HttpSession session){
         String safeQuery = SanitizeUtil.sanitizeQuery(search);
         Pageable pageable = PageRequest.of(page, 50);
-        return gitHubApiService.fetchReposByQuery(safeQuery, pageable, sort);
+        return gitHubApiService
+                .fetchReposByQuery(safeQuery, pageable, sort,session);
     }
 
     /**

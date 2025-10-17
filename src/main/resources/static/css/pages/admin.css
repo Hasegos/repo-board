@@ -48,3 +48,23 @@
     color: #666;
     font-style: italic;
 }
+
+.admin__page-alert-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.admin__page-alert {
+  display: inline-flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d0d7de;
+}
+
+.admin__page-alert--error {
+  background: #ffebe9;
+  border-color: #ff818266;
+  color: #9a1119;
+}
