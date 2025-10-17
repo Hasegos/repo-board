@@ -35,11 +35,10 @@ public class SearchService {
      * <p>입력값은 {@link SanitizeUtil#sanitizeQuery(String)}로 정제 후
      * URL 안전하게 인코딩된다.</p>
      *
-     * @param type  검색 타입 (예: "users" 또는 "repositories")
      * @param query 사용자 입력 검색어
      * @return URL 인코딩된 안전한 검색어
      */
-    public String resolveRedirect(String type,String query){
+    public String resolveRedirect(String query){
         String safeQuery = SanitizeUtil.sanitizeQuery(query);
         return URLEncoder.encode(safeQuery, StandardCharsets.UTF_8);
     }
