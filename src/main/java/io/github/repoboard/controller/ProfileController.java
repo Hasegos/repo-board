@@ -47,9 +47,9 @@ public class ProfileController {
                               @RequestParam(defaultValue = "6") int size,
                               @RequestParam(defaultValue = "all") String type,
                               Model model){
+        model.addAttribute("user", principal.getUser());
         try{
             ProfileView profileView = profileService.loadProfilePage(principal.getUser().getId(), page, size, type);
-            model.addAttribute("user", profileView.getUser());
             model.addAttribute("view", profileView);
         }
         catch (Exception e){
