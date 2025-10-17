@@ -63,19 +63,18 @@ public class AuthController {
     public String postRegister(@ModelAttribute("userDTO") @Valid UserDTO dto,
                                BindingResult br,
                                Model model){
-        try {
-            if (userService.findByUsername(dto.getUsername()).isPresent()) {
-                br.rejectValue("username", "duplicate", "이미 존재하는 회원입니다.");
-                return "auth/signup";
+
+        if (!br.hasFieldErrors("password") && !br.hasFieldErrors("passwordConfirm")) {
+            if (!java.util.Objects.equals(dto.getPassword(), dto.getPasswordConfirm())) {
+                br.rejectValue("passwordConfirm", "password.mismatch", "비밀번호가 일치하지 않습니다.");
             }
-            if (!br.hasFieldErrors("password") && !br.hasFieldErrors("passwordConfirm")) {
-                if (!java.util.Objects.equals(dto.getPassword(), dto.getPasswordConfirm())) {
-                    br.rejectValue("passwordConfirm", "password.mismatch", "비밀번호가 일치하지 않습니다.");
-                }
-            }
-            if (br.hasErrors()) {
-                return "auth/signup";
-            }
+        }
+
+        if (br.hasErrors()) {
+            return "auth/signup";
+        }
+
+        try{
             userService.register(dto);
             return "redirect:/auth/login";
         }catch (EntityExistsException e){
