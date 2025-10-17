@@ -10,9 +10,9 @@
                         <img th:src="@{/images/pin.svg}" alt="고정">
                     </button>
                 </form>
-                <button type="button" class="btn btn--toggle" onclick="toggleReadme(this)">
+                <button type="button" class="btn btn--toggle">
                     <span class="toggle-label">자세히 보기</span>
-                    <span class="arrow">▼</span>
+                    <span class="arrow">▲</span>
                 </button>
                 <form th:action="@{/users/saved/repos/delete/{repoGithubId}(repoGithubId=${repo.repoGithubId})}"
                       method="post">
