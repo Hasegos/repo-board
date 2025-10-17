@@ -120,10 +120,11 @@ public class ProfileDBService {
      * @throws IllegalArgumentException 잘못된 값일 경우
      */
     private ProfileVisibility parseVisibility(String visibility){
-        if("PUBLIC".equalsIgnoreCase(visibility)){
-            return ProfileVisibility.PUBLIC;
-        } else if("PRIVATE".equalsIgnoreCase(visibility)){
+        if(visibility == null){
             return ProfileVisibility.PRIVATE;
+        }
+        if(visibility.equals("PUBLIC")){
+            return ProfileVisibility.PUBLIC;
         }else{
             throw new IllegalArgumentException("올바르지 않은 공개 설정 값입니다.");
         }
