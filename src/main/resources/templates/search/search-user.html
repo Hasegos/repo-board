@@ -67,7 +67,7 @@
         </div>
 
         <!-- 페이지네이션 -->
-        <div class="pager" th:if="${errorMessage == null and savedRepos.totalPages > 1}">
+        <div class="pager" th:if="${savedRepos.totalPages > 1}">
             <!-- 이전 -->
             <a class="pager__btn"
                th:href="${savedRepos.first} ? '#' : @{/search/users(
