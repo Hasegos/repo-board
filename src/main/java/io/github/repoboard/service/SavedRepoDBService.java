@@ -1,11 +1,11 @@
 package io.github.repoboard.service;
 
-import io.github.repoboard.common.exception.SavedRepoNotFoundException;
 import io.github.repoboard.dto.request.SavedRepoDTO;
 import io.github.repoboard.model.RepoOwner;
 import io.github.repoboard.model.SavedRepo;
 import io.github.repoboard.model.User;
 import io.github.repoboard.repository.SavedRepoRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,7 +57,7 @@ public class SavedRepoDBService {
     @Transactional
     public void updateNote(Long savedGithubId, Long userId, String note){
         SavedRepo savedRepo = savedRepoRepository.findByRepoGithubIdAndUserId(savedGithubId, userId)
-                .orElseThrow(SavedRepoNotFoundException:: new);
+                .orElseThrow(() -> new EntityNotFoundException("저장된 레포를 찾을 수 없습니다."));
         savedRepo.setNote(note);
 
         savedRepoRepository.save(savedRepo);
@@ -73,7 +73,7 @@ public class SavedRepoDBService {
     @Transactional
     public void updatePin(Long savedGithubId, Long userId, boolean isPinned){
         SavedRepo savedRepo = savedRepoRepository.findByRepoGithubIdAndUserId(savedGithubId, userId)
-                .orElseThrow(SavedRepoNotFoundException :: new);
+                .orElseThrow(() -> new EntityNotFoundException("저장된 레포를 찾을 수 없습니다."));
         savedRepo.setPinned(isPinned);
 
         savedRepoRepository.save(savedRepo);
@@ -88,7 +88,7 @@ public class SavedRepoDBService {
     @Transactional
     public void delete(Long savedGithubId, Long userId){
         SavedRepo savedRepo = savedRepoRepository.findByRepoGithubIdAndUserId(savedGithubId, userId)
-                .orElseThrow(SavedRepoNotFoundException::new);
+                .orElseThrow(() -> new EntityNotFoundException("저장된 레포를 찾을 수 없습니다."));
 
        savedRepoRepository.delete(savedRepo);
     }
