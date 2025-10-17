@@ -5,7 +5,9 @@ import io.github.repoboard.security.core.CustomUserPrincipal;
 import io.github.repoboard.service.GitHubApiService;
 import io.github.repoboard.service.SavedRepoDBService;
 import io.github.repoboard.service.SavedRepoService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -46,18 +48,27 @@ public class SavedRepoController {
                                 @RequestParam(required = false, defaultValue = "popular") String sort,
                                 @RequestParam(defaultValue = "0") int pinnedPage,
                                 @RequestParam(defaultValue = "0") int unpinnedPage,
+                                RedirectAttributes ra,
                                 Model model){
-        SavedRepoView view = savedRepoService.loadSavedRepos(principal.getUser().getId(),
-                                        language, sort, pinnedPage, unpinnedPage);
+        model.addAttribute("user", principal.getUser());
+        try {
+            SavedRepoView view = savedRepoService.loadSavedRepos(principal.getUser().getId(),
+                    language, sort, pinnedPage, unpinnedPage);
 
-        model.addAttribute("user",view.getUser());
-        model.addAttribute("pinnedRepos", view.getPinnedRepos());
-        model.addAttribute("unpinnedRepos", view.getUnpinnedRepos());
-        model.addAttribute("languageOptions", view.getLanguageOptions());
-        model.addAttribute("selectedLanguage", language);
-        model.addAttribute("sort", sort);
+            model.addAttribute("pinnedRepos", view.getPinnedRepos());
+            model.addAttribute("unpinnedRepos", view.getUnpinnedRepos());
+            model.addAttribute("languageOptions", view.getLanguageOptions());
+            model.addAttribute("selectedLanguage", language);
+            model.addAttribute("sort", sort);
 
-        return "repository/saved";
+            return "repository/saved";
+        } catch (EntityNotFoundException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/users/saved/repos";
+        } catch (Exception e){
+            ra.addFlashAttribute("error", "저장소 정보를 불러오는 중 오류가 발생했습니다.");
+            return "redirect:/users/saved/repos";
+        }
     }
 
     /**
@@ -68,8 +79,20 @@ public class SavedRepoController {
      */
     @GetMapping("/{repoId}/readme")
     public ResponseEntity<String> getReadmeByRepoId(@PathVariable Long repoId){
-        String readme = gitHubApiService.getReadmeById(repoId);
-        return ResponseEntity.ok(readme);
+        try{
+            String readme = gitHubApiService.getReadmeById(repoId);
+            if(readme == null || readme.isBlank()){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("README를 찾을 수 없습니다.");
+            }
+            return ResponseEntity.ok(readme);
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest()
+                    .body("잘못된 요청입니다: " + e.getMessage());
+        }catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("README를 불러오는 중 오류가 발생했습니다.");
+        }
     }
 
     /**
@@ -86,9 +109,12 @@ public class SavedRepoController {
                            RedirectAttributes ra){
         try{
             savedRepoService.savedRepoById(id, principal.getUser().getId());
-        } catch (IllegalArgumentException e){
-            ra.addFlashAttribute("saveError", e.getMessage());
-            return "redirect:/";
+        } catch (IllegalArgumentException | EntityNotFoundException e){
+            ra.addFlashAttribute("error", e.getMessage());
+        } catch (RuntimeException e){
+            ra.addFlashAttribute("error", "저장 중 서버 오류가 발생했습니다.");
+        } catch (Exception e){
+            ra.addFlashAttribute("error", "알 수 없는 오류가 발생했습니다.");
         }
 
         return "redirect:/users/saved/repos";
@@ -103,8 +129,15 @@ public class SavedRepoController {
      */
     @PostMapping("/delete/{repoGithubId}")
     public String deleteRepo(@AuthenticationPrincipal CustomUserPrincipal principal,
+                             RedirectAttributes ra,
                              @PathVariable Long repoGithubId){
-        savedRepoDBService.delete(repoGithubId, principal.getUser().getId());
+        try{
+            savedRepoDBService.delete(repoGithubId, principal.getUser().getId());
+        } catch (EntityNotFoundException e){
+            ra.addFlashAttribute("error", e.getMessage());
+        }catch (Exception e){
+            ra.addFlashAttribute("error","레포지토리 삭제 중 오류가 발생했습니다.");
+        }
 
         return "redirect:/users/saved/repos";
     }
@@ -119,9 +152,16 @@ public class SavedRepoController {
      */
     @PostMapping("/note/{repoGithubId}")
     public String updateNote(@AuthenticationPrincipal CustomUserPrincipal principal,
+                             RedirectAttributes ra,
                              @PathVariable Long repoGithubId,
                              @RequestParam("note") String note){
-        savedRepoDBService.updateNote(repoGithubId, principal.getUser().getId(), note);
+        try {
+            savedRepoDBService.updateNote(repoGithubId, principal.getUser().getId(), note);
+        }catch (EntityNotFoundException e){
+            ra.addFlashAttribute("error", e.getMessage());
+        }catch (Exception e){
+            ra.addFlashAttribute("error", "메모 업데이트 중 오류가 발생했습니다.");
+        }
 
         return "redirect:/users/saved/repos";
     }
@@ -137,8 +177,15 @@ public class SavedRepoController {
     @PostMapping("/pin/{repoGithubId}")
     public String updatePinned(@AuthenticationPrincipal CustomUserPrincipal principal,
                                @PathVariable Long repoGithubId,
+                               RedirectAttributes ra,
                                @RequestParam boolean isPinned){
-        savedRepoDBService.updatePin(repoGithubId, principal.getUser().getId(), isPinned);
+        try {
+            savedRepoDBService.updatePin(repoGithubId, principal.getUser().getId(), isPinned);
+        }catch (EntityNotFoundException e){
+            ra.addFlashAttribute("error", e.getMessage());
+        }catch (Exception e){
+            ra.addFlashAttribute("error", "핀 업데이트 중 오류가 발생했습니다.");
+        }
 
         return "redirect:/users/saved/repos";
     }
