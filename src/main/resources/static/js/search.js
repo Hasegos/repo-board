@@ -1,0 +1,260 @@
+document.addEventListener('DOMContentLoaded', function () {
+    let isLoading = false;
+    let lastLoadAt = 0;
+    let retryCount = 0;
+    let isRateLimited = false;
+    let rateLimitEndTime = 0;
+    let isEnd = false;
+    const repoCache = new Map();
+    const errorDiv = document.getElementById('save-error');
+    const message = errorDiv?.dataset?.message;
+
+    if(message){
+        alert(message);
+    }
+
+    const MAX_CACHE_SIZE = 20;
+    const MAX_RETRY_COUNT = 3;
+    const RATE_LIMIT_RETRY_DELAY = 30000;
+    const NORMAL_RETRY_DELAY = 3000;
+
+    const metadata = document.getElementById('search-metadata');
+    let currentPage = parseInt(metadata.dataset.currentPage) || 0;
+
+    const url = new URL(window.location.href);
+    let currentSort = url.searchParams.get('sort') || 'popular';
+    const query = url.searchParams.get('q') || '';
+
+    const sortSelect = document.getElementById('sort-select');
+    if(sortSelect){
+        sortSelect.addEventListener('change', () => {
+            const nextUrl = new URL(window.location.href);
+            nextUrl.searchParams.set('sort', sortSelect.value);
+            nextUrl.searchParams.set('page', '0');
+            window.location.href = nextUrl.toString();
+        });
+    }
+
+    const languageColors = {
+        'Java': '#b07219', 'JavaScript': '#f1e05a', 'Python': '#3572A5', 'TypeScript': '#2b7489',
+        'Go': '#00ADD8', 'Rust': '#dea584', 'C++': '#f34b7d', 'C': '#555555', 'C#': '#239120',
+        'PHP': '#4F5D95', 'Ruby': '#701516', 'Swift': '#ffac45', 'Kotlin': '#F18E33',
+        'Dart': '#00B4AB', 'Shell': '#89e051', 'HTML': '#e34c26', 'CSS': '#1572B6'
+    };
+
+    function applyStylesToCards(cards) {
+        cards.forEach(card => {
+            const dot = card.querySelector('.language-dot');
+            if (dot) {
+                const lang = dot.dataset.language;
+                if (lang && languageColors[lang]) {
+                    dot.style.backgroundColor = languageColors[lang];
+                }
+            }
+            card.classList.add('processed', 'repo-card--fade-in');
+        });
+    }
+
+    function updateSpinnerMessage(isRateLimit = false) {
+        const spinner = document.getElementById('loading-spinner');
+        const spinnerText = spinner.querySelector('.loading-text') ||
+                           spinner.querySelector('span') ||
+                           document.createElement('span');
+
+        if (!spinnerText.parentNode) {
+            spinner.appendChild(spinnerText);
+        }
+
+        spinnerText.textContent = isRateLimit
+        ? '리포지토리를 불러오는데 시간이 걸립니다.'
+        : '더 많은 리포지토리 불러오는 중';
+    }
+
+    function isCurrentlyRateLimited() {
+        return isRateLimited && Date.now() < rateLimitEndTime;
+    }
+
+    function setRateLimit() {
+        isRateLimited = true;
+        rateLimitEndTime = Date.now() + RATE_LIMIT_RETRY_DELAY;
+        updateSpinnerMessage(true);
+    }
+
+    function clearRateLimit() {
+        isRateLimited = false;
+        rateLimitEndTime = 0;
+        retryCount = 0;
+        updateSpinnerMessage(false);
+    }
+
+    function addToCache(page,html){
+        const cacheKey = `query:${query}|page:${page}|sort:${currentSort}`;
+
+        if(repoCache.has(cacheKey)){
+            repoCache.delete(cacheKey);
+        }
+        repoCache.set(cacheKey, html);
+
+       if(repoCache.size > MAX_CACHE_SIZE){
+            const oldestKey = repoCache.keys().next().value;
+            repoCache.delete(oldestKey);
+       }
+    }
+
+    function loadMoreRepositories() {
+        const now = Date.now();
+        const nextPage = currentPage + 1;
+        const cacheKey = `query:${query}|page:${nextPage}|sort:${currentSort}`;
+
+        if(repoCache.has(cacheKey)){
+          insertCachedHTML(repoCache.get(cacheKey),nextPage);
+          return;
+        }
+
+        if (isEnd || isLoading || now - lastLoadAt < 1000 || isCurrentlyRateLimited()) return;
+        isLoading = true;
+        lastLoadAt = now;
+
+        const spinner = document.getElementById('loading-spinner');
+        const endMessage = document.getElementById('end-message');
+
+        spinner.classList.add('loading-spinner--show');
+        updateSpinnerMessage(isRateLimited);
+
+        const requestUrl = `/search/repositories/api/repos?q=${encodeURIComponent(query)}&page=${nextPage}&sort=${currentSort}`
+
+        fetch(requestUrl)
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+                return res.text();
+            })
+            .then(html => {
+                const repoGrid = document.getElementById('repo-grid');
+                if (html.trim()) {
+                    addToCache(nextPage, html);
+                    insertCachedHTML(html,nextPage);
+                    if (isRateLimited) {
+                        clearRateLimit();
+                    }
+                    retryCount = 0;
+                } else {
+                    const loadMoreContainer = document.getElementById('load-more-container');
+                    if (loadMoreContainer) loadMoreContainer.style.display = 'none';
+                    if (endMessage) endMessage.classList.remove('end-message--hidden');
+                    if (observer && observer.disconnect) observer.disconnect();
+                    isEnd = true;
+                }
+            })
+            .catch(err => {
+                handleApiError(err, nextPage);
+            })
+            .finally(() => {
+                isLoading = false;
+                spinner.classList.remove('loading-spinner--show');
+            });
+    }
+
+    function handleApiError(err, nextPage) {
+        const isRateLimitError = err.message.includes('429') ||
+                                err.message.includes('Rate') ||
+                                err.message.includes('rate');
+        if (isRateLimitError) {
+            setRateLimit();
+            scheduleRetry(nextPage, RATE_LIMIT_RETRY_DELAY);
+        } else if (retryCount < MAX_RETRY_COUNT) {
+            retryCount++;
+            scheduleRetry(nextPage, NORMAL_RETRY_DELAY);
+        } else {
+            updateSpinnerMessage(true);
+            showErrorState();
+        }
+    }
+
+    function scheduleRetry(nextPage, delay) {
+        setTimeout(() => {
+            if (isRateLimited && delay === RATE_LIMIT_RETRY_DELAY) {
+                clearRateLimit();
+            }
+
+            const scrollTarget = document.getElementById('scroll-trigger');
+            if (scrollTarget && isElementInViewport(scrollTarget)) {
+                observer.observe(scrollTarget);
+                loadMoreRepositories();
+            }
+        }, delay);
+    }
+
+    function isElementInViewport(el) {
+        const rect = el.getBoundingClientRect();
+        return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        );
+    }
+
+    function showErrorState() {
+        const spinner = document.getElementById('loading-spinner');
+        const endMessage = document.getElementById('end-message');
+
+        spinner.classList.remove('loading-spinner--show');
+        if (endMessage) {
+            endMessage.textContent =  '리포지토리를 불러오는데 시간이 걸립니다.';
+            endMessage.classList.remove('end-message--hidden');
+        }
+        if (observer && observer.disconnect) {
+            observer.disconnect();
+        }
+        retryCount = 0;
+    }
+
+    function insertCachedHTML(html, nextPage){
+        const repoGrid = document.getElementById('repo-grid');
+        repoGrid.insertAdjacentHTML('beforeend', html);
+
+        const newCards = repoGrid.querySelectorAll('.repo-card:not(.processed)');
+        applyStylesToCards(newCards);
+        currentPage = nextPage;
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const hasNext = tempDiv.children.length === 50;
+
+        if (!hasNext) {
+            const endMsg = document.getElementById('end-message');
+            if (endMsg) endMsg.classList.remove('end-message--hidden');
+            if(observer && observer.disconnect) observer.disconnect();
+            isEnd = true;
+        }
+    }
+
+    applyStylesToCards(document.querySelectorAll('.repo-card'));
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if(entry.isIntersecting && !isLoading && !isCurrentlyRateLimited()){
+                loadMoreRepositories();
+            }
+        });
+    }, {
+        rootMargin:'1500px',
+        threshold: 0
+    });
+
+    const scrollTarget = document.getElementById('scroll-trigger');
+    if(scrollTarget) observer.observe(scrollTarget);
+
+    window.addEventListener('scroll', () => {
+        if (isLoading) return;
+
+        const scrollHeight = document.documentElement.scrollHeight;
+        const scrollTop = window.scrollY;
+        const clientHeight = document.documentElement.clientHeight;
+
+        if (scrollTop + clientHeight >= scrollHeight - 300) {
+            loadMoreRepositories();
+        }
+    });
+});

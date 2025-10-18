@@ -1,6 +1,27 @@
+server:
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        secure: false
+        same-site: lax
+  shutdown: graceful
+
 spring:
   application:
     name: RepoBoard
+
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+  task:
+    execution:
+      shutdown:
+        await-termination: true
+        await-termination-period: 30s
+    scheduling:
+      await-termination: true
+      await-termination-period: 30s
 
   security:
     oauth2:
@@ -35,26 +56,20 @@ spring:
             paths:
               - "/**"
 
-  aop:
-    proxy-target-class: true  # (기본 CGLIB 권장)
-    expose-proxy: true        # ← currentProxy() 사용을 위해 필수
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-
   datasource:
-    url: jdbc:h2:mem:repoboard;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/${POSTGRESQL_DATABASE}
+    driver-class-name: org.postgresql.Driver
+    username: ${POSTGRESQL_USERNAME}
+    password: ${POSTGRESQL_PASSWORD}
 
   jpa:
     hibernate:
       ddl-auto: update
     properties:
-      hibernate.jdbc.time_zone: UTC
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc.time_zone: UTC
 
 aws:
   access-key-id: ${AWS_ACCESS_KEY_ID}
@@ -67,3 +82,38 @@ github:
   api:
     base-url: https://api.github.com
     token: ${GITHUB_API_TOKEN}
+
+logging:
+  level:
+    root: INFO
+    io.github.repoboard: DEBUG
+
+app:
+  delete-user:
+    retention-days: 7
+    purge-count: "0 0 3 * * *" # 새벽 3시기준
+  security:
+    csp: |-
+      default-src 'self' http://localhost:8080;
+      img-src 'self' https: data:;
+      style-src 'self' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      script-src 'self' http://localhost:8080 https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;
+      connect-src 'self' http://localhost:8080 https://api.github.com https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;
+      object-src 'none';
+      base-uri 'self';
+      frame-ancestors 'self';
+      form-action 'self' http://localhost:8080 https://github.com https://accounts.google.com;
+    cspReportOnly: false
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never

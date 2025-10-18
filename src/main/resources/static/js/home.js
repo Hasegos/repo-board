@@ -1,4 +1,3 @@
-let observer;
 let isRefresh = false;
 document.addEventListener('DOMContentLoaded', function () {
     let isLoading = false;
@@ -11,8 +10,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const MAX_CACHE_SIZE = 20;
     const MAX_RETRY_COUNT = 3;
-    const RATE_LIMIT_RETRY_DELAY = 30000; // 30초
-    const NORMAL_RETRY_DELAY = 3000; // 3초
+    const RATE_LIMIT_RETRY_DELAY = 30000;
+    const NORMAL_RETRY_DELAY = 3000;
 
     const metadata = document.getElementById('search-metadata');
     const url = new URL(window.location.href);
@@ -20,20 +19,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (isRefresh) {
         url.searchParams.delete('refresh');
+        url.searchParams.delete('page');
         history.replaceState(null, '', url.toString());
     }
 
     let currentPage = parseInt(metadata.dataset.currentPage) || 0;
     let currentLanguage = metadata.dataset.currentLanguage || 'java';
+    let currentSort = url.searchParams.get('sort') || 'popular';
 
     const refreshBtn = document.getElementById('refresh-btn');
     if(refreshBtn){
         refreshBtn.addEventListener('click', () => {
            const nextUrl = new URL(window.location.href);
            nextUrl.searchParams.set('refresh', 'true');
-           nextUrl.searchParams.set('page', '0'); // 새로고침은 항상 첫 페이지로
+           nextUrl.searchParams.set('page', '0');
            window.location.href = nextUrl.toString();
         })
+    }
+
+    const sortSelect = document.getElementById('sort-select');
+    if(sortSelect){
+        sortSelect.addEventListener('change', () => {
+            const selectedSort =  sortSelect.value;
+            const nextUrl = new URL(window.location.href);
+            nextUrl.searchParams.set('sort', sortSelect.value);
+            nextUrl.searchParams.set('page', '0');
+            window.location.href = nextUrl.toString();
+        });
     }
 
     const languageColors = {
@@ -43,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function () {
         'Dart': '#00B4AB', 'Shell': '#89e051', 'HTML': '#e34c26', 'CSS': '#1572B6'
     };
 
-    /** 언어 색상 */
     function applyStylesToCards(cards) {
         cards.forEach(card => {
             const dot = card.querySelector('.language-dot');
@@ -57,13 +68,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /** 언어 변경 url */
-    function changeLanguage(language) {
-        if (currentLanguage === language) return;
-        window.location.href = `/?language=${language}`;
-    }
+    document.querySelector('.language-filter__buttons')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.language-btn');
+        if (!btn) return;
 
-     /** 스피너 메시지 업데이트 */
+        const selectedLang = btn.dataset.language;
+        if (!selectedLang || selectedLang === currentLanguage) return;
+
+        window.location.href = `/?language=${selectedLang}`;
+    });
+
     function updateSpinnerMessage(isRateLimit = false) {
         const spinner = document.getElementById('loading-spinner');
         const spinnerText = spinner.querySelector('.loading-text') ||
@@ -79,12 +93,10 @@ document.addEventListener('DOMContentLoaded', function () {
         : '더 많은 리포지토리 불러오는 중';
     }
 
-     /** Rate Limit 체크 */
     function isCurrentlyRateLimited() {
         return isRateLimited && Date.now() < rateLimitEndTime;
     }
 
-    /** Rate Limit 설정 */
     function setRateLimit() {
         isRateLimited = true;
         rateLimitEndTime = Date.now() + RATE_LIMIT_RETRY_DELAY;
@@ -92,7 +104,6 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('Rate limit 감지: 30초 후 재시도');
     }
 
-    /** Rate Limit 해제 */
     function clearRateLimit() {
         isRateLimited = false;
         rateLimitEndTime = 0;
@@ -100,9 +111,8 @@ document.addEventListener('DOMContentLoaded', function () {
         updateSpinnerMessage(false);
     }
 
-    /** 캐싱 저장 + 범위 제한 (LRU 방식) */
     function addToCache(page,html){
-        const cacheKey = `lang:${currentLanguage}|page:${page}|refresh:${isRefresh}`;
+        const cacheKey = `lang:${currentLanguage}|page:${page}|sort:${currentSort}|refresh:${isRefresh}`;
 
         if(repoCache.has(cacheKey)){
             repoCache.delete(cacheKey);
@@ -115,11 +125,10 @@ document.addEventListener('DOMContentLoaded', function () {
        }
     }
 
-    /** Github API Repo 호출 */
     function loadMoreRepositories() {
         const now = Date.now();
         const nextPage = currentPage + 1;
-        const cacheKey = `lang:${currentLanguage}|page:${nextPage}`;
+        const cacheKey = `lang:${currentLanguage}|page:${nextPage}|sort:${currentSort}`;
 
         if(repoCache.has(cacheKey)){
           insertCachedHTML(repoCache.get(cacheKey),nextPage);
@@ -136,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
         spinner.classList.add('loading-spinner--show');
         updateSpinnerMessage(isRateLimited);
 
-        const requestUrl = `/api/repos?language=${currentLanguage}&page=${nextPage}`
+        const requestUrl = `/api/repos?language=${currentLanguage}&page=${nextPage}&sort=${currentSort}`
 
         fetch(requestUrl)
             .then(res => {
@@ -172,29 +181,24 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    /** API 오류 처리 */
     function handleApiError(err, nextPage) {
         const isRateLimitError = err.message.includes('429') ||
                                 err.message.includes('Rate') ||
                                 err.message.includes('rate');
-        if (isRateLimitError) {
-            // Rate Limit 에러인 경우
+        if (isRateLimitError){
             setRateLimit();
             scheduleRetry(nextPage, RATE_LIMIT_RETRY_DELAY);
         } else if (retryCount < MAX_RETRY_COUNT) {
-            // 일반 오류인 경우 최대 3번 재시도
-            retryCount++;
+           retryCount++;
             console.warn(`재시도 ${retryCount}회...`);
             scheduleRetry(nextPage, NORMAL_RETRY_DELAY);
         } else {
-            // 최대 재시도 횟수 초과
             console.error('최대 재시도 횟수 초과');
             updateSpinnerMessage(true);
             showErrorState();
         }
     }
 
-    /** 재시도 스케줄링 */
     function scheduleRetry(nextPage, delay) {
         setTimeout(() => {
             if (isRateLimited && delay === RATE_LIMIT_RETRY_DELAY) {
@@ -210,7 +214,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }, delay);
     }
 
-    /** 요소가 뷰포트에 있는지 확인 */
     function isElementInViewport(el) {
         const rect = el.getBoundingClientRect();
         return (
@@ -221,7 +224,6 @@ document.addEventListener('DOMContentLoaded', function () {
         );
     }
 
-    /** 오류 상태 표시 */
     function showErrorState() {
         const spinner = document.getElementById('loading-spinner');
         const endMessage = document.getElementById('end-message');
@@ -237,7 +239,6 @@ document.addEventListener('DOMContentLoaded', function () {
         retryCount = 0;
     }
 
-    /** HTML 삽입 및 스타일 적용 */
     function insertCachedHTML(html, nextPage){
         const repoGrid = document.getElementById('repo-grid');
         repoGrid.insertAdjacentHTML('beforeend', html);
@@ -259,9 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     applyStylesToCards(document.querySelectorAll('.repo-card'));
-    window.changeLanguage = changeLanguage;
 
-    /** 무한 스크롤 */
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if(entry.isIntersecting && !isLoading && !isCurrentlyRateLimited()){

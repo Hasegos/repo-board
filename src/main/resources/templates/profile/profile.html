@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>RepoBoard · 프로필</title>
     <link rel="stylesheet" th:href="@{/css/pages/profile.css}">
-    <th:block th:if="${onboarding}">
+    <th:block th:if="${view.onboarding}">
         <link rel="stylesheet" th:href="@{/css/pages/setupForm.css}" />
     </th:block>
 
-    <th:block th:if="${!onboarding}">
+    <th:block th:if="${!view.onboarding}">
         <link rel="stylesheet" th:href="@{/css/pages/profileView.css}" />
     </th:block>
 </head>
 <body>
     <header th:replace="~{fragments/header :: header}"></header>
     <main class="layout__container">
-        <th:block th:if="${onboarding}">
+        <th:block th:if="${view.onboarding}">
             <th:block th:replace="~{profile/setupForm :: setupForm}"></th:block>
         </th:block>
 
-        <th:block th:if="${!onboarding}">
+        <th:block th:if="${!view.onboarding}">
             <th:block th:replace="~{profile/profileView :: profileView}"></th:block>
         </th:block>
 
@@ -30,6 +30,9 @@
                  th:text="${error}">오류 메시지</div>
         </div>
     </main>
+    <th:block th:if="${!view.onboarding}">
+        <script th:src="@{/js/profileView.js}"></script>
+    </th:block>
     <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

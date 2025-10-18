@@ -1,0 +1,46 @@
+<th:block th:fragment="repo-cards">
+    <div th:each="repo : ${repoPage?.content}" class="repo-card">
+        <div class="repo-card__header">
+            <div class="repo-card__info">
+                <h3 class="repo-card__title">
+                    <a th:href="${repo.htmlUrl}" target="_blank" class="repo-card__title-link">
+                        <span th:text="${repo.name}">Repository Name</span>
+                    </a>
+                </h3>
+                <p class="repo-card__owner">
+                    <a th:href="${'https://github.com/' + repo.fullName.split('/')[0]}" target="_blank" class="repo-card__owner-link">
+                        <span th:text="${repo.fullName.split('/')[0]}">Owner</span>
+                    </a>
+                </p>
+            </div>
+            <form th:action="@{/users/saved/repos}" method="post">
+                <input type="hidden" name="id" th:value="${repo.id}">
+                <button type="submit" class="save-btn">저장</button>
+            </form>
+        </div>
+
+        <p class="repo-card__description" th:text="${repo.description ?: '설명이 없습니다.'}">
+            Repository description
+        </p>
+
+        <div class="repo-card__stats">
+            <div class="repo-card__meta">
+                <div class="language-badge" th:if="${repo.language}">
+                    <div class="language-dot" th:attr="data-language=${repo.language}"></div>
+                    <span class="language-badge__text--desktop" th:text="${repo.language}">Language</span>
+                </div>
+                <div class="repo-stat">
+                    <i class="repo-stat__icon repo-stat__icon--star fas fa-star"></i>
+                    <span class="repo-stat__count" th:text="${#numbers.formatDecimal(repo.stargazersCount, 0, 'COMMA', 0, 'POINT')}">0</span>
+                </div>
+                <div class="repo-stat">
+                    <i class="repo-stat__icon repo-stat__icon--fork fas fa-code-branch"></i>
+                    <span class="repo-stat__count" th:text="${#numbers.formatDecimal(repo.forksCount, 0, 'COMMA', 0, 'POINT')}">0</span>
+                </div>
+            </div>
+            <div class="repo-card__updated" th:if="${repo.updatedAt != null}">
+                <span class="repo-card__updated--desktop" th:text="${#temporals.format(repo.updatedAt, 'yyyy-MM-dd')}">2024-01-01</span>
+            </div>
+        </div>
+    </div>
+</th:block>

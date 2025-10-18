@@ -83,11 +83,96 @@
 
 /* ------- Repos section (block: repos)  ------- */
 .repos__title{
+  display:flex;
+  gap: 8px;
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 14px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border);
+  justify-content: space-between;
+}
+
+.repos__title-left {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* "공개 레포지토리"와 스위치 사이 간격 */
+}
+
+/* 공개 / 비공개 */
+.profile-visibility {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-visibility__switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+.profile-visibility__switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.profile-visibility__slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .3s;
+  border-radius: 20px;
+}
+
+.profile-visibility__slider:before {
+  position: absolute;
+  content: "";
+  height: 14px; width: 14px;
+  left: 3px; bottom: 3px;
+  background-color: #fff;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+.profile-visibility__switch input:checked + .profile-visibility__slider {
+  background-color: #4caf50;
+}
+
+.profile-visibility__switch input:checked + .profile-visibility__slider:before {
+  transform: translateX(20px);
+}
+
+.profile-visibility__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* 새로고침 */
+.profile-refresh {
+  display: flex;
+  align-items: center;
+  margin-left: 10px; /* 토글과 간격 */
+}
+
+.profile-refresh__btn {
+  background: #f6f8fa;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #24292f;
+  cursor: pointer;
+  transition: background-color .2s;
+}
+
+.profile-refresh__btn:hover {
+  background: #eaecef;
 }
 
 /* tabs */

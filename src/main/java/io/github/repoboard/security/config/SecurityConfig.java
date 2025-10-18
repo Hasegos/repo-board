@@ -3,15 +3,18 @@ package io.github.repoboard.security.config;
 import io.github.repoboard.security.oauth2.CustomOAuth2UserService;
 import io.github.repoboard.security.userdetails.CustomUserDetailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 /**
  * Spring Security 필터 체인, 인가/인증 정책, OAuth2 클라이언트 설정 등을 구성합니다.
@@ -34,6 +37,12 @@ public class SecurityConfig {
     private final CustomUserDetailService customUserDetailService;
     private final CustomAuthFailureHandler customAuthFailureHandler;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${app.security.csp:}")
+    private String cspDirectives;
+
+    @Value("${app.security.cspReportOnly:false}")
+    private boolean cspReportOnly;
 
     /**
      * DAO 기반 인증 Provider 빈을 등록합니다.
@@ -60,37 +69,54 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain (HttpSecurity http) throws Exception{
         http
-                .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/script/**").permitAll()
-                        .requestMatchers("/error/**").permitAll()
-                        .requestMatchers("/", "/users/login", "/users/signup","/oauth2/**","/login/**").permitAll()
-                        .requestMatchers("/profile", "/repos","/api/repos").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                        .loginPage("/users/login")
-                        .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/" , true)
-                        .failureHandler(customAuthFailureHandler)
-                        .usernameParameter("username")
-                        .passwordParameter("password")
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/")
-                        .deleteCookies("JSESSIONID")
-                )
-                .oauth2Login(oAuth2 -> oAuth2
-                        .loginPage("/users/login")
-                        .userInfoEndpoint(userInfo ->{
-                                userInfo.userService(customOAuth2UserService);
-                        })
-                        .defaultSuccessUrl("/", true)
-                        .failureHandler(customAuthFailureHandler)
-                );
+            .headers(header ->
+                header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+                .referrerPolicy(ref -> ref.policy(
+                        ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                .contentTypeOptions(Customizer.withDefaults())
+                .contentSecurityPolicy(c -> {
+                    if (cspDirectives != null && !cspDirectives.isBlank()){
+                        String sanitized = cspDirectives.replaceAll("[\r\n]+", " ");
+                        c.policyDirectives(sanitized);
+                        if(cspReportOnly) c.reportOnly();
+                    }
+                })
+            )
+            .csrf(csrf -> csrf
+                    .ignoringRequestMatchers( "/api/**"))
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/css/**", "/js/**", "/images/**", "/script/**").permitAll()
+                    .requestMatchers("/error/**").permitAll()
+                    .requestMatchers("/", "/users/login", "/users/signup","/oauth2/**","/login/**").permitAll()
+                    .requestMatchers("/api/repos","/search/**").permitAll()
+                    .requestMatchers("/admin/**", "/actuator/**").hasRole("ADMIN")
+                    .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                    .accessDeniedHandler((req, res , e)
+                            -> res.sendRedirect("/"))
+            )
+            .formLogin(form -> form
+                    .loginPage("/users/login")
+                    .loginProcessingUrl("/login")
+                    .defaultSuccessUrl("/" , true)
+                    .failureHandler(customAuthFailureHandler)
+                    .usernameParameter("username")
+                    .passwordParameter("password")
+                    .permitAll()
+            )
+            .logout(logout -> logout
+                    .logoutSuccessUrl("/")
+                    .deleteCookies("JSESSIONID")
+            )
+            .oauth2Login(oAuth2 -> oAuth2
+                    .loginPage("/users/login")
+                    .userInfoEndpoint(userInfo ->{
+                            userInfo.userService(customOAuth2UserService);
+                    })
+                    .defaultSuccessUrl("/", true)
+                    .failureHandler(customAuthFailureHandler)
+            );
         return http.build();
     }
 }

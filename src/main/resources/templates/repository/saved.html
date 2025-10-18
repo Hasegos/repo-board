@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>저장한 레포지토리</title>
+    <link rel="stylesheet" th:href="@{/css/pages/saved.css}" />
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <main>
+        <div class="saved-repos">
+            <h1 class="saved-repos__title">저장한 레포지토리</h1>
+
+            <div class="saved__page-alert-wrap" th:if="${error}">
+                <div class="saved__page-alert saved__page-alert--error" th:text="${error}">에러 메시지</div>
+            </div>
+
+            <div th:unless="${error}">
+                <form action="/users/saved/repos" method="Get" class="saved-repos__filters">
+                    <select name="language" id="filter-language">
+                        <option value="">언어 필터</option>
+                        <option th:each="lang : ${languageOptions}"
+                                th:value="${lang}"
+                                th:text="${lang}"
+                                th:selected="${selectedLanguage == lang}"></option>
+                    </select>
+
+                    <select name="sort" id="filter-sort">
+                        <option value="popular" th:selected="${sort == 'popular'}">인기순</option>
+                        <option value="recent" th:selected="${sort == 'recent'}">최신순</option>
+                    </select>
+                </form>
+
+                <div class="pinned-repos-section">
+                    <h2 class="section-title">📌 고정된 레포지토리</h2>
+                    <div th:if="${#lists.isEmpty(pinnedRepos)}" class="saved-repos__empty-message">
+                        고정된 레포지토리가 없습니다.
+                    </div>
+                    <div class="repo-list">
+                        <div th:each="repo : ${pinnedRepos}">
+                            <div th:replace="~{fragments/saved_card :: repoCardFragment(repo=${repo})}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pager" th:if="${pinnedRepos.totalPages > 1}">
+                    <a class="pager__btn"
+                       th:href="${pinnedRepos.first} ? '#' : @{/users/saved/repos(
+                                language=${selectedLanguage},
+                                sort=${sort},
+                                pinnedPage=${pinnedRepos.number - 1},
+                                unpinnedPage=${unpinnedRepos.number})}"
+                       th:classappend="${pinnedRepos.first} ? ' pager__btn--disabled'">이전</a>
+
+                    <div class="pager__info" th:text="${pinnedRepos.number + 1} + ' / ' + ${pinnedRepos.totalPages}">1 / 1</div>
+
+                    <a class="pager__btn"
+                       th:href="${pinnedRepos.last} ? '#' : @{/users/saved/repos(
+                                language=${selectedLanguage},
+                                sort=${sort},
+                                pinnedPage=${pinnedRepos.number + 1},
+                                unpinnedPage=${unpinnedRepos.number})}"
+                       th:classappend="${pinnedRepos.last} ? ' pager__btn--disabled'">다음</a>
+                </div>
+
+
+                <div class="unpinned-repos-section">
+                    <h2 class="section-title">🗂 저장한 레포지토리</h2>
+                    <div th:if="${#lists.isEmpty(unpinnedRepos)}" class="saved-repos__empty-message">
+                        저장한 레포지토리가 없습니다.
+                    </div>
+                    <div class="repo-list">
+                        <div th:each="repo : ${unpinnedRepos}">
+                            <div th:replace="~{fragments/saved_card :: repoCardFragment(repo=${repo})}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pager" th:if="${unpinnedRepos.totalPages > 1}">
+                    <a class="pager__btn"
+                       th:href="${unpinnedRepos.first} ? '#' : @{/users/saved/repos(
+                                language=${selectedLanguage},
+                                sort=${sort},
+                                unpinnedPage=${unpinnedRepos.number - 1},
+                                pinnedPage=${pinnedRepos.number})}"
+                       th:classappend="${unpinnedRepos.first} ? ' pager__btn--disabled'">이전</a>
+
+                    <div class="pager__info" th:text="${unpinnedRepos.number + 1} + ' / ' + ${unpinnedRepos.totalPages}">1 / 1</div>
+
+                    <a class="pager__btn"
+                       th:href="${unpinnedRepos.last} ? '#' : @{/users/saved/repos(
+                                language=${selectedLanguage},
+                                sort=${sort},
+                                unpinnedPage=${unpinnedRepos.number + 1},
+                                pinnedPage=${pinnedRepos.number})}"
+                       th:classappend="${unpinnedRepos.last} ? ' pager__btn--disabled'">다음</a>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <script th:src="@{/js/saved.js}"></script>
+</body>
+</html>

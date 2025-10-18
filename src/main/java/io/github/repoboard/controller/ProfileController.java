@@ -1,20 +1,12 @@
 package io.github.repoboard.controller;
 
-import io.github.repoboard.dto.GithubRepoDTO;
-import io.github.repoboard.dto.GithubUserDTO;
-import io.github.repoboard.model.Profile;
-import io.github.repoboard.model.User;
-import io.github.repoboard.model.enums.UserProvider;
+import io.github.repoboard.dto.view.ProfileView;
+import io.github.repoboard.dto.view.UserView;
 import io.github.repoboard.security.core.CustomUserPrincipal;
-import io.github.repoboard.service.GitHubApiService;
+import io.github.repoboard.service.ProfileDBService;
 import io.github.repoboard.service.ProfileService;
-import io.github.repoboard.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,81 +16,120 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Optional;
+import java.io.IOException;
 
+/**
+ * 사용자 프로필 관련 기능을 처리하는 컨트롤러입니다.
+ *
+ * <p>
+ * GitHub 프로필 연동, 새로고침, 공개 여부 설정 등<br>
+ * 사용자 프로필 데이터의 표시와 수정 기능을 제공합니다.
+ * </p>
+ */
 @Controller
 @RequestMapping("/users/profiles")
 @RequiredArgsConstructor
-@Slf4j
 public class ProfileController {
 
-    private final GitHubApiService gitHubApiService;
     private final ProfileService profileService;
-    private final UserService userService;
+    private final ProfileDBService profileDBService;
 
+    /**
+     * 사용자 프로필 관련 기능을 처리하는 컨트롤러입니다.
+     *
+     * <p>
+     * GitHub 프로필 연동, 새로고침, 공개 여부 설정 등<br>
+     * 사용자 프로필 데이터의 표시와 수정 기능을 제공합니다.
+     * </p>
+     */
     @GetMapping
     public String showProfile(@AuthenticationPrincipal CustomUserPrincipal principal,
-                              @RequestParam(value = "u", required = false) String u,
                               @RequestParam(defaultValue = "0") int page,
                               @RequestParam(defaultValue = "6") int size,
                               @RequestParam(defaultValue = "all") String type,
                               Model model){
-        User user = userService.findByUsername(principal.getUser().getUsername())
-                .orElseThrow(() -> new EntityNotFoundException("사용자가 존재하지않습니다."));
-        model.addAttribute("user", user);
-
+        model.addAttribute("user", UserView.from(principal.getUser()));
         try{
-            String username = null;
-            Optional<Profile> profileOptional = profileService.findProfileByUserId(user.getId());
-
-            if(profileOptional.isPresent()){
-                username = profileOptional.get().getGithubLogin();
-            }
-            else if(UserProvider.GITHUB == principal.getUser().getProvider()) {
-                username = String.valueOf(principal.getAttributes().get("login"));
-            }
-            else if(u != null && !u.isEmpty()){
-                username = u;
-            }
-
-            if(username == null){
-                model.addAttribute("onboarding",true);
-                return "profile/profile";
-            }
-
-            GithubUserDTO userDTO = gitHubApiService.getUser(username);
-            if (profileOptional.isEmpty()) {
-                profileService.registerProfile(user.getId(), userDTO);
-            }
-
-            Pageable pageable = PageRequest.of(page, size);
-            Page<GithubRepoDTO> repoPage = profileService.loadProfileView(username,pageable,type);
-
-            model.addAttribute("u", username);
-            model.addAttribute("profile", userDTO);
-            model.addAttribute("repos", repoPage);
-            model.addAttribute("currentType", type);
-            model.addAttribute("onboarding",false);
+            ProfileView profileView = profileService.loadProfilePage(principal.getUser().getId(), page, size, type);
+            model.addAttribute("view", profileView);
         }
         catch (Exception e){
             model.addAttribute("error", e.getMessage());
             model.addAttribute("onboarding",true);
         }
-
         return "profile/profile";
     }
 
+    /**
+     * 사용자의 GitHub 프로필 URL을 등록하여 초기 설정을 수행합니다.
+     *
+     * @param principal 로그인 사용자 정보
+     * @param url GitHub 프로필 URL
+     * @param ra 리다이렉트 시 전달할 플래시 속성
+     * @return 프로필 페이지로 리다이렉트
+     */
     @PostMapping("/setup")
-    public String setupProfile(@RequestParam("url") String url,
+    public String setupProfile(@AuthenticationPrincipal CustomUserPrincipal principal,
+                               @RequestParam("url") String url,
                                RedirectAttributes ra){
-
         try {
-            String username = gitHubApiService.extractUsername(url);
-            ra.addAttribute("u", username);
+            profileService.setupProfile(principal.getUser().getId(), url);
             return "redirect:/users/profiles";
-        }catch (Exception e){
+        }catch (IllegalArgumentException | IOException e){
             ra.addFlashAttribute("error", e.getMessage());
             return "redirect:/users/profiles";
+        } catch (Exception e){
+            ra.addFlashAttribute("error","알 수 없는 오류가 발생했습니다.");
+            return "redirect:/users/profiles";
         }
+    }
+
+    /**
+     * 사용자의 GitHub 프로필을 새로고침합니다.
+     *
+     * <p>
+     * API를 통해 최신 프로필 정보와 이미지를 갱신합니다.
+     * </p>
+     *
+     * @param principal 로그인 사용자 정보
+     * @param ra 리다이렉트 시 전달할 플래시 속성
+     * @return 프로필 페이지로 리다이렉트
+     */
+    @PostMapping("/refresh")
+    public String refreshProfile(@AuthenticationPrincipal CustomUserPrincipal principal,
+                                 RedirectAttributes ra){
+        try{
+            profileService.refreshProfile(principal.getUser().getId());
+        }catch (EntityNotFoundException | IllegalArgumentException e){
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        catch (IOException e){
+            ra.addFlashAttribute("error", "프로필 이미지 업데이트 중 오류가 발생했습니다");
+        }catch (Exception e){
+            ra.addFlashAttribute("error", "프로필 새로고침 실패");
+        }
+        return "redirect:/users/profiles";
+    }
+
+    /**
+     * 프로필 공개 여부(PUBLIC/PRIVATE)를 변경합니다.
+     *
+     * @param principal 로그인 사용자 정보
+     * @param visibility 새로 설정할 공개 상태 값
+     * @param ra 리다이렉트 시 전달할 플래시 속성
+     * @return 프로필 페이지로 리다이렉트
+     */
+    @PostMapping("/visibility")
+    public String updateVisibility(@AuthenticationPrincipal CustomUserPrincipal principal,
+                                   @RequestParam(value = "profileVisibility", required = false) String visibility,
+                                   RedirectAttributes ra){
+        try{
+            profileDBService.updateProfileVisibility(principal.getUser().getId(), visibility);
+        }catch (EntityNotFoundException | IllegalArgumentException e){
+            ra.addFlashAttribute("error", e.getMessage());
+        }catch (Exception e){
+            ra.addFlashAttribute("error", "프로필 업데이트 실패했습니다.");
+        }
+        return "redirect:/users/profiles";
     }
 }

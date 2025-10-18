@@ -1,17 +1,21 @@
 package io.github.repoboard.service;
 
-import io.github.repoboard.dto.GithubRepoDTO;
-import io.github.repoboard.dto.GithubSearchResponse;
-import io.github.repoboard.dto.GithubUserDTO;
-import io.github.repoboard.dto.QueryStrategyDTO;
+import io.github.repoboard.dto.github.GithubRepoDTO;
+import io.github.repoboard.dto.github.GithubSearchResponse;
+import io.github.repoboard.dto.github.GithubUserDTO;
+import io.github.repoboard.dto.strategy.QueryStrategyDTO;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -30,6 +34,7 @@ import java.util.regex.Pattern;
  * API 호출 한도는 IP 기준 60 요청/시간으로 제한됩니다.
  * </p>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GitHubApiService {
@@ -37,6 +42,8 @@ public class GitHubApiService {
     private final WebClient githubWebClient;
     private static final Duration TIMEOUT = Duration.ofSeconds(35);
     private final CacheManager cacheManager;
+    private final MarkdownService markdownService;
+    private static final String SESSION_ERROR_KEY = "ghApiError";
 
     /**
      * GitHub URL에서 username 자체 검증 (1~39자, 앞/뒤 하이픈 금지)
@@ -87,6 +94,28 @@ public class GitHubApiService {
     }
 
     /**
+     * GitHub 사용자 조회 (캐시 사용)<br><br>
+     *
+     * - 캐시에 값이 있으면 API 호출 안 함<br>
+     * - 없으면 API 호출 후 캐시에 저장
+     */
+    @Cacheable(value = "ghUser", key = "#username", sync = true)
+    public GithubUserDTO getUser(String username){
+        return fetchFromApi(username);
+    }
+
+    /**
+     * GitHub 사용자 새로고침 (항상 API 호출 + 캐시 갱신) <br><br>
+     *
+     * - 캐시에 있든 없든 API 다시 호출 <br>
+     * - 캐시에 최신값 덮어쓰기
+     */
+    @CachePut(value = "ghUser", key = "#username")
+    public GithubUserDTO refreshUser(String username){
+        return fetchFromApi(username);
+    }
+
+    /**
      * GitHub 사용자 프로필 정보 조회
      * <p>
      * 인증 토큰 없이 호출되므로, 비공개 프로필 항목은 조회되지 않습니다.
@@ -96,8 +125,7 @@ public class GitHubApiService {
      * @return {@link GithubUserDTO} 객체
      * @throws RuntimeException 사용자 정보 조회 실패 시
      */
-    @Cacheable(value = "ghUser", key = "#username", sync = true)
-    public GithubUserDTO getUser(String username){
+    private GithubUserDTO fetchFromApi(String username){
         try{
             return githubWebClient.get()
                     .uri("/users/{username}", username)
@@ -125,65 +153,177 @@ public class GitHubApiService {
      */
     @Cacheable(value = "ghRepos", key = "#username + ':' + #pageable.pageNumber + ':' +  #pageable.pageSize", sync = true)
     public Page<GithubRepoDTO> getOwnedRepos(String username, Pageable pageable){
+        try {
+            GithubUserDTO user = getUser(username);
+            long total = (user != null && user.getPublicRepos() != null)
+                    ? user.getPublicRepos()
+                    : 0;
 
-        GithubUserDTO user = getUser(username);
-        long total = (user != null && user.getPublicRepos() != null)
-                ? user.getPublicRepos()
-                : 0;
+            int currentPage = pageable.getPageNumber() + 1;
 
-        int currentPage = pageable.getPageNumber() + 1;
+            List<GithubRepoDTO> repos = githubWebClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/users/{username}/repos")
+                            .queryParam("type", "owner")
+                            .queryParam("sort", "pushed")
+                            .queryParam("per_page", pageable.getPageSize())
+                            .queryParam("page", currentPage)
+                            .build(username))
+                    .retrieve()
+                    .bodyToFlux(GithubRepoDTO.class)
+                    .collectList()
+                    .timeout(TIMEOUT)
+                    .block();
 
-        List<GithubRepoDTO> repos = githubWebClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/users/{username}/repos")
-                        .queryParam("type", "owner")
-                        .queryParam("sort", "pushed")
-                        .queryParam("per_page",pageable.getPageSize())
-                        .queryParam("page", currentPage)
-                        .build(username))
-                .retrieve()
-                .bodyToFlux(GithubRepoDTO.class)
-                .collectList()
-                .timeout(TIMEOUT)
-                .block();
-
-        return new PageImpl<>(repos, pageable, total);
+            return new PageImpl<>(repos, pageable, total);
+        }catch (Exception e){
+            log.error("📛 GitHub API 호출 실패 (username: {})", username, e);
+            throw new RuntimeException("⚠ GitHub 레포지토리를 불러오는 중 오류가 발생했습니다.");
+        }
     }
 
-    public Page<GithubRepoDTO> fetchRepos(String language, Pageable pageable, QueryStrategyDTO strategy){
+    /**
+     * GitHub 레포지토리를 ID 기반으로 단건 조회합니다.
+     * <p>
+     * GitHub API의 {@code /repositories/{id}} 엔드포인트를 호출합니다.
+     * </p>
+     *
+     * @param repoId 레포지토리 고유 ID
+     * @return {@link GithubRepoDTO} 객체 (없으면 null)
+     */
+    @Cacheable(value = "ghRepoById", key = "'repos:' + #repoId", sync = true)
+    public GithubRepoDTO getRepositoryId(Long repoId){
+        try {
+            return githubWebClient.get()
+                    .uri("/repositories/{id}", repoId)
+                    .retrieve()
+                    .bodyToMono(GithubRepoDTO.class)
+                    .timeout(TIMEOUT)
+                    .block();
+        }catch (WebClientResponseException.NotFound e){
+            return null;
+        }catch (Exception e){
+            throw new RuntimeException("레포지토리 정보 조회 중 오류 발생", e);
+        }
+    }
+
+    /**
+     *  GitHub 레포지토리의 README 를 Id 기반으로 조회합니다.
+     *
+     * <p>
+     * GitHub API의 {@code /repos/{owner}/{repo}/readme} 엔드포인트를 호출합니다.
+     * </p>
+     * @param repoId 레포지토리의 고유 ID
+     * @return {@link String} 객체 (없으면 null)
+     */
+    @Cacheable(value = "ghRepoReadmeById" , key = "'readme:' + #repoId", sync = true)
+    public String getReadmeById(Long repoId){
+        GithubRepoDTO repo = getRepositoryId(repoId);
+        if(repo == null || repo.getOwner() == null){
+            throw new IllegalArgumentException("레포지토리 정보를 찾을 수 없거나 Owner 정보가 없습니다.");
+        }
+        try{
+            String markdown = githubWebClient.get()
+                    .uri("/repos/{owner}/{repo}/readme",
+                            repo.getOwner().getLogin(), repo.getName())
+                    .header(HttpHeaders.ACCEPT, "application/vnd.github.v3.raw")
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .timeout(TIMEOUT)
+                    .block();
+            return markdownService.toSafeHtml(markdown);
+        } catch (WebClientResponseException.NotFound e){
+            return null;
+        }catch (Exception e){
+            throw new RuntimeException("레포지토리 정보 조회 중 오류 발생");
+        }
+    }
+
+    /**
+     * 언어, 정렬, 커스텀 전략(QueryStrategyDTO)에 기반하여 GitHub 레포지토리를 검색합니다.
+     * <p>
+     * - 기본 전략: {@code is:public stars:>1000 language:<언어>} <br>
+     * - 사용자 정의 전략: strategy.getQuery() + {@code language:<언어>}
+     * </p>
+     *
+     * @param language 언어 필터 (예: Java, Python)
+     * @param pageable 페이지네이션 정보
+     * @param strategy 검색 전략 (nullable)
+     * @param sort 정렬 기준 (popular=stars, recent=updated)
+     * @return {@link Page} 형태의 검색 결과
+     */
+    public Page<GithubRepoDTO> fetchRepos(String language, Pageable pageable, QueryStrategyDTO strategy, String sort,HttpSession session){
 
         String finalQuery = null;
         String cacheKey;
         Cache cache;
+        String githubSort = getSortKey(sort);
 
         if(strategy == null){
-            cacheKey = "lang:" + language + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
-            cache = cacheManager.getCache("ghSearch");
             finalQuery = "is:public stars:>1000 language:" + language;
+            cacheKey = String.format("lang:%s:page:%d:size:%d:sort:%s",
+                    language, (pageable.getPageNumber() + 1), pageable.getPageSize(), githubSort);
+            cache = cacheManager.getCache("ghSearch");
         }else {
             finalQuery = strategy.getQuery() + " language:" + language;
             String safeQuery = strategy.getQuery().replaceAll("\\s+", "_");
-            cacheKey = "refresh:" + strategy.getSort() + ":" + safeQuery + ":" + language
-                    + ":page:" + (pageable.getPageNumber() + 1) + ":" + pageable.getPageSize();
+            cacheKey = String.format("refresh:%s:%s:%s:page:%d:size:%d:sort:%s",
+                    sort, safeQuery, language, (pageable.getPageNumber() + 1), pageable.getPageSize(), githubSort);
             cache = cacheManager.getCache("ghRefresh");
         }
         Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
         if (cached != null) {
-            System.out.println("📦 캐시 히트: " + cacheKey);
+            log.debug("📦 캐시 히트: {}", cacheKey);
+            return cached;
+        }
+        return executeGithubSearch(cache, cacheKey, finalQuery, pageable,githubSort, session);
+    }
+
+    /**
+     * GitHub 저장소를 주어진 검색어로 검색하여 페이지 단위로 결과를 반환합니다.
+     *
+     * <p>검색어는 이름, 설명, README에서 일치 항목을 찾으며, 결과는 캐시(`ghQuerySearch`)에 저장됩니다.</p>
+     *
+     * @param query 사용자가 입력한 검색어
+     * @param pageable 페이징 정보
+     * @param sort 정렬 기준
+     * @return 검색 결과로 구성된 {@link Page} 객체. {@link GithubRepoDTO} 타입의 페이지 결과를 포함합니다.
+     */
+    public Page<GithubRepoDTO> fetchReposByQuery(String query, Pageable pageable, String sort, HttpSession session){
+        String githubSort = getSortKey(sort);
+        String safeQuery = query.replaceAll("\\s+","_");
+        String cacheKey = String.format("query:%s:page:%d:size:%d:sort:%s",
+                safeQuery, (pageable.getPageNumber() + 1), pageable.getPageSize(), githubSort);
+
+        Cache cache = cacheManager.getCache("ghQuerySearch");
+        Page<GithubRepoDTO> cached = cache != null ? cache.get(cacheKey, Page.class) : null;
+        if (cached != null) {
+            log.debug("📦 캐시 히트: {}", cacheKey);
             return cached;
         }
 
-        System.out.println("Query : " + finalQuery);
-        return executeGithubSearch(cache, cacheKey, finalQuery, pageable);
+        String finalQuery = query +" in:name,description,readme";
+        return executeGithubSearch(cache, cacheKey, finalQuery, pageable, githubSort,session);
     }
 
-    private Page<GithubRepoDTO> executeGithubSearch(Cache cache, String cacheKey, String query, Pageable pageable){
+    /**
+     * 실제 GitHub API 호출을 실행하여 검색 결과를 반환합니다.
+     *
+     * @param cache    캐시 인스턴스 (ghSearch/ghRefresh)
+     * @param cacheKey 캐시 키
+     * @param query    GitHub 검색 쿼리
+     * @param pageable 페이지네이션 정보
+     * @param sort     정렬 기준 (stars/updated)
+     * @return {@link Page} 형태의 {@link GithubRepoDTO} 결과
+     */
+    private Page<GithubRepoDTO> executeGithubSearch(Cache cache, String cacheKey,
+                                                    String query, Pageable pageable, String sort, HttpSession session){
         try {
             Page<GithubRepoDTO> result = githubWebClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/search/repositories")
                             .queryParam("q", query)
-                            .queryParam("sort", "stars")
+                            .queryParam("sort", sort)
                             .queryParam("order", "desc")
                             .queryParam("per_page", pageable.getPageSize())
                             .queryParam("page", pageable.getPageNumber() + 1)
@@ -195,42 +335,57 @@ public class GitHubApiService {
                                 .orElse("unknown");
                         if (response.statusCode().is2xxSuccessful()) {
                             if (contentType.contains("json") || contentType.contains("application/vnd.github")) {
-                                return response.bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {
+                                    return response.bodyToMono(new ParameterizedTypeReference<GithubSearchResponse<GithubRepoDTO>>() {
                                 });
                             } else {
-                                System.out.println("⚠️ 예상하지 못한 Content-Type, 텍스트로 읽기 시도");
+                                log.warn("⚠️ 예상하지 못한 Content-Type: {}", contentType);
                                 return response.bodyToMono(String.class)
-                                        .doOnNext(body -> System.out.println("📝 응답 내용: " + body.substring(0, Math.min(200, body.length()))))
+                                        .doOnNext(body -> log.debug("📝 응답 내용: {}" , body.substring(0, Math.min(200, body.length()))))
                                         .then(Mono.empty());
                             }
                         } else {
                             return response.bodyToMono(String.class)
-                                    .doOnNext(body -> System.out.println("❌ [GitHub API 에러 응답]: " + body))
+                                    .doOnNext(body -> log.error("❌ [GitHub API 에러 응답]: {} ", body))
                                     .then(Mono.empty());
                         }
                     })
                     .timeout(TIMEOUT)
                     .blockOptional()
                     .map(res ->{
-                        System.out.println("🔢 totalCount: " + res.getTotalCount());
-                        return new PageImpl<>(res.getItems(), pageable, res.getTotalCount());
+                            log.debug("🔢 totalCount: {}", res.getTotalCount());
+                            return new PageImpl<>(res.getItems(), pageable, res.getTotalCount());
                         }
                     )
                     .orElseGet(() -> {
-                        System.out.println("⚠️ GitHub 응답이 null 또는 에러 발생");
+                        log.warn("⚠️ GitHub 응답이 null 또는 에러 발생");
+                        session.setAttribute(SESSION_ERROR_KEY,true);
                         return new PageImpl<>(List.of(), pageable, 0);
                     });
-
             if (cache != null) {
                 cache.put(cacheKey, result);
-                System.out.println("캐시 저장 : " + cacheKey);
+                log.debug("캐시 저장 : {} " , cacheKey);
             }
+            session.removeAttribute(SESSION_ERROR_KEY);
             return result;
         }
         catch (Exception e){
-            System.err.println("검색 중 오류: " + e.getMessage());
-            e.printStackTrace();
+            log.error("검색 중 오류", e);
+            session.setAttribute(SESSION_ERROR_KEY, true);
             return new PageImpl<>(List.of(), pageable, 0);
         }
+    }
+
+    /**
+     * 주어진 sortKey를 GitHub API에서 지원하는 sort 파라미터로 매핑합니다.
+     *
+     * @param sortKey 사용자 정의 정렬 키 (popular/recent)
+     * @return GitHub API에서 사용하는 정렬 키 (stars/updated)
+     */
+    private String getSortKey(String sortKey){
+        return switch (sortKey){
+            case "popular" -> "stars";
+            case "recent" -> "updated";
+            default -> "stars";
+        };
     }
 }

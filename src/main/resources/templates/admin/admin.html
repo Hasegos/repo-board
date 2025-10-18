@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>관리자 페이지</title>
+    <link rel="stylesheet" th:href="@{/css/pages/admin.css}">
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <main class="admin">
+        <h1 class="admin__title">관리자 페이지</h1>
+
+        <div class="admin__page-alert-wrap" th:if="${error}">
+            <div class="admin__page-alert admin__page-alert--error"
+                 th:text="${error}">오류 메시지</div>
+        </div>
+
+        <div class="admin__tabs">
+            <button class="admin__tab-button" data-tab="list">사용자 목록</button>
+            <button class="admin__tab-button" data-tab="deleted">삭제된 사용자 목록</button>
+            <button class="admin__tab-button" data-tab="log">활동 로그</button>
+        </div>
+
+        <section id="list" class="admin__tab-content admin__tab-content--active">
+            <h2 class="admin__subtitle">사용자 목록</h2>
+
+            <div th:if="${#lists.isEmpty(users)}" class="admin__empty-message">
+                등록된 사용자가 없습니다.
+            </div>
+
+            <table class="admin__table" th:if="${!#lists.isEmpty(users)}">
+                <thead class="admin__table-head">
+                <tr class="admin__table-row">
+                    <th class="admin__table-header">ID</th>
+                    <th class="admin__table-header">이메일</th>
+                    <th class="admin__table-header">가입일</th>
+                    <th class="admin__table-header">권한</th>
+                    <th class="admin__table-header">상태</th>
+                    <th class="admin__table-header">관리</th>
+                </tr>
+                </thead>
+                <tbody class="admin__table-body">
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.id}">1</td>
+                        <td th:text="${user.username}">홍길동</td>
+                        <td th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">2025-10-09</td>
+                        <td th:text="${user.role}">USER</td>
+                        <td th:text="${user.status}">ACTIVE</td>
+                        <td>
+                            <div th:if="${user.role.name() != 'ROLE_ADMIN'}">
+                                <form th:action="@{/admin/toggle/{userId}(userId=${user.id})}" method="post">
+                                    <button type="submit" th:text="${user.status == 'ACTIVE'} ? '정지' : '활성'">토글</button>
+                                </form>
+                                <form th:action="@{/admin/delete/{userId}(userId=${user.id})}" method="post">
+                                    <button type="submit">삭제</button>
+                                </form>
+                            </div>
+                            <span th:if="${user.role.name() == 'ROLE_ADMIN'}" >관리 불가</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="deleted" class="admin__tab-content">
+            <h2 class="admin__subtitle">삭제된 사용자</h2>
+
+            <div th:if="${#lists.isEmpty(deletedUsers)}" class="admin__empty-message">
+                삭제된 사용자가 없습니다.
+            </div>
+
+            <table class="admin__table" th:if="${!#lists.isEmpty(deletedUsers)}">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>이메일</th>
+                    <th>삭제일</th>
+                    <th>복구</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="deleted : ${deletedUsers}">
+                        <td th:text="${deleted.id}"></td>
+                        <td th:text="${deleted.username}"></td>
+                        <td th:text="${#temporals.format(deleted.deleteAt, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td>
+                            <form th:action="@{/admin/restore/{username}(username=${deleted.username})}" method="post">
+                                <button type="submit">복구</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="log" class="admin__tab-content">
+            <h2 class="admin__subtitle">활동 로그</h2>
+            <ul id="logList" class="admin__log-list"></ul>
+            <button id="loadMoreBtn" class="admin__form-button">더 보기</button>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+    <script th:src="@{/js/admin.js}"></script>
+</body>
+</html>

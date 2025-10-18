@@ -15,14 +15,18 @@
             : '설정 (폼 로그인 사용자)'">
             설정
         </h1>
-        <div class="settings__layout">
+
+        <div class="settings__page-alert-wrap" th:if="${error}">
+            <div class="settings__page-alert settings__page-alert--error" th:text="${error}">에러 메시지</div>
+        </div>
+
+        <div class="settings__layout" th:if="${error == null}">
             <nav class="settings__sidebar" aria-label="설정 메뉴">
                 <a class="settings__tab settings__tab--active" href="#account" th:if="${authType == 'LOCAL'}">계정</a>
                 <a class="settings__tab" href="#security" th:if="${authType == 'LOCAL'}">보안</a>
                 <a class="settings__tab" href="#danger">위험 구역</a>
             </nav>
             <section class="settings__content">
-                <!-- 계정 카드 (LOCAL 전용) -->
                 <article id="account" class="card" th:if="${authType == 'LOCAL'}">
                     <h2 class="card__title">계정</h2>
                     <div class="card__body" th:object="${user}">
@@ -52,7 +56,6 @@
                     </div>
                 </article>
 
-                <!-- 보안 카드 (LOCAL 전용) -->
                 <article id="security" class="card" th:if="${authType == 'LOCAL'}">
                     <h2 class="card__title">보안</h2>
                     <div class="card__body">
@@ -104,7 +107,6 @@
                     </div>
                 </article>
 
-                <!-- 안내 카드 (소셜 로그인 전용) -->
                 <article class="card" th:if="${authType != 'LOCAL'}">
                     <h2 class="card__title">안내</h2>
                     <div class="card__body">
@@ -113,11 +115,9 @@
                     </div>
                 </article>
 
-                <!-- 위험 구역 -->
                 <article id="danger" class="card card--danger">
                     <h2 class="card__title">위험 구역</h2>
-                    <form th:action="@{/users/settings/delete}" method="post"
-                          onsubmit="return confirm('계정 탈퇴시 모든 내용이 삭제됩니다.')">
+                    <form id="deleteAccountForm" th:action="@{/users/settings/delete}" method="post">
                         <div class="card__body">
                             <p class="danger-zone__text">계정을 삭제하면 복구할 수 없습니다.</p>
                             <button class="button button--danger" type="submit">계정 삭제</button>

@@ -1,10 +1,15 @@
 package io.github.repoboard.security.oauth2;
 
+import io.github.repoboard.dto.github.GithubUserDTO;
 import io.github.repoboard.model.User;
 import io.github.repoboard.model.enums.UserProvider;
 import io.github.repoboard.model.enums.UserRoleType;
+import io.github.repoboard.model.enums.UserStatus;
+import io.github.repoboard.repository.DeleteUserRepository;
 import io.github.repoboard.repository.UserRepository;
 import io.github.repoboard.security.core.CustomUserPrincipal;
+import io.github.repoboard.service.GitHubApiService;
+import io.github.repoboard.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,10 +19,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -36,6 +43,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ProfileService profileService;
+    private final GitHubApiService gitHubApiService;
+    private final DeleteUserRepository deleteUserRepository;
 
     @Qualifier("githubWebClient")
     private final WebClient githubWebClient;
@@ -60,24 +70,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     /**
-     * Provider별 속성 표준화 → 기존 사용자 조회/신규 생성 → {@link CustomUserPrincipal} 반환.
+     * OAuth2 로그인 사용자 정보를 표준화하고 앱의 User 도메인에 매핑한다.
      *
-     * <p><b>Google</b></p>
-     * <ul>
-     *   <li>id: <code>sub</code></li>
-     *   <li>email: <code>email</code> (동의 필수)</li>
-     * </ul>
+     * <p>기존 providerId가 있으면 로그인 처리, 없으면 신규 사용자 생성.</p>
+     * <p>7일 이내 탈퇴한 동일 providerId가 존재하면 예외 발생.</p>
+     * <p>폼 가입된 이메일과 중복되면 예외 발생.</p>
      *
-     * <p><b>GitHub</b></p>
-     * <ul>
-     *   <li>id: <code>id</code></li>
-     *   <li>email: 속성에 없거나 비공개면 <code>/user/emails</code> API로 보완 조회</li>
-     * </ul>
+     * <p><b>Google</b>: id=sub, email=email</p>
+     * <p><b>GitHub</b>: id=id, email 없으면 /user/emails 로 보완</p>
      *
-     * @param req OAuth2UserRequest (Provider, 토큰 등)
-     * @param ou  Provider로부터 조회된 OAuth2User(속성 맵 포함)
-     * @return 애플리케이션 계정으로 매핑된 OAuth2User
-     * @throws OAuth2AuthenticationException 필수 속성 누락/권한 거부/정책 위반
+     * @param req OAuth2 요청 정보
+     * @param ou  Provider에서 받은 사용자 정보
+     * @return 매핑된 CustomUserPrincipal
+     * @throws OAuth2AuthenticationException 정책 위반 또는 필수 정보 누락 시
      */
     private OAuth2User socialLogin(OAuth2UserRequest req, OAuth2User ou){
 
@@ -123,8 +128,27 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Optional<User> userOptional = userRepository.findByProviderId(socialId);
         if(userOptional.isPresent()){
             User user = userOptional.get();
+
+            if(user.getStatus() == UserStatus.SUSPENDED){
+                throw new OAuth2AuthenticationException(new OAuth2Error("SUSPENDED"));
+            }
+
+            if(user.getStatus() == UserStatus.DELETED){
+                throw new OAuth2AuthenticationException(new OAuth2Error("DELETED"));
+            }
+
             return new CustomUserPrincipal(user, attributes);
         }
+
+        deleteUserRepository.findByProviderId(socialId)
+                .ifPresent(backup -> {
+                    Instant sevenDaysAgo = Instant.now().minus(Duration.ofDays(7));
+
+                    if(backup.getStatus() == UserStatus.DELETED &&
+                       backup.getDeleteAt().isAfter(sevenDaysAgo)){
+                        throw new OAuth2AuthenticationException(new OAuth2Error("DELETED"));
+                    }
+                });
 
         userRepository.findByUsername(email).ifPresent(u -> {
             if(u.getProviderId() == null || u.getProviderId().isBlank()){
@@ -137,10 +161,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         User user = new User();
         user.setUsername(generateUniqueUsername(email));
         user.setPassword(passwordEncoder.encode(randomPassword));
-        user.setRole(UserRoleType.USER);
+        user.setRole(UserRoleType.ROLE_USER);
         user.setProviderId(socialId);
         user.setProvider(provider);
-        user.setCreatedAt(Instant.now());
 
         try{
             userRepository.save(user);
@@ -149,6 +172,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
         log.info("신규 OAuth2 사용자 생성 : {} (provider={})", email, regId);
 
+        if(provider == UserProvider.GITHUB){
+            String login = String.valueOf(attributes.get("login"));
+            if(profileService.findProfileByUserId(user.getId()).isEmpty()){
+                try{
+                    GithubUserDTO dto = gitHubApiService.getUser(login);
+                    profileService.registerProfile(user.getId(), dto);
+                }catch (IOException e){
+                    log.error("Github API 호출 실패");
+                    throw new OAuth2AuthenticationException("Github 프로필 동기화 중 오류 발생");
+                }
+            }
+        }
         return new CustomUserPrincipal(user,attributes);
     }
 
