@@ -68,3 +68,73 @@
   border-color: #ff818266;
   color: #9a1119;
 }
+
+@media (min-width: 769px) {
+  .header__menu-mobile {
+    display: none;
+  }
+  .header__mobile-menu {
+     display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header__inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "logo toggle"
+      "search search"
+      "nav nav";
+    gap: 10px;
+  }
+
+  .header__menu-mobile{
+    display:flex;
+    margin-right:10px;
+    gap:15px;
+  }
+
+  .header__menu-button{
+    cursor: pointer;
+    color: white;
+    background-color: #24292f;
+    font-size: 25px;
+    border: none;
+  }
+
+  .header__mobile-menu-items{
+    display: flex;
+    gap: 10px;
+  }
+
+  .header__logo {
+    grid-area: logo;
+  }
+
+  .header__search {
+    grid-area: search;
+    display: none;
+  }
+
+  .header__nav {
+    display: none;
+  }
+
+  .header__mobile-menu {
+    display: none;
+    gap: 10px;
+    padding: 12px;
+    background-color: #161b22;
+    border-top: 1px solid #30363d;
+  }
+
+  /* 열렸을 때만 표시 */
+  .header__mobile-menu--active {
+    display: flex;
+  }
+
+  .header__search--active {
+    display: flex;
+  }
+}
