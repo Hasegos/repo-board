@@ -1,18 +1,22 @@
-server:
-  servlet:
-    session:
-      timeout: 30m
-      cookie:
-        secure: false
-        same-site: lax
-  shutdown: graceful
-
 spring:
   application:
     name: RepoBoard
 
   lifecycle:
     timeout-per-shutdown-phase: 30s
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRESQL_DATABASE}
+    driver-class-name: org.postgresql.Driver
+    username: ${POSTGRESQL_USERNAME}
+    password: ${POSTGRESQL_PASSWORD}
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc.time_zone: UTC
 
   task:
     execution:
@@ -22,25 +26,6 @@ spring:
     scheduling:
       await-termination: true
       await-termination-period: 30s
-
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-            scope:
-              - profile
-              - email
-            redirect-uri: http://localhost:8080/login/oauth2/code/google
-          github:
-            client-id: ${GITHUB_CLIENT_ID}
-            client-secret: ${GITHUB_CLIENT_SECRET}
-            scope:
-              - read:user
-              - user:email
-            redirect-uri: http://localhost:8080/login/oauth2/code/github
 
   thymeleaf:
     cache: true
@@ -56,33 +41,6 @@ spring:
             paths:
               - "/**"
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRESQL_DATABASE}
-    driver-class-name: org.postgresql.Driver
-    username: ${POSTGRESQL_USERNAME}
-    password: ${POSTGRESQL_PASSWORD}
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        jdbc.time_zone: UTC
-
-aws:
-  access-key-id: ${AWS_ACCESS_KEY_ID}
-  secret-access-key: ${AWS_SECRET_ACCESS_KEY}
-  region: ${AWS_REGION}
-  s3:
-    bucket-name: ${AWS_S3_BUCKET_NAME}
-
-github:
-  api:
-    base-url: https://api.github.com
-    token: ${GITHUB_API_TOKEN}
-
 logging:
   level:
     root: INFO
@@ -92,19 +50,6 @@ app:
   delete-user:
     retention-days: 7
     purge-count: "0 0 3 * * *" # 새벽 3시기준
-  security:
-    csp: |-
-      default-src 'self' http://localhost:8080;
-      img-src 'self' https: data:;
-      style-src 'self' https://fonts.googleapis.com;
-      font-src 'self' https://fonts.gstatic.com;
-      script-src 'self' http://localhost:8080 https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;
-      connect-src 'self' http://localhost:8080 https://api.github.com https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;
-      object-src 'none';
-      base-uri 'self';
-      frame-ancestors 'self';
-      form-action 'self' http://localhost:8080 https://github.com https://accounts.google.com;
-    cspReportOnly: false
 
 management:
   endpoints:
@@ -117,3 +62,15 @@ management:
       probes:
         enabled: true
       show-details: never
+
+aws:
+  access-key-id: ${AWS_ACCESS_KEY_ID}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+  region: ${AWS_REGION}
+  s3:
+    bucket-name: ${AWS_S3_BUCKET_NAME}
+
+github:
+  api:
+    base-url: https://api.github.com
+    token: ${GITHUB_API_TOKEN}
