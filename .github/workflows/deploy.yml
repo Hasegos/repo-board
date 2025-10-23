@@ -20,5 +20,10 @@ jobs:
             cd /home/ubuntu/repo-board
             git pull origin master
             ./mvnw clean package -DskipTests
-            sudo fuser -k -n tcp 8080 || true          
-            export $(cat .env | xargs) && nohup java -Dspring.profiles.active=prod -jar target/*SNAPSHOT.jar > ./nohup.out 2>&1 &
+            sudo fuser -k -n tcp 8080 || true 
+            sleep 3
+            export $(cat .env | xargs)
+            nohup java -Dspring.profiles.active=prod -jar target/*SNAPSHOT.jar > ./nohup.out 2>&1 < /dev/null &
+            disown
+            sleep 1
+            echo "Deployment completed"
