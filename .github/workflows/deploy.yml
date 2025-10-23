@@ -21,6 +21,7 @@ jobs:
           script_stop: true
           script: |
             cd /home/ubuntu/repo-board            
+            rm -rf src/main/resources/application-prod.yml
             git pull origin master
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application-prod.yml
             ./mvnw clean package -DskipTests
