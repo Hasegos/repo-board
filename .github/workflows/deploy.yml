@@ -25,5 +25,5 @@ jobs:
             ./mvnw clean package -DskipTests
             sudo fuser -k -n tcp 8080 || true 
             export $(cat .env | xargs)
-            nohup java -Dspring.profiles.active=prod -jar target/*SNAPSHOT.jar > ./nohup.out 2>&1 < /dev/null &            
+            nohup java -jar target/*SNAPSHOT.jar > ./nohup.out 2>&1 < /dev/null &            
             echo "Deployment completed"
