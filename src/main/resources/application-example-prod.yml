@@ -1,7 +1,7 @@
 spring:
   config:
     activate:
-      on-profile: prod # 운영환경
+      on-profile: prod # 운영환경 example (실제와 다름)
 
   jpa:
     hibernate:
