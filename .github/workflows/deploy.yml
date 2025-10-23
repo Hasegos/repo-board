@@ -11,10 +11,13 @@ jobs:
     steps:
       - name: SSH(원격접속)로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          APPLICATION_PROPERTIES: ${{ secrets.APPLICATION_PROPERTIES }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
+          envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
             cd /home/ubuntu/repo-board
