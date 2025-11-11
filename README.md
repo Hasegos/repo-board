@@ -26,10 +26,10 @@
 
 # 🛠️ 기술 스택
 - **Frontend**: <img src="https://img.shields.io/badge/html5-E34F26?style=for-the-badge&logo=html5&logoColor=white"> <img src="https://img.shields.io/badge/css-1572B6?style=for-the-badge&logo=css3&logoColor=white"> <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=JavaScript&logoColor=white"> <img src="https://img.shields.io/badge/Thymeleaf-005F0F?style=for-the-badge&logo=Thymeleaf&logoColor=white">
-- **Backend**: <img src="https://img.shields.io/badge/java-007396?style=for-the-badge&logo=java&logoColor=white"> <img src="https://img.shields.io/badge/springboot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
-- **Database**: <img src="https://img.shields.io/badge/postgresql-4169E1?style=for-the-badge&logo=postgresql&logoColor=white"> <img src="https://img.shields.io/badge/H2 Database-09476B?style=for-the-badge&logo=H2 Database&logoColor=white">
-- **Infra/DevOps**: <img src="https://img.shields.io/badge/postgresql-4169E1?style=for-the-badge&logo=postgresql&logoColor=white"> <img src="https://img.shields.io/badge/H2 Database-09476B?style=for-the-badge&logo=H2 Database&logoColor=white">
-- **Tooling**: <img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white"> <img src="https://img.shields.io/badge/notion-000?style=for-the-badge&logo=Notion&logoColor=white"> <img src="https://img.shields.io/badge/discord-5865F2?style=for-the-badge&logo=discord&logoColor=white">
+- **Backend**: <img src="https://img.shields.io/badge/java 17-007396?style=for-the-badge&logo=java&logoColor=white"> <img src="https://img.shields.io/badge/springboot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
+- **Database**: <img src="https://img.shields.io/badge/postgresql-4169E1?style=for-the-badge&logo=postgresql&logoColor=white"> <img src="https://img.shields.io/badge/H2 Database-09476B?style=for-the-badge&logo=H2-Database&logoColor=white">
+- **Infra/DevOps**: <img src="https://img.shields.io/badge/AWS EC2-%23FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white"> <img src="https://img.shields.io/badge/AWS S3-%23FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white"> <img src="https://img.shields.io/badge/GitHub Actions-181717?style=for-the-badge&logo=github-actions&logoColor=white">
+- **Tooling**: <img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white"> <img src="https://img.shields.io/badge/notion-000?style=for-the-badge&logo=Notion&logoColor=white"> <img src="https://img.shields.io/badge/Intellij IDEA-000000?style=for-the-badge&logo=Intellij-IDEA&logoColor=white">
 
 ## 📁 디렉토리 구조
 
@@ -86,7 +86,7 @@ repoboard/
 
 ### 🗺️ ERD 개요
 
-<img width="1516" height="484" alt="Image" src="https://github.com/user-attachments/assets/94605594-064a-43e2-a007-2f901cd242b7" />
+<img width="800" height="484" alt="Image" src="https://github.com/user-attachments/assets/94605594-064a-43e2-a007-2f901cd242b7" />
 
 ### 📚 프로젝트 문서 / 회고
 
@@ -97,7 +97,7 @@ repoboard/
 
 ### 메인 페이지
 
-<img width="1569" height="1008" alt="Image" src="https://github.com/user-attachments/assets/33d9453a-a1f1-46aa-824b-47e574aef950" />
+<img width="700" height="600" alt="Image" src="https://github.com/user-attachments/assets/33d9453a-a1f1-46aa-824b-47e574aef950" />
 
 - 언어 버튼(Java, JS, Python 등)과 정렬 옵션(인기순 / 최신순)으로 GitHub 레포를 탐색한다.
 - 미리 정의한 쿼리 전략(언어·기간·별점 조건)을 순환해 다양한 레포를 노출한다.
@@ -108,8 +108,8 @@ repoboard/
 
 ### 로그인 / 회원가입 페이지
 
-<img width="1123" height="1021" alt="Image" src="https://github.com/user-attachments/assets/802da984-66ee-4272-9995-455b56803dcc" />
-<img width="1138" height="1004" alt="Image" src="https://github.com/user-attachments/assets/fd2cba5c-4428-468f-ba59-e28e3441fbea" />
+<img width="450" height="400" alt="Image" src="https://github.com/user-attachments/assets/802da984-66ee-4272-9995-455b56803dcc" />
+<img width="450" height="400" alt="Image" src="https://github.com/user-attachments/assets/fd2cba5c-4428-468f-ba59-e28e3441fbea" />
 
 - 폼 로그인(이메일/비밀번호)과 GitHub·Google OAuth2 로그인을 모두 지원한다.
 - 회원가입 시 서버 단에서 이메일 중복, 비밀번호 규칙 등을 `@Valid`와 `BindingResult`로 검증한다.
@@ -120,8 +120,8 @@ repoboard/
 
 ### 오픈 프로필 설정 / 보기 페이지
 
-<img width="1367" height="807" alt="Image" src="https://github.com/user-attachments/assets/d1b3aff3-7590-4b53-a8d8-ad17af886433" />
-<img width="1203" height="1036" alt="Image" src="https://github.com/user-attachments/assets/2adce381-dca8-46ed-8869-d4512f3c2b59" />
+<img width="450" height="400" alt="Image" src="https://github.com/user-attachments/assets/d1b3aff3-7590-4b53-a8d8-ad17af886433" />
+<img width="450" height="400" alt="Image" src="https://github.com/user-attachments/assets/2adce381-dca8-46ed-8869-d4512f3c2b59" />
 
 - 최초 접속 시 GitHub 프로필 URL 또는 username을 입력해 오픈 프로필을 생성할 수 있다.
 - GitHub API를 통해 아바타, 이름, bio, followers, 공개 레포 수 등을 주기적으로 새로고침한다.
@@ -132,7 +132,7 @@ repoboard/
 
 ### 저장한 레포지토리 페이지
 
-<img width="1504" height="1139" alt="Image" src="https://github.com/user-attachments/assets/9f1cf5f6-14d1-4047-ae34-cd4938a7dad3" />
+<img width="700" height="600" alt="Image" src="https://github.com/user-attachments/assets/9f1cf5f6-14d1-4047-ae34-cd4938a7dad3" />
 
 - 내가 저장한 레포를 **핀 고정 영역**과 **일반 영역**으로 구분해 보여준다.
 - 언어 필터와 정렬 옵션(인기순 / 최신순), 페이지네이션을 지원해 저장 레포를 효율적으로 탐색할 수 있다.
@@ -143,8 +143,8 @@ repoboard/
 
 ### 검색 페이지
 
-<img width="1645" height="1270" alt="Image" src="https://github.com/user-attachments/assets/a5562891-a27a-4827-babf-638dc02d22f8" />
-<img width="1118" height="871" alt="Image" src="https://github.com/user-attachments/assets/f33ea877-b77f-4f75-ab31-bf634cdb7bd6" />
+<img width="450" height="400" alt="Image" src="https://github.com/user-attachments/assets/a5562891-a27a-4827-babf-638dc02d22f8" />
+<img width="450" height="400" alt="Image" src="https://github.com/user-attachments/assets/f33ea877-b77f-4f75-ab31-bf634cdb7bd6" />
 
 - 하나의 검색 진입 화면에서 “레포지토리 검색”과 “사용자 검색” 중 원하는 검색 타입을 선택할 수 있다.
 - 레포지토리 검색은 언어, 정렬 기준, 검색어를 조합해 GitHub 레포를 조회하고, 추가 결과는 스크롤을 통해 점진적으로 불러온다.
@@ -155,8 +155,8 @@ repoboard/
 
 ### 설정 페이지
 
-<img width="1136" height="1281" alt="Image" src="https://github.com/user-attachments/assets/af16d8bb-f203-493a-b571-21caba7ef4bc" />
-<img width="1222" height="867" alt="Image" src="https://github.com/user-attachments/assets/4bdff4e0-cc98-4250-8ed2-c3c9aaefbfe1" />
+<img width="450" height="400" alt="Image" src="https://github.com/user-attachments/assets/af16d8bb-f203-493a-b571-21caba7ef4bc" />
+<img width="450" height="400" alt="Image" src="https://github.com/user-attachments/assets/4bdff4e0-cc98-4250-8ed2-c3c9aaefbfe1" />
 
 - 로그인 타입(LOCAL / OAuth2)에 따라 서로 다른 설정 화면을 제공한다.
 - LOCAL 계정 사용자는 현재 비밀번호 검증을 거쳐 새 비밀번호로 변경할 수 있다.
@@ -166,8 +166,8 @@ repoboard/
 
 ### 관리자 페이지
 
-<img width="1669" height="727" alt="Image" src="https://github.com/user-attachments/assets/d879e559-aa10-47d0-860f-d135ebce1c79" />
-<img width="1550" height="641" alt="Image" src="https://github.com/user-attachments/assets/20771449-5844-440c-b30a-222a7db82c87" />
+<img width="450" height="400" alt="Image" src="https://github.com/user-attachments/assets/d879e559-aa10-47d0-860f-d135ebce1c79" />
+<img width="450" height="400" alt="Image" src="https://github.com/user-attachments/assets/20771449-5844-440c-b30a-222a7db82c87" />
 
 - 전체 사용자 목록과 삭제된 사용자 기록을 한 화면에서 관리할 수 있다.
 - 관리자는 개별 사용자에 대해 계정 삭제, 삭제된 계정 복원, 상태(ACTIVE / SUSPENDED) 전환 등의 액션을 수행할 수 있다.
