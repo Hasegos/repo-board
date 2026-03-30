@@ -6,7 +6,6 @@
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 <!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
 
-
 <url>
   <loc>https://repoboard.kr/</loc>
   <lastmod>2026-03-30T12:32:05+00:00</lastmod>
@@ -22,6 +21,5 @@
   <lastmod>2026-03-30T12:32:05+00:00</lastmod>
   <priority>0.80</priority>
 </url>
-
 
 </urlset>
