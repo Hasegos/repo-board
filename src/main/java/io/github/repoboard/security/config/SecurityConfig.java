@@ -85,7 +85,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                     .ignoringRequestMatchers( "/api/**"))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/css/**", "/js/**", "/images/**", "/script/**").permitAll()
+                    .requestMatchers("/css/**", "/js/**", "/images/**", "/script/**", "/sitemap.xml", "/robots.txt").permitAll()
                     .requestMatchers("/error/**").permitAll()
                     .requestMatchers("/", "/users/login", "/users/signup","/oauth2/**","/login/**").permitAll()
                     .requestMatchers("/api/repos","/search/**").permitAll()
