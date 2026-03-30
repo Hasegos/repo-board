@@ -1,31 +1,58 @@
-name: Deploy To EC2
+name: RepoBoard CI/CD
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
+
 
 jobs:
-  Deploy:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest # 빌드 작업대
+
     steps:
-      - name: SSH(원격접속)로 EC2에 접속하기
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          APPLICATION_PROPERTIES: ${{ secrets.APPLICATION_PROPERTIES }}
+      # 소스코드 가져오기
+      - name: 소스 코드 가져오기
+        uses: actions/checkout@v3
+
+      # 자바 환경 셋팅
+      - name: 자바 환경 셋팅
+        uses: actions/setup-java@v3
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          envs: APPLICATION_PROPERTIES
-          script_stop: true
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # maven 으로 jar 빌드
+      - name: maven jar 빌드
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      # 빌드된 jar 파일 Rocky linux로 전달 (SCP)
+      - name: 빌드된 jar 파일 Rocky linux로 전달
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.REMOTE_IP }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "target/repoboard-0.0.1-SNAPSHOT.jar
+          target: "/root/workspace/repo-board"
+          rm: false
+
+      # 서버에 접속해서 서비스 재시작
+      - name: 서버에 접속해서 서비스 재시작
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.REMOTE_IP }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /home/ubuntu/repo-board            
-            rm -rf src/main/resources/application-prod.yml
-            git pull origin master
-            echo "$APPLICATION_PROPERTIES" > src/main/resources/application-prod.yml
-            ./mvnw clean package -DskipTests
-            sudo fuser -k -n tcp 8080 || true 
-            export $(cat .env | xargs)
-            nohup java -Dspring.profiles.active=prod -jar target/*SNAPSHOT.jar > ./nohup.out 2>&1 < /dev/null &            
-            echo "Deployment completed"
+            # 새 파일에 대한 보안 라벨 갱신 
+            restorecon -v /root/workspace/repo-board/target/repoboard-0.0.1-SNAPSHOT.jar
+            
+            # systemctl 서비스 재시작
+            systemctl restart repo-board
+            
+            # 5초 대기후 서비스 상태 확인
+            sleep 5
+            systemctl is-active repo-board
