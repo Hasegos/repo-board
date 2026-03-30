@@ -35,7 +35,7 @@ jobs:
           host: ${{ secrets.REMOTE_IP }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: "target/repoboard-0.0.1-SNAPSHOT.jar
+          source: "target/repoboard-0.0.1-SNAPSHOT.jar"
           target: "/root/workspace/repo-board"
           rm: false
 
