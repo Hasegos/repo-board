@@ -1,6 +1,7 @@
 User-agent: *
 Disallow: /admin
 Disallow: /actuator
+Disallow: /users/
 Allow: /
 
 Sitemap: https://repoboard.kr/sitemap.xml
