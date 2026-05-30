@@ -1,4 +1,4 @@
-package io.github.repoboard.security.config;
+package io.github.repoboard.common.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
