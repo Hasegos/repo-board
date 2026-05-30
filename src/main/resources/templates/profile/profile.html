@@ -1,11 +1,9 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <th:block th:replace="~{fragments/meta :: common}"></th:block>
     <title>RepoBoard · 프로필</title>
     <link rel="stylesheet" th:href="@{/css/pages/profile.css}">
-    <link rel="icon" type="image/svg+xml" th:href="@{/images/logo-favicon.svg}">
     <th:block th:if="${view.onboarding}">
         <link rel="stylesheet" th:href="@{/css/pages/setupForm.css}" />
     </th:block>
