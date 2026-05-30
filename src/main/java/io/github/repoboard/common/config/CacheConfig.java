@@ -1,4 +1,4 @@
-package io.github.repoboard.security.config;
+package io.github.repoboard.common.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;

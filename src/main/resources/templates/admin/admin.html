@@ -1,12 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <th:block th:replace="~{fragments/meta :: common}"></th:block>
     <title>관리자 페이지</title>
     <link rel="stylesheet" th:href="@{/css/pages/admin.css}">
-    <link rel="icon" type="image/svg+xml" th:href="@{/images/logo-favicon.svg}">
 </head>
 <body>
     <header th:replace="~{fragments/header :: header}"></header>

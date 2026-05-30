@@ -70,7 +70,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain (HttpSecurity http) throws Exception{
         http
             .headers(header ->
-                header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+                header.frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
                 .referrerPolicy(ref -> ref.policy(
                         ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
                 .contentTypeOptions(Customizer.withDefaults())
@@ -85,16 +85,22 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                     .ignoringRequestMatchers( "/api/**"))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/css/**", "/js/**", "/images/**", "/script/**", "/sitemap.xml", "/robots.txt").permitAll()
-                    .requestMatchers("/error/**").permitAll()
+                    .requestMatchers("/css/**", "/js/**", "/images/**", "/script/**","/sitemap.xml", "/robots.txt", "/favicon.ico").permitAll()
                     .requestMatchers("/", "/users/login", "/users/signup","/oauth2/**","/login/**").permitAll()
                     .requestMatchers("/api/repos","/search/**").permitAll()
+                    .requestMatchers("/users/profiles/**", "/users/saved/**", "/users/settings/**").authenticated()
                     .requestMatchers("/admin/**", "/actuator/**").hasRole("ADMIN")
-                    .anyRequest().authenticated()
+                    .anyRequest().permitAll()
             )
             .exceptionHandling(ex -> ex
-                    .accessDeniedHandler((req, res , e)
-                            -> res.sendRedirect("/"))
+                    .accessDeniedHandler((req, res , e) -> {
+                        if(req.getUserPrincipal() == null){
+                            res.sendRedirect("/users/login");
+                        }
+                        else{
+                            res.sendRedirect("/");
+                        }
+                    })
             )
             .formLogin(form -> form
                     .loginPage("/users/login")

@@ -1,4 +1,4 @@
-package io.github.repoboard.security.config;
+package io.github.repoboard.common.config;
 
 import io.github.repoboard.common.exception.GithubRateLimitException;
 import io.github.repoboard.common.exception.UnexpectedContentTypeException;

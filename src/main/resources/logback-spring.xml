@@ -1,46 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-
-    <!-- 콘솔 출력 -->
+    <!-- ===== 콘솔 ===== -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!-- 일반 로그 (app.log) -->
+    <!-- ===== access.log ===== -->
+    <appender name="ACCESS_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/current/access.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/%d{yyyy-MM-dd}/access.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ===== app.log ===== -->
     <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/app.log</file>
+        <file>logs/current/app.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>logs/%d{yyyy-MM-dd}/app.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{clientIp:-}] %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!-- 관리자 로그 (admin.log) -->
+    <!-- ===== error.log (WARN 이상만) ===== -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/current/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/%d{yyyy-MM-dd}/error.log</fileNamePattern>
+            <maxHistory>60</maxHistory>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{clientIp:-}] %logger{36} - %msg%n%ex</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ===== admin.log ===== -->
     <appender name="ADMIN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/admin.log</file>
+        <file>logs/current/admin.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/admin-actions.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
+            <fileNamePattern>logs/%d{yyyy-MM-dd}/admin.log</fileNamePattern>
+            <maxHistory>90</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{clientIp:-}] %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!-- 전체 로그 (일반 로그: 콘솔 + app.log) -->
-    <root level="INFO">
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="APP_FILE"/>
-    </root>
+    <!-- ===== ACCESS 전용 로거 (AccessLogInterceptor) ===== -->
+    <logger name="ACCESS" level="INFO" additivity="false">
+        <appender-ref ref="ACCESS_FILE"/>
+    </logger>
 
-    <!-- AdminService 로그는 콘솔 + admin-actions.log 로 분리 -->
+    <!-- ===== AdminService 로거 ===== -->
     <logger name="io.github.repoboard.service.AdminService" level="INFO" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="ADMIN_FILE"/>
     </logger>
+
+    <!-- ===== Root ===== -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="APP_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </root>
 
 </configuration>

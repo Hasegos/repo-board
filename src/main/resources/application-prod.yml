@@ -1,11 +1,11 @@
 spring:
   config:
     activate:
-      on-profile: dev # 개발 환경
+      on-profile: prod # 운영환경
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
 
   security:
     oauth2:
@@ -17,38 +17,36 @@ spring:
             scope:
               - profile
               - email
-            redirect-uri: http://localhost:8080/login/oauth2/code/google
+            redirect-uri: https://repoboard.kr/login/oauth2/code/google
           github:
             client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
             scope:
               - read:user
               - user:email
-            redirect-uri: http://localhost:8080/login/oauth2/code/github
-
-  thymeleaf:
-    cache: false
+            redirect-uri: https://repoboard.kr/login/oauth2/code/github
 
 server:
-  port: 8081
   servlet:
     session:
       timeout: 30m
       cookie:
-        secure: false
+        secure: true
         same-site: lax
+  shutdown: graceful
+  forward-headers-strategy: native
 
 app:
   security:
     csp: |-
-      default-src 'self' http://localhost:8080;  
+      default-src 'self' https://repoboard.kr;  
       img-src 'self' https: data:;  
       style-src 'self' https://fonts.googleapis.com;  
       font-src 'self' https://fonts.gstatic.com;  
-      script-src 'self' http://localhost:8080 https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;  
-      connect-src 'self' http://localhost:8080 https://api.github.com https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;  
+      script-src 'self' https://repoboard.kr https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;  
+      connect-src 'self' https://repoboard.kr https://api.github.com https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;  
       object-src 'none';  
       base-uri 'self';  
-      frame-ancestors 'none';  
-      form-action 'self' http://localhost:8080 https://github.com https://accounts.google.com;
+      frame-ancestors 'self';  
+      form-action 'self' https://repoboard.kr https://github.com https://accounts.google.com;
     cspReportOnly: false
