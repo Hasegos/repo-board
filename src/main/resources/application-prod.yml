@@ -1,7 +1,7 @@
 spring:
   config:
     activate:
-      on-profile: prod # 운영환경
+      on-profile: prod
 
   jpa:
     hibernate:
@@ -47,6 +47,6 @@ app:
       connect-src 'self' https://repoboard.kr https://api.github.com https://apis.google.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com;  
       object-src 'none';  
       base-uri 'self';  
-      frame-ancestors 'self';  
+      frame-ancestors 'none';  
       form-action 'self' https://repoboard.kr https://github.com https://accounts.google.com;
     cspReportOnly: false

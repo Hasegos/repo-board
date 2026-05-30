@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/meta :: common}"></th:block>
+    <title th:text="'RepoBoard · ' + (${status} ?: '오류')">RepoBoard · 오류</title>
+    <link rel="stylesheet" th:href="@{/css/pages/error.css}">
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+
+    <main class="error" role="main">
+        <section class="error__panel" aria-labelledby="error-title">
+            <p class="error__code" th:text="${status} ?: 'ERROR'">404</p>
+            <h1 id="error-title" class="error__title"
+                th:text="${title} ?: '문제가 발생했습니다'">페이지를 찾을 수 없습니다</h1>
+            <p class="error__message"
+               th:text="${message} ?: '잠시 후 다시 시도해 주세요.'">요청하신 주소가 없거나 이동되었습니다.</p>
+
+            <div class="error__actions">
+                <a class="error__btn error__btn--primary" th:href="@{/}">홈으로</a>
+                <a class="error__btn error__btn--ghost" href="javascript:history.back()">이전 페이지</a>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

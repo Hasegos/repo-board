@@ -1,12 +1,13 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width,initial-scale=1.0">
-    <title>RepoBoard</title>
+    <th:block th:replace="~{fragments/meta :: common}"></th:block>
+    <title>RepoBoard | 사용자 검색</title>
+    <th:block th:replace="~{fragments/meta :: og(
+        'RepoBoard | 사용자 검색',
+        'RepoBoard에서 다른 개발자의 오픈 프로필과 저장한 레포지토리를 찾아보세요.',
+        'https://repoboard.kr/search/users')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/pages/search-user.css}" />
-    <link rel="icon" type="image/svg+xml" th:href="@{/images/logo-favicon.svg}">
 </head>
 <body>
     <header th:replace="~{fragments/header :: header}"></header>
